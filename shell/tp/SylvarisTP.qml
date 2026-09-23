@@ -14,11 +14,22 @@ Scope {
     property bool wanted: false
     property var screenInfo: null
     property real wheelAcc: 0
+    property real reveal: 0
+    property real time: 0
+    property bool cursorIdle: false
+    property point pointer: Qt.point(-1, -1)
+    property string shownName: ""
+    property string shownDescription: ""
     readonly property var ids: Theme.ids
     readonly property string front: carousel.count > 0 && carousel.currentIndex >= 0 && carousel.currentIndex < root.ids.length ? root.ids[carousel.currentIndex] : ""
     readonly property var frontEntry: root.front !== "" && Theme.catalog[root.front] !== undefined ? Theme.catalog[root.front] : null
+    readonly property string frontName: root.frontEntry === null ? "" : root.frontEntry.name
 
     signal opened
+
+    function stagger(k: int): real {
+        return Math.max(0, Math.min(1, (root.reveal - k * 0.14) / 0.72));
+    }
 
     function open(): void {
         if (root.wanted)
@@ -33,14 +44,25 @@ Scope {
             carousel.currentIndex = Math.max(0, i);
             ThemePreview.begin(Theme.currentId);
             root.wheelAcc = 0;
+            root.cursorIdle = false;
+            idleTimer.restart();
+            root.pointer = Qt.point(-1, -1);
+            root.shownName = root.frontName;
+            root.shownDescription = root.frontEntry === null ? "" : root.frontEntry.description;
             root.shown = true;
+            revealOut.stop();
+            revealIn.restart();
             root.opened();
         });
     }
 
     function finish(): void {
         root.wanted = false;
+        if (!root.shown)
+            return;
         root.shown = false;
+        revealIn.stop();
+        revealOut.restart();
     }
 
     function commit(): void {
@@ -76,9 +98,40 @@ Scope {
             carousel.decrementCurrentIndex();
     }
 
+    onFrontNameChanged: {
+        if (root.shown)
+            nameSwap.restart();
+        else
+            root.shownName = root.frontName;
+    }
+
+    NumberAnimation {
+        id: revealIn
+        target: root
+        property: "reveal"
+        to: 1
+        duration: 420
+        easing.type: Easing.OutCubic
+    }
+
+    NumberAnimation {
+        id: revealOut
+        target: root
+        property: "reveal"
+        to: 0
+        duration: 280
+        easing.type: Easing.InCubic
+    }
+
+    Timer {
+        id: idleTimer
+        interval: 1200
+        onTriggered: root.cursorIdle = true
+    }
+
     PanelWindow {
         id: win
-        visible: root.shown
+        visible: root.shown || root.reveal > 0
         screen: root.screenInfo
         anchors {
             top: true
@@ -87,7 +140,7 @@ Scope {
             right: true
         }
         color: "transparent"
-        exclusionMode: ExclusionMode.Normal
+        exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "sylvaris-tp"
         WlrLayershell.keyboardFocus: root.shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
@@ -97,9 +150,57 @@ Scope {
                 stage.forceActiveFocus();
         }
 
+        FrameAnimation {
+            running: win.visible
+            onTriggered: root.time += frameTime
+        }
+
+        SequentialAnimation {
+            id: nameSwap
+
+            ParallelAnimation {
+                NumberAnimation {
+                    target: nameColumn
+                    property: "slide"
+                    to: 40
+                    duration: 140
+                    easing.type: Easing.InCubic
+                }
+                NumberAnimation {
+                    target: nameColumn
+                    property: "opacity"
+                    to: 0
+                    duration: 140
+                }
+            }
+            ScriptAction {
+                script: {
+                    root.shownName = root.frontName;
+                    root.shownDescription = root.frontEntry === null ? "" : root.frontEntry.description;
+                }
+            }
+            ParallelAnimation {
+                NumberAnimation {
+                    target: nameColumn
+                    property: "slide"
+                    from: 40
+                    to: 0
+                    duration: 300
+                    easing.type: Easing.OutCubic
+                }
+                NumberAnimation {
+                    target: nameColumn
+                    property: "opacity"
+                    to: 1
+                    duration: 300
+                }
+            }
+        }
+
         Item {
             id: backdrop
             anchors.fill: parent
+            opacity: Math.min(1, root.reveal * 1.6)
             readonly property bool gpu: backdrop.GraphicsInfo.api !== GraphicsInfo.Software && backdrop.GraphicsInfo.api !== GraphicsInfo.Unknown
 
             Rectangle {
@@ -138,26 +239,36 @@ Scope {
                         }
                     }
 
-                    Image {
-                        id: wall
+                    Item {
                         anchors.fill: parent
-                        anchors.margins: -64
-                        visible: false
-                        fillMode: Image.PreserveAspectCrop
-                        asynchronous: true
-                        sourceSize.width: 1280
-                        source: !backdrop.gpu || layerItem.e === null || layerItem.e.wallpaper === "" ? "" : "file://" + layerItem.e.wallpaper
-                    }
+                        scale: 1.06 + 0.02 * Math.sin(root.time * 0.11)
 
-                    MultiEffect {
-                        anchors.fill: wall
-                        visible: backdrop.gpu && wall.status === Image.Ready
-                        source: wall
-                        blurEnabled: true
-                        blur: 1
-                        blurMax: 32
-                        saturation: 0.1
-                        brightness: -0.35
+                        transform: Translate {
+                            x: 22 * Math.sin(root.time * 0.07)
+                            y: 14 * Math.cos(root.time * 0.05)
+                        }
+
+                        Image {
+                            id: wall
+                            anchors.fill: parent
+                            anchors.margins: -64
+                            visible: false
+                            fillMode: Image.PreserveAspectCrop
+                            asynchronous: true
+                            sourceSize.width: 1280
+                            source: !backdrop.gpu || layerItem.e === null || layerItem.e.wallpaper === "" ? "" : "file://" + layerItem.e.wallpaper
+                        }
+
+                        MultiEffect {
+                            anchors.fill: wall
+                            visible: backdrop.gpu && wall.status === Image.Ready
+                            source: wall
+                            blurEnabled: true
+                            blur: 1
+                            blurMax: 32
+                            saturation: 0.1
+                            brightness: -0.35
+                        }
                     }
 
                     Rectangle {
@@ -165,11 +276,36 @@ Scope {
                         visible: backdrop.gpu && wall.status === Image.Ready
                         color: Qt.alpha(layerItem.e === null ? "#000000" : layerItem.e.colors.base, 0.35)
                     }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        visible: Resin.enabled && Resin.tint > 0 && layerItem.e !== null
+                        gradient: Gradient {
+                            GradientStop {
+                                position: 0
+                                color: Qt.alpha(layerItem.e === null ? "#000000" : layerItem.e.colors.accent, Resin.tint * 0.6)
+                            }
+                            GradientStop {
+                                position: 0.55
+                                color: "transparent"
+                            }
+                        }
+                    }
                 }
+            }
+
+            Image {
+                visible: Resin.enabled && Resin.grain > 0
+                anchors.fill: parent
+                source: Qt.resolvedUrl("../assets/grain.png")
+                fillMode: Image.Tile
+                opacity: Resin.grain
+                smooth: false
             }
 
             MouseArea {
                 anchors.fill: parent
+                enabled: root.shown
                 onClicked: root.cancel()
             }
         }
@@ -184,6 +320,20 @@ Scope {
             x: (win.width - 2560 * stage.k) / 2
             y: (win.height - 1440 * stage.k) / 2
             focus: true
+            enabled: root.shown
+
+            HoverHandler {
+                cursorShape: root.cursorIdle ? Qt.BlankCursor : Qt.ArrowCursor
+                onPointChanged: {
+                    root.cursorIdle = false;
+                    idleTimer.restart();
+                    root.pointer = point.position;
+                }
+                onHoveredChanged: {
+                    if (!hovered)
+                        root.pointer = Qt.point(-1, -1);
+                }
+            }
 
             Keys.onLeftPressed: root.step(-1)
             Keys.onRightPressed: root.step(1)
@@ -194,6 +344,7 @@ Scope {
             PathView {
                 id: carousel
                 anchors.fill: parent
+                opacity: root.stagger(0)
                 model: root.ids
                 pathItemCount: Math.min(count, 7)
                 preferredHighlightBegin: 0
@@ -205,6 +356,10 @@ Scope {
                 onCurrentIndexChanged: {
                     if (root.shown && currentIndex >= 0 && currentIndex < root.ids.length)
                         ThemePreview.settle(root.ids[currentIndex]);
+                }
+
+                transform: Translate {
+                    y: (1 - root.stagger(0)) * 160
                 }
 
                 path: Path {
@@ -274,6 +429,8 @@ Scope {
                 }
 
                 delegate: ThemeCard {
+                    time: root.time
+                    pointer: root.pointer
                     onPicked: i => {
                         if (i === carousel.currentIndex)
                             root.commit();
@@ -299,47 +456,55 @@ Scope {
             Text {
                 visible: carousel.count === 0
                 anchors.centerIn: parent
+                opacity: root.stagger(0)
                 text: "No themes found"
                 color: Theme.textDim
                 font.family: Tokens.fontUi
                 font.pixelSize: 48
             }
 
-            Column {
+            Item {
                 x: 140
                 y: 1440 - 170 - nameText.height
-                spacing: 6
+                width: nameColumn.width
+                height: nameColumn.height
+                opacity: root.stagger(1)
 
-                Text {
-                    id: nameText
-                    text: root.frontEntry === null ? "" : root.frontEntry.name
-                    color: Qt.alpha(root.frontEntry === null ? Theme.text : root.frontEntry.colors.text, 0.92)
-                    font.family: Tokens.fontUi
-                    font.pixelSize: Tokens.tpNameSize
-                    font.weight: Font.ExtraBold
-                    font.letterSpacing: -6
-                    layer.enabled: backdrop.gpu
-                    layer.effect: MultiEffect {
-                        shadowEnabled: true
-                        shadowBlur: 0.6
-                        shadowOpacity: 0.45
-                    }
-
-                    onTextChanged: nameFade.restart()
-
-                    NumberAnimation on opacity {
-                        id: nameFade
-                        from: 0
-                        to: 1
-                        duration: 400
-                    }
+                transform: Translate {
+                    y: (1 - root.stagger(1)) * 160
                 }
 
-                Text {
-                    text: root.frontEntry === null ? "" : root.frontEntry.description
-                    color: root.frontEntry === null ? Theme.textDim : root.frontEntry.colors.textDim
-                    font.family: Tokens.fontUi
-                    font.pixelSize: 28
+                Column {
+                    id: nameColumn
+                    property real slide: 0
+                    spacing: 6
+
+                    transform: Translate {
+                        y: nameColumn.slide
+                    }
+
+                    Text {
+                        id: nameText
+                        text: root.shownName
+                        color: Qt.alpha(root.frontEntry === null ? Theme.text : root.frontEntry.colors.text, 0.92)
+                        font.family: Tokens.fontUi
+                        font.pixelSize: Tokens.tpNameSize
+                        font.weight: Font.ExtraBold
+                        font.letterSpacing: -6
+                        layer.enabled: backdrop.gpu
+                        layer.effect: MultiEffect {
+                            shadowEnabled: true
+                            shadowBlur: 0.6
+                            shadowOpacity: 0.45
+                        }
+                    }
+
+                    Text {
+                        text: root.shownDescription
+                        color: root.frontEntry === null ? Theme.textDim : root.frontEntry.colors.textDim
+                        font.family: Tokens.fontUi
+                        font.pixelSize: 28
+                    }
                 }
             }
 
@@ -350,11 +515,16 @@ Scope {
                 y: 1440 - 140 - height
                 width: applyLabel.implicitWidth + 68
                 height: applyLabel.implicitHeight + 40
-                scale: applyArea.pressed ? 0.96 : 1
+                opacity: root.stagger(2)
+                scale: applyArea.pressed ? 0.96 : applyArea.containsMouse ? 1.03 : 1
+
+                transform: Translate {
+                    y: (1 - root.stagger(2)) * 160
+                }
 
                 Behavior on scale {
                     NumberAnimation {
-                        duration: 120
+                        duration: 140
                         easing.type: Easing.OutCubic
                     }
                 }
@@ -362,7 +532,6 @@ Scope {
                 Glass {
                     anchors.fill: parent
                     radius: height / 2
-                    inner: true
                     lit: true
                     hot: applyArea.containsMouse
                 }
@@ -381,7 +550,6 @@ Scope {
                     id: applyArea
                     anchors.fill: parent
                     hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
                     onClicked: root.commit()
                 }
             }
@@ -391,11 +559,15 @@ Scope {
                 y: 1440 - 50 - height
                 width: hint.implicitWidth + 40
                 height: hint.implicitHeight + 16
+                opacity: root.stagger(2)
+
+                transform: Translate {
+                    y: (1 - root.stagger(2)) * 160
+                }
 
                 Glass {
                     anchors.fill: parent
                     radius: height / 2
-                    inner: true
                 }
 
                 Text {
@@ -408,5 +580,6 @@ Scope {
                 }
             }
         }
+
     }
 }

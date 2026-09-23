@@ -88,7 +88,7 @@ sylvaris tp next         # move the picker's carousel (also: prev, apply)
 sylvaris state           # print the shell state as JSON
 ```
 
-SylvarisTP opens on the focused monitor with the current theme in front. Arrow keys, the mouse wheel, dragging or clicking a side card move the carousel; once it rests for half a second the whole desktop previews that theme through your `themeHook`. Enter or **Apply theme** keeps it, Esc or a click on the backdrop brings back the theme you started with. The CC's Theme button and `sylvaris view tp` open it too.
+SylvarisTP opens on the focused monitor with the current theme in front. Arrow keys, the mouse wheel, dragging or clicking a side card move the carousel; once it rests for half a second the whole desktop previews that theme through your `themeHook`. It slides up over everything, including your bar, and hides the cursor until you move the mouse. Enter or **Apply theme** keeps it, Esc or a click on the backdrop brings back the theme you started with. The CC's Theme button and `sylvaris view tp` open it too.
 
 Views: `compact`, `orbit-bluetooth`, `orbit-wifi`, `calendar`, `outputs`, `displays`, `hotspot`. Add `:<key>` to focus a device or network, for example `sylvaris view orbit-bluetooth:AA:BB:CC:DD:EE:FF`.
 

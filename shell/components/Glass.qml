@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Shapes
-import Quickshell.Widgets
 import qs
 import qs.services
 
@@ -95,11 +94,10 @@ Item {
         }
     }
 
-    ClippingRectangle {
+    RoundClip {
         visible: root.on && root.panel && Resin.sheen > 0
         anchors.fill: parent
         radius: root.radius
-        color: "transparent"
 
         Shape {
             id: sheen
