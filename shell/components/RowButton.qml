@@ -21,13 +21,17 @@ Rectangle {
             easing.type: Easing.OutCubic
         }
     }
-    color: hover.hovered ? Theme.tintMid : Theme.tintSoft
+    color: "transparent"
 
-    Behavior on color {
-        ColorAnimation {
-            duration: Tokens.stateDuration
-        }
+    Glass {
+        anchors.fill: parent
+        z: -1
+        radius: root.radius
+        inner: true
+        hot: hover.hovered
+        offColor: hover.hovered ? Theme.tintMid : Theme.tintSoft
     }
+
 
     HoverHandler {
         id: hover

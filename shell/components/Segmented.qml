@@ -12,7 +12,16 @@ Rectangle {
 
     implicitHeight: Tokens.segmentedHeight
     radius: 16
-    color: Theme.tintMid
+    color: "transparent"
+
+    Glass {
+        anchors.fill: parent
+        z: -1
+        radius: root.radius
+        inner: true
+        offColor: Theme.tintMid
+    }
+
 
     Row {
         id: row
@@ -28,7 +37,7 @@ Rectangle {
                 width: (row.width - row.spacing * (root.options.length - 1)) / Math.max(1, root.options.length)
                 height: row.height
                 radius: 12
-                color: on ? Theme.accent : "transparent"
+                color: on ? Qt.alpha(Theme.accent, Resin.litAlpha) : "transparent"
 
                 Behavior on color {
                     ColorAnimation {

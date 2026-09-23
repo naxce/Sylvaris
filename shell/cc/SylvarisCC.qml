@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Wayland
 import qs
 import qs.services
+import qs.components
 
 Scope {
     id: root
@@ -231,12 +232,11 @@ Scope {
                 easing.type: Easing.OutCubic
             }
 
-            Rectangle {
+            Glass {
                 anchors.fill: parent
                 radius: Tokens.radiusPanel
-                color: Theme.surface
-                border.width: 1
-                border.color: Theme.line
+                offColor: Theme.surface
+                offBorder: Theme.line
             }
 
             CompactView {

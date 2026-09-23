@@ -104,7 +104,16 @@ Item {
         width: labelColumn.width + 20
         height: labelColumn.height + 8
         radius: 10
-        color: Theme.surface
+        color: "transparent"
+
+        Glass {
+            anchors.fill: parent
+            z: -1
+            radius: parent.radius
+            inner: true
+            offColor: Theme.surface
+        }
+
 
         Column {
             id: labelColumn

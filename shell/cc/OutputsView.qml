@@ -27,13 +27,17 @@ Item {
                 width: parent.width
                 height: 56
                 radius: Tokens.radiusRow
-                color: modelData.current ? Theme.tintStrong : rowHover.hovered ? Theme.tintMid : Theme.tintSoft
+                color: "transparent"
 
-                Behavior on color {
-                    ColorAnimation {
-                        duration: Tokens.stateDuration
-                    }
+                Glass {
+                    anchors.fill: parent
+                    z: -1
+                    radius: parent.radius
+                    inner: true
+                    hot: rowHover.hovered
+                    offColor: modelData.current ? Theme.tintStrong : rowHover.hovered ? Theme.tintMid : Theme.tintSoft
                 }
+
                 border.width: modelData.current ? 1 : 0
                 border.color: Theme.accent
 

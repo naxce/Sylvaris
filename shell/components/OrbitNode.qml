@@ -17,15 +17,18 @@ Rectangle {
     implicitWidth: row.implicitWidth + 28
     implicitHeight: Math.max(40, row.implicitHeight + 20)
     radius: Tokens.radiusNode
-    color: root.selected ? Theme.accent : Theme.node
+    color: "transparent"
 
-    Behavior on color {
-        ColorAnimation {
-            duration: Tokens.stateDuration
-        }
+    Glass {
+        anchors.fill: parent
+        z: -1
+        radius: root.radius
+        inner: true
+        lit: root.selected
+        offColor: Theme.node
+        offBorder: Theme.lineStrong
     }
-    border.width: 1
-    border.color: Theme.lineStrong
+
     scale: area.pressed ? 0.95 : hover.hovered ? 1.04 : 1
 
     Behavior on scale {

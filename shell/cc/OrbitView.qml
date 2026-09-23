@@ -362,7 +362,7 @@ Item {
         width: Tokens.powerSize
         height: Tokens.powerSize
         radius: width / 2
-        color: Theme.accent
+        color: Qt.alpha(Theme.accent, Resin.litAlpha)
 
         Glyph {
             anchors.centerIn: parent
@@ -387,9 +387,16 @@ Item {
         width: 400
         height: 200
         radius: Tokens.radiusCard
-        color: Theme.node
-        border.width: 1
-        border.color: Theme.lineStrong
+        color: "transparent"
+
+        Glass {
+            anchors.fill: parent
+            z: -1
+            radius: parent.radius
+            raised: true
+            offColor: Theme.node
+            offBorder: Theme.lineStrong
+        }
 
         Column {
             anchors.fill: parent
@@ -439,9 +446,16 @@ Item {
         anchors.margins: 24
         anchors.bottomMargin: 90
         radius: Tokens.radiusCard
-        color: Theme.node
-        border.width: 1
-        border.color: Theme.lineStrong
+        color: "transparent"
+
+        Glass {
+            anchors.fill: parent
+            z: -1
+            radius: parent.radius
+            raised: true
+            offColor: Theme.node
+            offBorder: Theme.lineStrong
+        }
 
         ListView {
             anchors.fill: parent

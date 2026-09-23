@@ -9,9 +9,16 @@ Rectangle {
 
     implicitHeight: Tokens.artSize + Tokens.cardPadding * 2
     radius: Tokens.radiusCard
-    color: Theme.tint
-    border.width: 1
-    border.color: Theme.cardLine
+    color: "transparent"
+
+    Glass {
+        anchors.fill: parent
+        z: -1
+        radius: root.radius
+        inner: true
+        offBorder: Theme.cardLine
+    }
+
 
     Rectangle {
         id: artBox

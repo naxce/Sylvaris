@@ -89,7 +89,17 @@ Item {
                 width: root.cellWidth
                 height: 56
                 radius: Tokens.radiusRow
-                color: isToday ? Theme.accent : modelData.inMonth ? Theme.tint : "transparent"
+                color: "transparent"
+
+                Glass {
+                    anchors.fill: parent
+                    z: -1
+                    visible: parent.isToday || modelData.inMonth
+                    radius: parent.radius
+                    inner: true
+                    lit: parent.isToday
+                }
+
 
                 Text {
                     anchors.centerIn: parent

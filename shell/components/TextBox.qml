@@ -17,9 +17,19 @@ Rectangle {
 
     implicitHeight: 44
     radius: Tokens.radiusRow
-    color: Theme.tintMid
-    border.width: 1
-    border.color: input.activeFocus ? Theme.accent : Theme.cardLine
+    color: "transparent"
+    border.width: input.activeFocus ? 1 : 0
+    border.color: Theme.accent
+
+    Glass {
+        anchors.fill: parent
+        z: -1
+        radius: root.radius
+        inner: true
+        offColor: Theme.tintMid
+        offBorder: input.activeFocus ? "transparent" : Theme.cardLine
+    }
+
 
     TextInput {
         id: input

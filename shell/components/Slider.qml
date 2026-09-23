@@ -16,7 +16,16 @@ Rectangle {
 
     implicitHeight: Tokens.sliderHeight
     radius: Tokens.radiusRow
-    color: Theme.tintMid
+    color: "transparent"
+
+    Glass {
+        anchors.fill: parent
+        z: -1
+        radius: root.radius
+        inner: true
+        offColor: Theme.tintMid
+    }
+
 
     Item {
         width: parent.width * Math.max(0, Math.min(1, root.value))

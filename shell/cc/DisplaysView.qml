@@ -86,9 +86,16 @@ Item {
         width: parent.width - 56
         height: 230
         radius: Tokens.radiusCard
-        color: Theme.tint
-        border.width: 1
-        border.color: Theme.cardLine
+        color: "transparent"
+
+        Glass {
+            anchors.fill: parent
+            z: -1
+            radius: parent.radius
+            inner: true
+            offBorder: Theme.cardLine
+        }
+
 
         Repeater {
             model: root.enabledNames
@@ -105,13 +112,22 @@ Item {
                 width: o.width / o.scale * root.fit.factor
                 height: o.height / o.scale * root.fit.factor
                 radius: 8
-                color: modelData === root.selected ? Theme.fill : Theme.tintStrong
+                color: modelData === root.selected ? Theme.fill : "transparent"
 
                 Behavior on color {
                     ColorAnimation {
                         duration: Tokens.stateDuration
                     }
                 }
+
+                Glass {
+                    anchors.fill: parent
+                    z: -1
+                    radius: parent.radius
+                    inner: true
+                    offColor: Theme.tintStrong
+                }
+
                 border.width: modelData === root.selected ? 2 : 1
                 border.color: modelData === root.selected ? Theme.accent : Theme.lineStrong
 
@@ -174,13 +190,22 @@ Item {
                     width: chipText.implicitWidth + 28
                     height: 34
                     radius: 17
-                    color: modelData === root.selected ? Theme.accent : Theme.tintMid
+                    color: modelData === root.selected ? Qt.alpha(Theme.accent, Resin.litAlpha) : "transparent"
 
                     Behavior on color {
                         ColorAnimation {
                             duration: Tokens.stateDuration
                         }
                     }
+
+                    Glass {
+                        anchors.fill: parent
+                        z: -1
+                        radius: parent.radius
+                        inner: true
+                        offColor: Theme.tintMid
+                    }
+
 
                     Text {
                         id: chipText
@@ -236,13 +261,22 @@ Item {
                     width: modeText.implicitWidth + 24
                     height: 32
                     radius: 10
-                    color: on ? Theme.fill : Theme.tintSoft
+                    color: on ? Theme.fill : "transparent"
 
                     Behavior on color {
                         ColorAnimation {
                             duration: Tokens.stateDuration
                         }
                     }
+
+                    Glass {
+                        anchors.fill: parent
+                        z: -1
+                        radius: parent.radius
+                        inner: true
+                        offColor: Theme.tintSoft
+                    }
+
                     border.width: on ? 1 : 0
                     border.color: Theme.accent
 
@@ -280,13 +314,22 @@ Item {
                     width: 64
                     height: 32
                     radius: 10
-                    color: on ? Theme.fill : Theme.tintSoft
+                    color: on ? Theme.fill : "transparent"
 
                     Behavior on color {
                         ColorAnimation {
                             duration: Tokens.stateDuration
                         }
                     }
+
+                    Glass {
+                        anchors.fill: parent
+                        z: -1
+                        radius: parent.radius
+                        inner: true
+                        offColor: Theme.tintSoft
+                    }
+
                     border.width: on ? 1 : 0
                     border.color: Theme.accent
 
@@ -342,7 +385,16 @@ Item {
         width: parent.width - 56
         height: 64
         radius: Tokens.radiusCard
-        color: Theme.node
+        color: "transparent"
+
+        Glass {
+            anchors.fill: parent
+            z: -1
+            radius: parent.radius
+            raised: true
+            offColor: Theme.node
+        }
+
         border.width: 1
         border.color: Theme.accent
 

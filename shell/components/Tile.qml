@@ -18,15 +18,18 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: Tokens.radiusTile
-        color: hover.hovered ? Theme.tintMid : Theme.tint
+        color: "transparent"
 
-        Behavior on color {
-            ColorAnimation {
-                duration: Tokens.stateDuration
-            }
+        Glass {
+            anchors.fill: parent
+            z: -1
+            radius: parent.radius
+            inner: true
+            hot: hover.hovered
+            offColor: hover.hovered ? Theme.tintMid : Theme.tint
+            offBorder: Theme.cardLine
         }
-        border.width: 1
-        border.color: Theme.cardLine
+
         scale: bodyArea.pressed ? 0.97 : 1
 
         Behavior on scale {
@@ -62,13 +65,17 @@ Item {
                     easing.type: Easing.OutCubic
                 }
             }
-            color: root.active ? Theme.accent : Theme.tintStrong
+            color: "transparent"
 
-            Behavior on color {
-                ColorAnimation {
-                    duration: Tokens.stateDuration
-                }
+            Glass {
+                anchors.fill: parent
+                z: -1
+                radius: parent.radius
+                inner: true
+                lit: root.active
+                offColor: Theme.tintStrong
             }
+
 
             Glyph {
                 anchors.centerIn: parent

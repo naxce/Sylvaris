@@ -77,6 +77,7 @@ Item {
     Shape {
         preferredRendererType: Shape.CurveRenderer
         id: disc
+        visible: !Resin.enabled
         anchors.fill: parent
 
         ShapePath {
@@ -105,6 +106,13 @@ Item {
                 sweepAngle: 360
             }
         }
+    }
+
+    Glass {
+        visible: Resin.enabled
+        anchors.fill: parent
+        radius: width / 2
+        inner: true
     }
 
     Shape {
