@@ -21,6 +21,10 @@ export const DEFAULT_SETTINGS = {
     hotspot: { ssid: "Sylvaris", band: "bg" }
 }
 
+export const DEFAULT_GLASS = { enabled: true, opacity: 0.55, layerOpacity: 0.35, tint: 0.14, sheen: 0.35, flow: 1, rim: 0.5, grain: 0.035 }
+
+const GLASS_RANGES = { opacity: [0, 1], layerOpacity: [0, 1], tint: [0, 1], sheen: [0, 1], flow: [0, 3], rim: [0, 1], grain: [0, 0.2] }
+
 const TOGGLE_ID = /^[a-z0-9_-]+$/
 const STRING_KEYS = ["themesDir", "themeHook", "themeStateFile", "avatar", "lockCommand", "terminal"]
 const DEFAULT_TOGGLE_ICON = String.fromCodePoint(0xF0521)
@@ -173,4 +177,37 @@ export function setPath(obj, path, value) {
 
 export function serialize(obj) {
     return JSON.stringify(obj, null, 2) + "\n"
+}
+
+export function resolveGlass(config, settings) {
+    const values = clone(DEFAULT_GLASS)
+    const errors = []
+    for (const [source, raw] of [["config.json", config], ["settings.json", settings]]) {
+        if (raw === undefined || raw === null)
+            continue
+        if (!isObject(raw)) {
+            errors.push(source + " glass must be an object")
+            continue
+        }
+        for (const key of Object.keys(raw)) {
+            const v = raw[key]
+            if (key === "enabled") {
+                if (typeof v === "boolean")
+                    values.enabled = v
+                else
+                    errors.push(source + " glass.enabled must be true or false")
+                continue
+            }
+            const range = GLASS_RANGES[key]
+            if (range === undefined) {
+                errors.push(source + " glass." + key + " is not a glass key")
+                continue
+            }
+            if (typeof v === "number" && Number.isFinite(v) && v >= range[0] && v <= range[1])
+                values[key] = v
+            else
+                errors.push(source + " glass." + key + " must be a number from " + range[0] + " to " + range[1])
+        }
+    }
+    return { values: values, errors: errors }
 }
