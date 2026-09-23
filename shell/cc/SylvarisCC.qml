@@ -70,7 +70,20 @@ Scope {
     }
 
     function componentFor(v: string): var {
+        if (v === "orbit-bluetooth" || v === "orbit-wifi")
+            return orbitView;
         return null;
+    }
+
+    Component {
+        id: orbitView
+
+        OrbitView {
+            mode: root.view === "orbit-wifi" ? "wifi" : "bluetooth"
+            initialFocus: root.focusKey
+            onModeRequested: m => root.applyView("orbit-" + m)
+            onCloseRequested: root.applyView("compact")
+        }
     }
 
     PanelWindow {

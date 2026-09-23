@@ -1,0 +1,17 @@
+sleep 1.5
+ipc view orbit-bluetooth
+sleep 1.5
+shot bt
+ipc view orbit-bluetooth:00:11:22:33:44:01
+sleep 1.2
+shot bt-focus
+ipc view orbit-bluetooth:00:11:22:33:44:06
+sleep 1.2
+shot bt-long
+ipc view orbit-wifi
+sleep 1.5
+shot wifi
+ipc view orbit-wifi:Home_5G
+sleep 1.2
+shot wifi-focus
+ipc state
