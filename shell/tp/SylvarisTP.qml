@@ -138,6 +138,7 @@ Scope {
                     Image {
                         id: wall
                         anchors.fill: parent
+                        anchors.margins: -64
                         visible: false
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
@@ -146,7 +147,7 @@ Scope {
                     }
 
                     MultiEffect {
-                        anchors.fill: parent
+                        anchors.fill: wall
                         visible: backdrop.gpu && wall.status === Image.Ready
                         source: wall
                         blurEnabled: true
@@ -205,7 +206,7 @@ Scope {
 
                 path: Path {
                     startX: 1280
-                    startY: 640 + Tokens.tpRingY
+                    startY: Tokens.tpRingCenterY + Tokens.tpRingY
 
                     PathAttribute {
                         name: "depth"
@@ -217,7 +218,7 @@ Scope {
                     }
                     PathArc {
                         x: 1280 + Tokens.tpRingX
-                        y: 640
+                        y: Tokens.tpRingCenterY
                         radiusX: Tokens.tpRingX
                         radiusY: Tokens.tpRingY
                         direction: PathArc.Counterclockwise
@@ -232,7 +233,7 @@ Scope {
                     }
                     PathArc {
                         x: 1280
-                        y: 640 - Tokens.tpRingY
+                        y: Tokens.tpRingCenterY - Tokens.tpRingY
                         radiusX: Tokens.tpRingX
                         radiusY: Tokens.tpRingY
                         direction: PathArc.Counterclockwise
@@ -247,7 +248,7 @@ Scope {
                     }
                     PathArc {
                         x: 1280 - Tokens.tpRingX
-                        y: 640
+                        y: Tokens.tpRingCenterY
                         radiusX: Tokens.tpRingX
                         radiusY: Tokens.tpRingY
                         direction: PathArc.Counterclockwise
@@ -262,7 +263,7 @@ Scope {
                     }
                     PathArc {
                         x: 1280
-                        y: 640 + Tokens.tpRingY
+                        y: Tokens.tpRingCenterY + Tokens.tpRingY
                         radiusX: Tokens.tpRingX
                         radiusY: Tokens.tpRingY
                         direction: PathArc.Counterclockwise

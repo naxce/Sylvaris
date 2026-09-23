@@ -46,7 +46,8 @@ Singleton {
     readonly property int tpCardWidth: 560
     readonly property int tpCardHeight: 760
     readonly property int tpRingX: 900
-    readonly property int tpRingY: 80
+    readonly property int tpRingY: 220
+    readonly property int tpRingCenterY: 480
     readonly property int tpNameSize: 190
     readonly property int tpRadius: 36
     readonly property var morphCurve: [0.2, 0.8, 0.2, 1, 1, 1]
