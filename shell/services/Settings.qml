@@ -15,6 +15,12 @@ Singleton {
     readonly property var merged: S.merge(Config.values, root.values)
     property string notice: ""
     property string lastWritten: ""
+    property bool loadedOnce: false
+
+    onNoticeChanged: {
+        if (root.notice !== "")
+            console.warn("sylvaris: " + root.notice);
+    }
 
     function get(key: string): var {
         return S.getPath(root.values, key);
@@ -31,11 +37,16 @@ Singleton {
         const r = S.parseJson(text);
         if (!r.ok) {
             backup.setText(text);
+            if (root.loadedOnce) {
+                root.notice = "settings.json is not valid JSON; a copy was saved as settings.json.bak and the last good settings stay in use";
+                return;
+            }
             root.notice = "settings.json is not valid JSON; a copy was saved as settings.json.bak and defaults are in use";
             root.values = S.validateSettings({});
             return;
         }
         root.notice = "";
+        root.loadedOnce = true;
         root.values = S.validateSettings(r.value);
     }
 

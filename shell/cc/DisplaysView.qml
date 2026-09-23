@@ -289,7 +289,7 @@ Item {
         RowButton {
             icon: Icons.GLYPHS.displays
             label: "Save layout"
-            onClicked: Displays.save(root.draft)
+            onClicked: Displays.save()
         }
 
         RowButton {

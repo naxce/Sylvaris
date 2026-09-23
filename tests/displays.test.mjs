@@ -2,7 +2,7 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import {
-    parseOutputs, layoutKey, snapshot, sameLayout, formatMode, applyArgs, uniqueModes, fitScale, modeLabel
+    parseOutputs, layoutKey, snapshot, sameLayout, formatMode, applyArgs, uniqueModes, fitScale, modeLabel, canApply
 } from "../shell/lib/displays.mjs"
 
 const text = readFileSync(new URL("./fixtures/wlr-randr.json", import.meta.url), "utf8")
@@ -74,4 +74,11 @@ test("fitScale fits enabled outputs into a box", () => {
 
 test("modeLabel is human readable", () => {
     assert.equal(modeLabel({ width: 2560, height: 1440, refresh: 200.013 }), "2560×1440 · 200 Hz")
+})
+
+test("canApply refuses layouts with every output off", () => {
+    assert.equal(canApply(snapshot(outputs)), true)
+    assert.equal(canApply({ "DP-1": { enabled: false }, "DP-2": { enabled: false } }), false)
+    assert.equal(canApply({}), false)
+    assert.equal(canApply(null), false)
 })

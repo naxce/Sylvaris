@@ -133,3 +133,13 @@ export function fitScale(snap, boxW, boxH, pad) {
 export function modeLabel(mode) {
     return mode.width + "×" + mode.height + " · " + Math.round(mode.refresh) + " Hz"
 }
+
+export function canApply(snap) {
+    if (snap === null || typeof snap !== "object")
+        return false
+    for (const name of Object.keys(snap)) {
+        if (snap[name] && snap[name].enabled === true)
+            return true
+    }
+    return false
+}

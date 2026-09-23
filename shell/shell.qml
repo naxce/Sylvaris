@@ -76,6 +76,7 @@ ShellRoot {
                 key: Displays.key,
                 outputs: Displays.outputs.map(o => o.name),
                 countdown: Displays.countdown,
+                enabled: Object.keys(Displays.current).filter(k => Displays.current[k].enabled),
                 error: Displays.error
             },
             parts: Object.keys(root.parts),

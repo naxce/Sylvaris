@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "displays": {
+    "layouts": {
+      "DP-1+DP-2+HDMI-A-1": {
+        "DP-1": { "enabled": false },
+        "DP-2": { "enabled": false },
+        "HDMI-A-1": { "enabled": false }
+      }
+    }
+  }
+}

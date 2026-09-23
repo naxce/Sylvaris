@@ -1,0 +1,9 @@
+sleep 1.5
+ipc toggle cc
+ipc toggle cc
+sleep 1
+ipc state
+ipc open cc
+ipc close cc
+sleep 1
+ipc state

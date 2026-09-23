@@ -14,6 +14,11 @@ Singleton {
     property var values: S.validateConfig({})
     property string notice: ""
 
+    onNoticeChanged: {
+        if (root.notice !== "")
+            console.warn("sylvaris: " + root.notice);
+    }
+
     function ingest(text: string): void {
         const r = S.parseJson(text);
         if (!r.ok) {

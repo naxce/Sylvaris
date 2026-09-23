@@ -8,6 +8,7 @@ Scope {
     id: root
 
     property bool shown: false
+    property bool wanted: false
     property string view: "compact"
     property string focusKey: ""
     property var screenInfo: null
@@ -23,7 +24,10 @@ Scope {
     }
 
     function show(initial: string): void {
+        root.wanted = true;
         Compositor.refresh(() => {
+            if (!root.wanted)
+                return;
             root.screenInfo = Compositor.screenFor(Compositor.focusedName());
             root.applyView(initial);
             root.shown = true;
@@ -36,25 +40,26 @@ Scope {
     }
 
     function open(): void {
-        if (!root.shown)
+        if (!root.wanted)
             root.show("compact");
     }
 
     function close(): void {
+        root.wanted = false;
         root.shown = false;
         root.view = "compact";
         root.focusKey = "";
     }
 
     function toggle(): void {
-        if (root.shown)
+        if (root.wanted)
             root.close();
         else
             root.open();
     }
 
     function setView(name: string): void {
-        if (root.shown)
+        if (root.wanted && root.shown)
             root.applyView(name);
         else
             root.show(name);

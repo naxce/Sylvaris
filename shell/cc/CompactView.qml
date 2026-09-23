@@ -189,6 +189,16 @@ Item {
             height: Tokens.headerGap - Tokens.gap
         }
 
+        Text {
+            width: parent.width
+            visible: text !== ""
+            text: Config.notice !== "" ? Config.notice : Settings.notice !== "" ? Settings.notice : (Theme.errors.length > 0 ? Theme.errors[0] : "")
+            wrapMode: Text.WordWrap
+            color: Theme.danger
+            font.family: Tokens.fontUi
+            font.pixelSize: Tokens.smallSize
+        }
+
         Grid {
             width: parent.width
             columns: 2

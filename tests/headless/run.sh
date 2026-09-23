@@ -59,6 +59,9 @@ hl_env=(env -i HOME="$home" PATH="${HL_QS_PATH:-$PATH}" XDG_RUNTIME_DIR="$rt"
     XDG_CONFIG_HOME="$home/.config" WAYLAND_DISPLAY="$display" SWAYSOCK="$sock"
     QT_QUICK_BACKEND=software SYLVARIS_DEMO="${SYLVARIS_DEMO:-1}" SYLVARIS_TRACE=1
     USER="${USER:-user}" LANG="${LANG:-C.UTF-8}")
+if [ -n "${HL_NIRI_SOCKET:-}" ]; then
+    hl_env+=(NIRI_SOCKET="$HL_NIRI_SOCKET")
+fi
 
 "${hl_env[@]}" "$qs_bin" -p "$shell_dir" >"$out/qs.log" 2>&1 &
 qs_pid=$!

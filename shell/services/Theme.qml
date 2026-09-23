@@ -17,6 +17,11 @@ Singleton {
     property string currentId: ""
     property var theme: T.DEFAULT_THEME
     property var errors: []
+
+    onErrorsChanged: {
+        for (const e of root.errors)
+            console.warn("sylvaris: " + e);
+    }
     property var ids: []
     readonly property var target: T.tokens(root.theme)
     property var fromTokens: T.tokens(T.DEFAULT_THEME)

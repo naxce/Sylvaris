@@ -26,7 +26,7 @@ Singleton {
         if (root.restored)
             return;
         root.restored = true;
-        if (root.saved !== null && !D.sameLayout(root.saved, root.current))
+        if (root.saved !== null && D.canApply(root.saved) && !D.sameLayout(root.saved, root.current))
             root.run(root.saved);
     }
 
@@ -51,6 +51,10 @@ Singleton {
     }
 
     function apply(snap: var): void {
+        if (!D.canApply(snap)) {
+            root.error = "At least one display has to stay on";
+            return;
+        }
         root.previous = root.current;
         root.run(snap);
         root.countdown = 15;
@@ -71,8 +75,9 @@ Singleton {
         root.previous = null;
     }
 
-    function save(snap: var): void {
-        Settings.set("displays.layouts." + root.key, snap);
+    function save(): void {
+        if (D.canApply(root.current))
+            Settings.set("displays.layouts." + root.key, root.current);
     }
 
     Timer {
