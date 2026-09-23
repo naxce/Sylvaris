@@ -42,6 +42,13 @@ Singleton {
     readonly property int nodeMoveDuration: 450
     readonly property int colorDuration: 400
     readonly property int stateDuration: 160
+    readonly property int previewDelay: 500
+    readonly property int tpCardWidth: 560
+    readonly property int tpCardHeight: 760
+    readonly property int tpRingX: 900
+    readonly property int tpRingY: 80
+    readonly property int tpNameSize: 190
+    readonly property int tpRadius: 36
     readonly property var morphCurve: [0.2, 0.8, 0.2, 1, 1, 1]
     readonly property int haloSize: 118
     readonly property int haloRim: 3
