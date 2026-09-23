@@ -8,7 +8,7 @@ ShellRoot {
     id: root
 
     property var parts: ({})
-    readonly property var boot: [Tokens, Config, Settings, Theme, Compositor, Audio, Media, NightLight, Dnd, Toggles]
+    readonly property var boot: [Tokens, Config, Settings, Theme, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot]
 
     function part(name: string): var {
         return root.parts[name] === undefined ? null : root.parts[name];
@@ -46,6 +46,28 @@ ShellRoot {
                 enabled: Dnd.enabled
             },
             toggles: Toggles.items,
+            bluetooth: {
+                available: BluetoothService.available,
+                enabled: BluetoothService.enabled,
+                scanning: BluetoothService.scanning,
+                summary: BluetoothService.summary,
+                items: BluetoothService.items,
+                error: BluetoothService.error
+            },
+            network: {
+                available: NetworkService.available,
+                hasWifi: NetworkService.hasWifi,
+                enabled: NetworkService.enabled,
+                summary: NetworkService.summary,
+                items: NetworkService.items,
+                error: NetworkService.error
+            },
+            hotspot: {
+                available: Hotspot.available,
+                active: Hotspot.active,
+                profileExists: Hotspot.profileExists,
+                error: Hotspot.error
+            },
             parts: Object.keys(root.parts),
             config: Config.values,
             configNotice: Config.notice,
