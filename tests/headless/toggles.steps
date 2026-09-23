@@ -1,0 +1,14 @@
+sleep 1.5
+ipc toggle cc
+ipc toggle cc
+ipc toggle cc
+ipc toggle cc
+ipc toggle cc
+ipc toggle cc
+ipc toggle cc
+sleep 0.5
+ipc state
+ipc toggle cc
+sleep 0.5
+ipc state
+shot closed

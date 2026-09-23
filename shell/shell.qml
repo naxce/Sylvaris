@@ -3,11 +3,14 @@ import Quickshell
 import Quickshell.Io
 import qs
 import qs.services
+import qs.cc
 
 ShellRoot {
     id: root
 
-    property var parts: ({})
+    property var parts: ({
+            cc: ccPart
+        })
     readonly property var boot: [Tokens, Config, Settings, Theme, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
 
     function part(name: string): var {
@@ -76,6 +79,11 @@ ShellRoot {
                 error: Displays.error
             },
             parts: Object.keys(root.parts),
+            cc: {
+                open: ccPart.shown,
+                view: ccPart.view,
+                focus: ccPart.focusKey
+            },
             config: Config.values,
             configNotice: Config.notice,
             settings: Settings.values,
@@ -89,6 +97,10 @@ ShellRoot {
                 tokens: Theme.target
             }
         };
+    }
+
+    SylvarisCC {
+        id: ccPart
     }
 
     IpcHandler {

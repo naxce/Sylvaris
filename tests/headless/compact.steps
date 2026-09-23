@@ -1,0 +1,5 @@
+sleep 1.5
+ipc open cc
+sleep 1
+shot compact
+ipc state

@@ -1,0 +1,9 @@
+sleep 1.5
+mark before-open
+ipc open cc
+sleep 0.5
+ipc close cc
+sleep 0.3
+mark before-open-2
+ipc open cc
+sleep 0.5
