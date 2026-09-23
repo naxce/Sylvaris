@@ -4,9 +4,9 @@ import QtQuick
 import Quickshell
 
 Singleton {
-    readonly property int ccCompactWidth: 460
-    readonly property int ccExpandedWidth: 620
-    readonly property int ccHeight: 660
+    readonly property int centerCompactWidth: 460
+    readonly property int centerExpandedWidth: 620
+    readonly property int centerHeight: 660
     readonly property int edgeMargin: 12
     readonly property int panelPaddingX: 28
     readonly property int panelPaddingY: 30
@@ -43,13 +43,13 @@ Singleton {
     readonly property int colorDuration: 400
     readonly property int stateDuration: 160
     readonly property int previewDelay: 500
-    readonly property int tpCardWidth: 560
-    readonly property int tpCardHeight: 760
-    readonly property int tpRingX: 900
-    readonly property int tpRingY: 220
-    readonly property int tpRingCenterY: 480
-    readonly property int tpNameSize: 190
-    readonly property int tpRadius: 36
+    readonly property int themeCardWidth: 560
+    readonly property int themeCardHeight: 760
+    readonly property int themeRingX: 900
+    readonly property int themeRingY: 220
+    readonly property int themeRingCenterY: 480
+    readonly property int themeNameSize: 190
+    readonly property int themeRadius: 36
     readonly property var morphCurve: [0.2, 0.8, 0.2, 1, 1, 1]
     readonly property int haloSize: 118
     readonly property int haloRim: 3

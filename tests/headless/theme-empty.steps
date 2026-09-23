@@ -1,0 +1,9 @@
+sleep 1.5
+ipc open theme
+sleep 0.5
+ipc state
+ipc theme next
+ipc theme apply
+ipc close theme
+sleep 0.8
+ipc state

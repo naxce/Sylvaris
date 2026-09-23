@@ -8,9 +8,9 @@ usage() {
 Usage: sylvaris [command]
 
   (no command)             start the shell
-  cc [toggle|open|close]   control SylvarisCC (default: toggle)
-  view <name>              open SylvarisCC on a view (tp opens SylvarisTP)
-  tp [toggle|open|close|next|prev|apply]  control SylvarisTP (default: toggle)
+  center [toggle|open|close]  control SylCenter (default: toggle)
+  view <name>                 open SylCenter on a view (theme opens SylTheme)
+  theme [toggle|open|close|next|prev|apply]  control SylTheme (default: toggle)
   state                    print the shell state as JSON
 EOF
 }
@@ -23,7 +23,7 @@ case "${1:-}" in
 "")
     exec qs -p "$dir" -n
     ;;
-cc)
+center)
     action="${2:-toggle}"
     case "$action" in
     toggle | open | close) ;;
@@ -32,16 +32,16 @@ cc)
         exit 2
         ;;
     esac
-    call "$action" cc
+    call "$action" center
     ;;
-tp)
+theme)
     action="${2:-toggle}"
     case "$action" in
     toggle | open | close)
-        call "$action" tp
+        call "$action" theme
         ;;
     next | prev | apply)
-        call tp "$action"
+        call theme "$action"
         ;;
     *)
         echo "sylvaris: unknown action '$action'" >&2

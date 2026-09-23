@@ -85,9 +85,9 @@
 <body>
 <main>
   <h1>Sylvaris design reference</h1>
-  <p class="lead">The approved visual source of truth for SylvarisCC, SylvarisTP and SylvarisSettings. All sizes are real pixels, and every value in the token table maps directly to <code>Tokens.qml</code>. Colors shown are the example "warm" palette; real colors come from the active theme's JSON. Add <code>?wallpaper=/path/to/image.jpg</code> to preview with a real wallpaper. The constellation idea is inspired by <a href="https://github.com/ilyamiro/serpantinum">ilyamiro/serpantinum</a>.</p>
+  <p class="lead">The approved visual source of truth for SylCenter, SylTheme and SylSettings. All sizes are real pixels, and every value in the token table maps directly to <code>Tokens.qml</code>. Colors shown are the example "warm" palette; real colors come from the active theme's JSON. Add <code>?wallpaper=/path/to/image.jpg</code> to preview with a real wallpaper. The constellation idea is inspired by <a href="https://github.com/ilyamiro/serpantinum">ilyamiro/serpantinum</a>.</p>
 
-  <h2>SylvarisCC: Morph</h2>
+  <h2>SylCenter: Morph</h2>
   <p class="lead">A compact 460×660 panel that grows to 620×660 for detail views. The demo cycles through three states: compact → Bluetooth orbit (controller view) → device focus.</p>
   <div class="frame" id="ccFrame" style="width:620px;height:660px"><div class="world wall" style="width:620px;height:660px">
     <div class="panel" id="ccPanel" style="right:0;top:0;width:460px;height:660px">
@@ -109,7 +109,7 @@
     </div>
   </div></div>
 
-  <h2>SylvarisTP: carousel ring with curtain typography</h2>
+  <h2>SylTheme: carousel ring with curtain typography</h2>
   <p class="lead">Full screen, 2560×1440, shown scaled. Theme cards ride a tilted ring, and the backdrop follows the front card. The theme's name is set huge in the bottom-left corner.</p>
   <div class="frame" data-scale-frame style="aspect-ratio:16/9;width:100%"><div class="world" id="tp" style="width:2560px;height:1440px;perspective:2600px;overflow:hidden">
     <div class="blur" id="tpBlur"></div>
@@ -118,7 +118,7 @@
     <div class="hint" style="bottom:50px">◀ ▶ switch · <b>Enter</b> apply · <b>Esc</b> cancel</div>
   </div></div>
 
-  <h2>SylvarisSettings: rail + orbit</h2>
+  <h2>SylSettings: rail + orbit</h2>
   <p class="lead">Full screen, 2560×1440, shown scaled. Categories in the rail on the left, the category's sections orbiting a Halo core, and the selected section's controls on the right.</p>
   <div class="frame" data-scale-frame style="aspect-ratio:16/9;width:100%"><div class="world" id="st" style="width:2560px;height:1440px;overflow:hidden">
     <div class="blur"></div>
@@ -139,22 +139,22 @@
   <p class="lead">Every value that <code>Tokens.qml</code> must reproduce exactly.</p>
   <table>
     <tr><th>Token</th><th>Value</th><th>Used by</th></tr>
-    <tr><td>cc.compact</td><td>460 × 660, 12 px from the screen edges, top-right by default</td><td>SylvarisCC</td></tr>
-    <tr><td>cc.expanded</td><td>620 × 660, grows toward the screen center, 600 ms cubic-bezier(.2,.8,.2,1)</td><td>SylvarisCC morph</td></tr>
+    <tr><td>center.compact</td><td>460 × 660, 12 px from the screen edges, top-right by default</td><td>SylCenter</td></tr>
+    <tr><td>center.expanded</td><td>620 × 660, grows toward the screen center, 600 ms cubic-bezier(.2,.8,.2,1)</td><td>SylCenter morph</td></tr>
     <tr><td>radius.panel / card / tile / row / node</td><td>24 / 18 / 18 / 14 / 16</td><td>all</td></tr>
     <tr><td>radius.glass (full-screen)</td><td>28</td><td>TP, Settings</td></tr>
-    <tr><td>tile</td><td>height 76, icon 44 (radius 14), gap 12, 2 columns; 16 above the tiles, 12 between the other sections, 30 panel padding</td><td>CC</td></tr>
+    <tr><td>tile</td><td>height 76, icon 44 (radius 14), gap 12, 2 columns; 16 above the tiles, 12 between the other sections, 30 panel padding</td><td>SylCenter</td></tr>
     <tr><td>font.ui / font.mono</td><td>Inter / JetBrainsMono Nerd Font; clock 52 px weight 600</td><td>all</td></tr>
-    <tr><td>orbit.ring</td><td>ellipse rx 215, ry 190 (CC); dashed 3/9, stroke line color</td><td>Orbit</td></tr>
+    <tr><td>orbit.ring</td><td>ellipse rx 215, ry 190 (SylCenter); dashed 3/9, stroke line color</td><td>Orbit</td></tr>
     <tr><td>orbit.nodes</td><td>evenly spaced slots on the ring; the constellation turns at 0.04 rad/s; sway ±0.02 rad at 0.5 rad/s</td><td>Orbit</td></tr>
     <tr><td>orbit.slots</td><td>at most 6 nodes: up to 5 items (or 4 + "+N more") and Scan; labels elided at 130 px</td><td>Orbit</td></tr>
     <tr><td>halo</td><td>118 px disc, rim 3 px, two arcs rotating 40°/s, glow 40 px</td><td>HaloCore</td></tr>
     <tr><td>sonar</td><td>3 rings, scale 1 → 2.7, opacity .8 → 0, period 2.2 s (0.73 s while scanning)</td><td>HaloCore</td></tr>
     <tr><td>silk</td><td>2 px quadratic curve, midpoint sways ±14 px at 1.6 rad/s, starts 74 px from the core center</td><td>SilkLink</td></tr>
     <tr><td>label under core</td><td>top = core center + 78; name 17 px bold, status 13 px dim; sits on a surface-colored backing (radius 10, padding 10 × 4) so Silk links pass behind the text</td><td>Orbit</td></tr>
-    <tr><td>tp.card</td><td>560 × 760, ring radius 900, front scale 1, back scale .55, rotateY ±28°</td><td>SylvarisTP</td></tr>
-    <tr><td>tp.name</td><td>190 px weight 800, letter-spacing -6, text at 92% opacity with a soft shadow, left 140 bottom 170</td><td>SylvarisTP</td></tr>
-    <tr><td>settings layout</td><td>rail 330 wide at 70/170; card 560 wide at right 70; search 600 × 58 centered at top 70</td><td>SylvarisSettings</td></tr>
+    <tr><td>theme.card</td><td>560 × 760, ring radius 900, front scale 1, back scale .55, rotateY ±28°</td><td>SylTheme</td></tr>
+    <tr><td>theme.name</td><td>190 px weight 800, letter-spacing -6, text at 92% opacity with a soft shadow, left 140 bottom 170</td><td>SylTheme</td></tr>
+    <tr><td>settings layout</td><td>rail 330 wide at 70/170; card 560 wide at right 70; search 600 × 58 centered at top 70</td><td>SylSettings</td></tr>
     <tr><td>backdrop blur</td><td>blur 32, brightness .4, saturation 1.1, drawn from the theme wallpaper</td><td>TP, Settings</td></tr>
   </table>
 </main>

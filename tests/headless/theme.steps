@@ -1,0 +1,13 @@
+sleep 1.5
+ipc open theme
+sleep 0.6
+ipc state
+shot theme-open
+ipc theme next
+ipc theme next
+sleep 1.2
+ipc state
+shot theme-coal
+ipc close theme
+sleep 1
+ipc state

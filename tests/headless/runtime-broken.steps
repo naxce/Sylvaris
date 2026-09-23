@@ -1,5 +1,5 @@
 sleep 1.5
-write sylvaris/settings.json {"version":1,"cc":{"corner":"top-left"}}
+write sylvaris/settings.json {"version":1,"center":{"corner":"top-left"}}
 sleep 1
 write sylvaris/settings.json {broken
 sleep 1

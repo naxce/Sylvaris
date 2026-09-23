@@ -1,10 +1,10 @@
 # Sylvaris
 
-A modular desktop shell built on [Quickshell](https://quickshell.org), made for **Hyprland** and **niri** and also working on **sway**. Sylvaris runs as one resident process that hosts parts:
+A modular desktop shell built on [Quickshell](https://quickshell.org), made for **Hyprland** and **niri** and also working on **sway**. Sylvaris runs as one resident process, SylCore, that hosts parts:
 
-- **SylvarisCC**: a control center that morphs from a compact panel into living orbits for Wi-Fi and Bluetooth
+- **SylCenter**: a control center that morphs from a compact panel into living orbits for Wi-Fi and Bluetooth
 
-SylvarisTP (theme picker) and SylvarisSettings (full-screen settings) are next.
+SylTheme (theme picker) and SylSettings (full-screen settings) are next.
 
 ## Install
 
@@ -50,37 +50,37 @@ SylvarisTP (theme picker) and SylvarisSettings (full-screen settings) are next.
 
 | Compositor | Autostart | Toggle the control center |
 |---|---|---|
-| Hyprland (`hyprland.conf`) | `exec-once = sylvaris` | `bind = SUPER, A, exec, sylvaris cc` |
-| Hyprland (Lua) | `hl.exec_cmd("sylvaris")` inside `hl.on("hyprland.start", ...)` | `hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("sylvaris cc"))` |
-| niri | `spawn-at-startup "sylvaris"` | `Mod+A { spawn "sylvaris" "cc"; }` |
-| sway | `exec sylvaris` | `bindsym $mod+a exec sylvaris cc` |
+| Hyprland (`hyprland.conf`) | `exec-once = sylvaris` | `bind = SUPER, A, exec, sylvaris center` |
+| Hyprland (Lua) | `hl.exec_cmd("sylvaris")` inside `hl.on("hyprland.start", ...)` | `hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("sylvaris center"))` |
+| niri | `spawn-at-startup "sylvaris"` | `Mod+A { spawn "sylvaris" "center"; }` |
+| sway | `exec sylvaris` | `bindsym $mod+a exec sylvaris center` |
 
-Waybar button: `"on-click": "sylvaris cc"`.
+Waybar button: `"on-click": "sylvaris center"`.
 
-The panel is translucent, so turn on blur behind the `sylvaris-cc` layer:
+The panel is translucent, so turn on blur behind the `sylcenter` layer:
 
 ```lua
-hl.layer_rule({ name = "sylvaris_cc", match = { namespace = "sylvaris-cc" }, blur = true, ignore_alpha = 0.3 })
+hl.layer_rule({ name = "sylcenter", match = { namespace = "sylcenter" }, blur = true, ignore_alpha = 0.3 })
 ```
 
 ```ini
-layerrule = blur, sylvaris-cc
-layerrule = ignorealpha 0.3, sylvaris-cc
+layerrule = blur, sylcenter
+layerrule = ignorealpha 0.3, sylcenter
 ```
 
-SylvarisTP animates itself, so turn off Hyprland's own layer animation for it:
+SylTheme animates itself, so turn off Hyprland's own layer animation for it:
 
 ```lua
-hl.layer_rule({ name = "sylvaris_tp", match = { namespace = "sylvaris-tp" }, no_anim = true })
+hl.layer_rule({ name = "syltheme", match = { namespace = "syltheme" }, no_anim = true })
 ```
 
 ```ini
-layerrule = noanim, sylvaris-tp
+layerrule = noanim, syltheme
 ```
 
 ```kdl
 layer-rule {
-    match namespace="^sylvaris-cc$"
+    match namespace="^sylcenter$"
     background-effect {
         blur true
     }
@@ -91,14 +91,14 @@ layer-rule {
 
 ```sh
 sylvaris                 # start the shell
-sylvaris cc              # toggle SylvarisCC (also: open, close)
-sylvaris view orbit-wifi # open SylvarisCC on a view
-sylvaris tp              # toggle SylvarisTP, the theme picker (also: open, close)
-sylvaris tp next         # move the picker's carousel (also: prev, apply)
+sylvaris center          # toggle SylCenter (also: open, close)
+sylvaris view orbit-wifi # open SylCenter on a view
+sylvaris theme           # toggle SylTheme, the theme picker (also: open, close)
+sylvaris theme next      # move the picker's carousel (also: prev, apply)
 sylvaris state           # print the shell state as JSON
 ```
 
-SylvarisTP opens on the focused monitor with the current theme in front. Arrow keys, the mouse wheel, dragging or clicking a side card move the carousel; once it rests for half a second the whole desktop previews that theme through your `themeHook`. It slides up over everything, including your bar, and hides the cursor until you move the mouse. Enter or **Apply theme** keeps it, Esc or a click on the backdrop brings back the theme you started with. The CC's Theme button and `sylvaris view tp` open it too.
+SylTheme opens on the focused monitor with the current theme in front. Arrow keys, the mouse wheel, dragging or clicking a side card move the carousel; once it rests for half a second the whole desktop previews that theme through your `themeHook`. It slides up over everything, including your bar, and hides the cursor until you move the mouse. Enter or **Apply theme** keeps it, Esc or a click on the backdrop brings back the theme you started with. SylCenter's Theme button and `sylvaris view theme` open it too.
 
 Views: `compact`, `orbit-bluetooth`, `orbit-wifi`, `calendar`, `outputs`, `displays`, `hotspot`. Add `:<key>` to focus a device or network, for example `sylvaris view orbit-bluetooth:AA:BB:CC:DD:EE:FF`.
 
@@ -125,7 +125,7 @@ programs.sylvaris.settings.glass = {
 };
 ```
 
-Invalid values keep the previous layer's value and show a notice in the CC. Blur comes from your compositor (see the layer rules above); sway has no blur, so there the glass is translucency only.
+Invalid values keep the previous layer's value and show a notice in SylCenter. Blur comes from your compositor (see the layer rules above); sway has no blur, so there the glass is translucency only.
 
 ## Configuration
 

@@ -3,15 +3,15 @@ import Quickshell
 import Quickshell.Io
 import qs
 import qs.services
-import qs.cc
-import qs.tp
+import qs.center
+import qs.theme
 
 ShellRoot {
     id: root
 
     property var parts: ({
-            cc: ccPart,
-            tp: tpPart
+            center: centerPart,
+            theme: themePart
         })
     readonly property var boot: [Tokens, Config, Settings, Theme, Resin, ThemePreview, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
 
@@ -82,17 +82,11 @@ ShellRoot {
                 error: Displays.error
             },
             parts: Object.keys(root.parts),
-            cc: {
-                open: ccPart.shown,
-                view: ccPart.view,
-                focus: ccPart.focusKey,
-                screen: ccPart.screenInfo ? ccPart.screenInfo.name : ""
-            },
-            tp: {
-                open: tpPart.shown,
-                front: tpPart.front,
-                original: ThemePreview.original,
-                applied: ThemePreview.applied
+            center: {
+                open: centerPart.shown,
+                view: centerPart.view,
+                focus: centerPart.focusKey,
+                screen: centerPart.screenInfo ? centerPart.screenInfo.name : ""
             },
             config: Config.values,
             configNotice: Config.notice,
@@ -110,27 +104,31 @@ ShellRoot {
                 ids: Theme.ids,
                 tokens: Theme.target,
                 catalog: Object.keys(Theme.catalog).sort(),
-                hookError: Theme.hookError
+                hookError: Theme.hookError,
+                open: themePart.shown,
+                front: themePart.front,
+                original: ThemePreview.original,
+                applied: ThemePreview.applied
             }
         };
     }
 
-    SylvarisCC {
-        id: ccPart
+    SylCenter {
+        id: centerPart
         onPartRequested: name => {
             const p = root.part(name);
             if (p !== null)
                 p.open();
         }
         onShownChanged: {
-            if (ccPart.shown)
-                tpPart.cancel();
+            if (centerPart.shown)
+                themePart.cancel();
         }
     }
 
-    SylvarisTP {
-        id: tpPart
-        onOpened: ccPart.close()
+    SylTheme {
+        id: themePart
+        onOpened: centerPart.close()
     }
 
     IpcHandler {
@@ -161,26 +159,26 @@ ShellRoot {
         }
 
         function view(name: string): string {
-            if (name === "tp") {
-                tpPart.open();
+            if (name === "theme") {
+                themePart.open();
                 return "ok";
             }
-            const p = root.part("cc");
+            const p = root.part("center");
             if (p === null)
-                return "unknown part: cc";
+                return "unknown part: center";
             p.setView(name);
             return "ok";
         }
 
-        function tp(action: string): string {
+        function theme(action: string): string {
             if (action === "next")
-                tpPart.step(1);
+                themePart.step(1);
             else if (action === "prev")
-                tpPart.step(-1);
+                themePart.step(-1);
             else if (action === "apply")
-                tpPart.commit();
+                themePart.commit();
             else
-                return "unknown tp action: " + action;
+                return "unknown theme action: " + action;
             return "ok";
         }
 

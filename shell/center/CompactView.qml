@@ -15,7 +15,7 @@ Item {
     readonly property var toggles: Toggles.items
     readonly property var tiles: root.buildTiles()
 
-    implicitWidth: Tokens.ccCompactWidth
+    implicitWidth: Tokens.centerCompactWidth
     implicitHeight: column.implicitHeight + Tokens.panelPaddingY * 2
 
     function toggleTile(t: var): var {
@@ -256,7 +256,7 @@ Item {
                 width: (bottomRow.width - bottomRow.spare) / (Displays.available ? 2 : 1)
                 icon: Icons.GLYPHS.theme
                 label: "Theme"
-                onClicked: root.openView("tp")
+                onClicked: root.openView("theme")
             }
 
             RowButton {

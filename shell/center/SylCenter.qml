@@ -13,7 +13,7 @@ Scope {
     property string view: "compact"
     property string focusKey: ""
     property var screenInfo: null
-    readonly property string corner: Settings.values.cc.corner
+    readonly property string corner: Settings.values.center.corner
     readonly property bool expanded: root.view !== "compact"
     signal partRequested(string name)
 
@@ -152,7 +152,7 @@ Scope {
         color: "transparent"
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.namespace: "sylvaris-catcher"
+        WlrLayershell.namespace: "sylcatcher"
 
         MouseArea {
             anchors.fill: parent
@@ -174,13 +174,13 @@ Scope {
             left: Tokens.edgeMargin
             right: Tokens.edgeMargin
         }
-        implicitWidth: Tokens.ccExpandedWidth
-        implicitHeight: Math.max(Tokens.ccHeight, compact.implicitHeight)
+        implicitWidth: Tokens.centerExpandedWidth
+        implicitHeight: Math.max(Tokens.centerHeight, compact.implicitHeight)
         color: "transparent"
         exclusionMode: ExclusionMode.Normal
         exclusiveZone: 0
         WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.namespace: "sylvaris-cc"
+        WlrLayershell.namespace: "sylcenter"
         WlrLayershell.keyboardFocus: root.shown ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
         mask: Region {
             item: panel
@@ -201,8 +201,8 @@ Scope {
 
             property real enter: 1
 
-            width: root.expanded ? Tokens.ccExpandedWidth : Tokens.ccCompactWidth
-            height: root.expanded ? Tokens.ccHeight : compact.implicitHeight
+            width: root.expanded ? Tokens.centerExpandedWidth : Tokens.centerCompactWidth
+            height: root.expanded ? Tokens.centerHeight : compact.implicitHeight
             x: root.corner === "top-left" ? 0 : root.corner === "top-right" ? win.width - width : (win.width - width) / 2
             opacity: panel.enter
             focus: true
@@ -248,12 +248,12 @@ Scope {
 
             CompactView {
                 id: compact
-                width: Tokens.ccCompactWidth
+                width: Tokens.centerCompactWidth
                 x: root.corner === "top-left" ? 0 : root.corner === "top-right" ? panel.width - width : (panel.width - width) / 2
                 opacity: root.expanded ? 0 : 1
                 visible: opacity > 0
                 enabled: !root.expanded
-                onOpenView: name => name === "tp" ? root.handOff(name) : root.applyView(name)
+                onOpenView: name => name === "theme" ? root.handOff(name) : root.applyView(name)
 
                 Behavior on opacity {
                     NumberAnimation {

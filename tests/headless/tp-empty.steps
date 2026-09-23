@@ -1,9 +1,0 @@
-sleep 1.5
-ipc open tp
-sleep 0.5
-ipc state
-ipc tp next
-ipc tp apply
-ipc close tp
-sleep 0.8
-ipc state

@@ -23,8 +23,8 @@ Item {
 
     signal picked(int index)
 
-    width: Tokens.tpCardWidth
-    height: Tokens.tpCardHeight
+    width: Tokens.themeCardWidth
+    height: Tokens.themeCardHeight
     scale: root.depth
     z: root.depth * 100
     opacity: (0.35 + 0.65 * Math.max(0, (root.depth - 0.55) / 0.45)) * root.enter
@@ -71,7 +71,7 @@ Item {
 
     Glass {
         anchors.fill: parent
-        radius: Tokens.tpRadius
+        radius: Tokens.themeRadius
         raised: true
         offColor: Theme.node
         offBorder: Theme.lineStrong
@@ -81,7 +81,7 @@ Item {
         id: fallback
         anchors.fill: parent
         anchors.margins: 14
-        radius: Tokens.tpRadius - 10
+        radius: Tokens.themeRadius - 10
         antialiasing: true
         gradient: Gradient {
             GradientStop {
@@ -106,7 +106,7 @@ Item {
         asynchronous: true
         smooth: true
         mipmap: true
-        sourceSize.width: Tokens.tpCardWidth * 2
+        sourceSize.width: Tokens.themeCardWidth * 2
         source: root.entry === null || root.entry.wallpaper === "" ? "" : "file://" + root.entry.wallpaper
     }
 

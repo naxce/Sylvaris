@@ -141,7 +141,7 @@ Scope {
         color: "transparent"
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.namespace: "sylvaris-tp"
+        WlrLayershell.namespace: "syltheme"
         WlrLayershell.keyboardFocus: root.shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
         onVisibleChanged: {
@@ -382,7 +382,7 @@ Scope {
 
                 path: Path {
                     startX: 1280
-                    startY: Tokens.tpRingCenterY + Tokens.tpRingY
+                    startY: Tokens.themeRingCenterY + Tokens.themeRingY
 
                     PathAttribute {
                         name: "depth"
@@ -393,10 +393,10 @@ Scope {
                         value: 0
                     }
                     PathArc {
-                        x: 1280 + Tokens.tpRingX
-                        y: Tokens.tpRingCenterY
-                        radiusX: Tokens.tpRingX
-                        radiusY: Tokens.tpRingY
+                        x: 1280 + Tokens.themeRingX
+                        y: Tokens.themeRingCenterY
+                        radiusX: Tokens.themeRingX
+                        radiusY: Tokens.themeRingY
                         direction: PathArc.Counterclockwise
                     }
                     PathAttribute {
@@ -409,9 +409,9 @@ Scope {
                     }
                     PathArc {
                         x: 1280
-                        y: Tokens.tpRingCenterY - Tokens.tpRingY
-                        radiusX: Tokens.tpRingX
-                        radiusY: Tokens.tpRingY
+                        y: Tokens.themeRingCenterY - Tokens.themeRingY
+                        radiusX: Tokens.themeRingX
+                        radiusY: Tokens.themeRingY
                         direction: PathArc.Counterclockwise
                     }
                     PathAttribute {
@@ -423,10 +423,10 @@ Scope {
                         value: 0
                     }
                     PathArc {
-                        x: 1280 - Tokens.tpRingX
-                        y: Tokens.tpRingCenterY
-                        radiusX: Tokens.tpRingX
-                        radiusY: Tokens.tpRingY
+                        x: 1280 - Tokens.themeRingX
+                        y: Tokens.themeRingCenterY
+                        radiusX: Tokens.themeRingX
+                        radiusY: Tokens.themeRingY
                         direction: PathArc.Counterclockwise
                     }
                     PathAttribute {
@@ -439,9 +439,9 @@ Scope {
                     }
                     PathArc {
                         x: 1280
-                        y: Tokens.tpRingCenterY + Tokens.tpRingY
-                        radiusX: Tokens.tpRingX
-                        radiusY: Tokens.tpRingY
+                        y: Tokens.themeRingCenterY + Tokens.themeRingY
+                        radiusX: Tokens.themeRingX
+                        radiusY: Tokens.themeRingY
                         direction: PathArc.Counterclockwise
                     }
                 }
@@ -507,7 +507,7 @@ Scope {
                         text: root.shownName
                         color: Qt.alpha(root.frontEntry === null ? Theme.text : root.frontEntry.colors.text, 0.92)
                         font.family: Tokens.fontUi
-                        font.pixelSize: Tokens.tpNameSize
+                        font.pixelSize: Tokens.themeNameSize
                         font.weight: Font.ExtraBold
                         font.letterSpacing: -6
                         layer.enabled: backdrop.gpu

@@ -82,7 +82,7 @@ test("validateSettings fixes invalid values field by field", () => {
         hotspot: { ssid: "x".repeat(33), band: "z" },
         unknown: 7
     })
-    assert.deepEqual(v.cc, { corner: "top-right", other: 1 })
+    assert.deepEqual(v.center, { corner: "top-right", other: 1 })
     assert.deepEqual(v.nightLight, { enabled: false, temperature: 4000 })
     assert.deepEqual(v.displays, { layouts: {} })
     assert.deepEqual(v.toggleState, { a: true })
@@ -92,11 +92,11 @@ test("validateSettings fixes invalid values field by field", () => {
 
 test("validateSettings keeps valid values", () => {
     const v = validateSettings({
-        cc: { corner: "top-left" },
+        center: { corner: "top-left" },
         nightLight: { enabled: true, temperature: 3500 },
         hotspot: { ssid: "Mine", band: "a" }
     })
-    assert.equal(v.cc.corner, "top-left")
+    assert.equal(v.center.corner, "top-left")
     assert.deepEqual(v.nightLight, { enabled: true, temperature: 3500 })
     assert.deepEqual(v.hotspot, { ssid: "Mine", band: "a" })
     assert.ok(CORNERS.includes("top-center"))
@@ -110,7 +110,7 @@ test("merge lets settings win over config on shared keys", () => {
     const out = merge({ extra: "config", themeHook: "h" }, { extra: "settings" })
     assert.equal(out.extra, "settings")
     assert.equal(out.themeHook, "h")
-    assert.equal(out.cc.corner, "top-right")
+    assert.equal(out.center.corner, "top-right")
 })
 
 test("getPath and setPath work on nested keys without mutating", () => {

@@ -1,9 +1,9 @@
 sleep 1.5
-ipc toggle cc
-ipc toggle cc
+ipc toggle center
+ipc toggle center
 sleep 1
 ipc state
-ipc open cc
-ipc close cc
+ipc open center
+ipc close center
 sleep 1
 ipc state

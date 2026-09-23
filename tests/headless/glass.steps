@@ -1,5 +1,5 @@
 sleep 1.5
-ipc open cc
+ipc open center
 sleep 0.6
 shot glass-on
 write sylvaris/settings.json {"version":1,"glass":{"enabled":false}}
