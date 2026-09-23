@@ -1,18 +1,118 @@
 # Sylvaris
 
-A modular desktop shell built on [Quickshell](https://quickshell.org), made for Hyprland and niri and also working on sway. Sylvaris runs as one resident process and hosts parts:
+A modular desktop shell built on [Quickshell](https://quickshell.org), made for **Hyprland** and **niri** and also working on **sway**. Sylvaris runs as one resident process that hosts parts:
 
-- **SylvarisCC**: the control center
+- **SylvarisCC**: a control center that morphs from a compact panel into living orbits for Wi-Fi and Bluetooth
 
-More parts (SylvarisTP, SylvarisSettings) are on the way.
+SylvarisTP (theme picker) and SylvarisSettings (full-screen settings) are next.
 
-## Usage
+## Install
+
+### Nix flake with Home Manager
+
+```nix
+{
+  inputs.sylvaris.url = "github:naxce/Sylvaris";
+
+  outputs = { sylvaris, ... }: {
+    homeConfigurations.me = home-manager.lib.homeManagerConfiguration {
+      modules = [
+        sylvaris.homeManagerModules.sylvaris
+        {
+          programs.sylvaris = {
+            enable = true;
+            settings = {
+              themeHook = "";
+              toggles = [
+                { id = "performance"; label = "Performance"; on = "gamemode-on"; off = "gamemode-off"; }
+              ];
+            };
+            themes.midnight = {
+              name = "Midnight";
+              wallpaper = "~/Pictures/midnight.png";
+              colors = { base = "#0f1117"; surface = "#1a1d27"; accent = "#7aa2f7"; accentHi = "#9ab8ff"; accentDeep = "#4c6ab3"; onAccent = "#0f1117"; text = "#e6e9f2"; textDim = "#8d94a8"; danger = "#e06c75"; };
+            };
+          };
+        }
+      ];
+    };
+  };
+}
+```
+
+### Without Nix
+
+1. Install `quickshell` (0.3.1 or newer), `wlr-randr`, `wlsunset`, NetworkManager (`nmcli`), `pactl`, `wl-clipboard`, and the fonts **Inter** and **JetBrainsMono Nerd Font**.
+2. Copy `shell/` to `~/.config/quickshell/sylvaris`.
+3. Put `bin/sylvaris` on your `PATH`.
+
+## Start it with your compositor
+
+| Compositor | Autostart | Toggle the control center |
+|---|---|---|
+| Hyprland (`hyprland.conf`) | `exec-once = sylvaris` | `bind = SUPER, A, exec, sylvaris cc` |
+| Hyprland (Lua) | `hl.exec_cmd("sylvaris")` inside `hl.on("hyprland.start", ...)` | `hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("sylvaris cc"))` |
+| niri | `spawn-at-startup "sylvaris"` | `Mod+A { spawn "sylvaris" "cc"; }` |
+| sway | `exec sylvaris` | `bindsym $mod+a exec sylvaris cc` |
+
+Waybar button: `"on-click": "sylvaris cc"`.
+
+## Commands
 
 ```sh
-sylvaris              # start the shell (put this in your compositor's autostart)
-sylvaris cc           # toggle the control center
-sylvaris state        # print the shell state as JSON
+sylvaris                 # start the shell
+sylvaris cc              # toggle SylvarisCC (also: open, close)
+sylvaris view orbit-wifi # open SylvarisCC on a view
+sylvaris state           # print the shell state as JSON
 ```
+
+Views: `compact`, `orbit-bluetooth`, `orbit-wifi`, `calendar`, `outputs`, `displays`, `hotspot`. Add `:<key>` to focus a device or network, for example `sylvaris view orbit-bluetooth:AA:BB:CC:DD:EE:FF`.
+
+## Configuration
+
+`~/.config/sylvaris/config.json` is yours (or Nix's). Sylvaris never writes to it.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `themesDir` | `~/.config/sylvaris/themes` | Folder of theme bundles |
+| `themeHook` | `""` | Command run with the theme id when a theme is applied. Empty means Sylvaris writes the id to `themeStateFile` itself. |
+| `themeStateFile` | `~/.local/state/sylvaris/theme` | File holding the active theme id; Sylvaris watches it |
+| `avatar` | `~/.face` | Image shown in the control center header |
+| `lockCommand` | `loginctl lock-session` | Used by future parts |
+| `terminal` | `kitty` | Used by future parts |
+| `toggles` | `[]` | Custom tiles: `{ id, label, icon?, on, off, status? }`. `status` is a command whose exit code 0 means "on". |
+
+`~/.config/sylvaris/settings.json` belongs to Sylvaris. It stores what you change in the UI (panel corner, night light, saved display layouts, hotspot name) and is re-applied at every start. If it becomes invalid, Sylvaris keeps a copy as `settings.json.bak` and starts on defaults.
+
+### Theme bundles
+
+```json
+{
+  "id": "midnight",
+  "name": "Midnight",
+  "description": "Deep blue",
+  "wallpaper": "~/Pictures/midnight.png",
+  "colors": {
+    "base": "#0f1117", "surface": "#1a1d27", "accent": "#7aa2f7", "accentHi": "#9ab8ff",
+    "accentDeep": "#4c6ab3", "onAccent": "#0f1117", "text": "#e6e9f2", "textDim": "#8d94a8",
+    "textSoft": "#c8cdda", "danger": "#e06c75"
+  },
+  "alpha": { "surface": 0.9, "glass": 0.62, "line": 0.16, "tint": 0.08 }
+}
+```
+
+Missing or invalid colors fall back to the built-in theme, one value at a time.
+
+## Development
+
+```sh
+nix develop
+node --test tests/*.test.mjs
+nix flake check
+tests/headless/run.sh tests/headless/out/compact tests/headless/compact.steps tests/fixtures/seed/warm
+```
+
+`tests/headless/run.sh` starts a headless sway with no visible output, runs Sylvaris inside it with `SYLVARIS_DEMO=1` (fixture devices instead of real ones), drives it over IPC and saves screenshots. It never touches your real devices or screens. `docs/design/reference.html` is the visual source of truth.
 
 ## Credits
 
