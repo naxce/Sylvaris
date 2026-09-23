@@ -8,7 +8,7 @@ ShellRoot {
     id: root
 
     property var parts: ({})
-    readonly property var boot: [Tokens, Config, Settings, Theme, Compositor]
+    readonly property var boot: [Tokens, Config, Settings, Theme, Compositor, Audio, Media, NightLight, Dnd, Toggles]
 
     function part(name: string): var {
         return root.parts[name] === undefined ? null : root.parts[name];
@@ -22,6 +22,30 @@ ShellRoot {
                 focused: Compositor.focusedName(),
                 screens: Compositor.screenNames()
             },
+            audio: {
+                available: Audio.available,
+                volume: Audio.volume,
+                muted: Audio.muted,
+                output: Audio.outputName,
+                sinks: Audio.sinks
+            },
+            media: {
+                available: Media.available,
+                title: Media.title,
+                playing: Media.playing
+            },
+            nightLight: {
+                available: NightLight.available,
+                enabled: NightLight.enabled,
+                temperature: NightLight.temperature,
+                error: NightLight.error
+            },
+            dnd: {
+                available: Dnd.available,
+                tool: Dnd.tool,
+                enabled: Dnd.enabled
+            },
+            toggles: Toggles.items,
             parts: Object.keys(root.parts),
             config: Config.values,
             configNotice: Config.notice,
