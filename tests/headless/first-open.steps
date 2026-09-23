@@ -1,0 +1,5 @@
+sway create_output
+sway focus output HEADLESS-2
+ipc open cc
+sleep 0.5
+ipc state

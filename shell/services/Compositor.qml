@@ -44,20 +44,33 @@ Singleton {
     }
 
     function refresh(callback: var): void {
-        if (root.name !== "niri") {
+        if (root.name === "unknown" || (root.name !== "niri" && root.focusedName() !== "")) {
             callback();
             return;
         }
         root.pending = root.pending.concat([callback]);
-        niriTimeout.restart();
-        if (!niriQuery.running)
+        timeout.restart();
+        if (root.name === "niri" && !niriQuery.running)
             niriQuery.running = true;
     }
 
+    Component.onCompleted: root.focusedName()
+
     Timer {
-        id: niriTimeout
+        id: timeout
         interval: 300
         onTriggered: root.flush()
+    }
+
+    Connections {
+        target: root.name === "hyprland" ? Hyprland : root.name === "sway" ? I3 : null
+
+        function onFocusedMonitorChanged() {
+            if (root.focusedName() === "")
+                return;
+            timeout.stop();
+            root.flush();
+        }
     }
 
     Process {
@@ -70,7 +83,7 @@ Singleton {
                 } catch (e) {
                     root.niriFocused = "";
                 }
-                niriTimeout.stop();
+                timeout.stop();
                 root.flush();
             }
         }

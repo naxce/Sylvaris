@@ -71,7 +71,7 @@ ipc() {
 }
 
 for _ in $(seq 100); do
-    ipc state >/dev/null 2>&1 && break
+    "${hl_env[@]}" "$qs_bin" -p "$shell_dir" ipc show 2>/dev/null | grep -q sylvaris && break
     sleep 0.1
 done
 
@@ -89,6 +89,10 @@ while read -r cmd rest; do
         ;;
     sleep)
         sleep "$rest"
+        ;;
+    sway)
+        read -r -a args <<<"$rest"
+        env -i XDG_RUNTIME_DIR="$rt" SWAYSOCK="$sock" PATH="$PATH" swaymsg "${args[@]}" >/dev/null
         ;;
     mark)
         printf 'MARK %s %s\n' "$rest" "$(date +%s%3N)" >>"$out/ipc.log"

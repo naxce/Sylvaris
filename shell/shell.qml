@@ -83,7 +83,8 @@ ShellRoot {
             cc: {
                 open: ccPart.shown,
                 view: ccPart.view,
-                focus: ccPart.focusKey
+                focus: ccPart.focusKey,
+                screen: ccPart.screenInfo ? ccPart.screenInfo.name : ""
             },
             config: Config.values,
             configNotice: Config.notice,
