@@ -57,6 +57,26 @@ SylvarisTP (theme picker) and SylvarisSettings (full-screen settings) are next.
 
 Waybar button: `"on-click": "sylvaris cc"`.
 
+The panel is translucent, so turn on blur behind the `sylvaris-cc` layer:
+
+```lua
+hl.layer_rule({ name = "sylvaris_cc", match = { namespace = "sylvaris-cc" }, blur = true, ignore_alpha = 0.3 })
+```
+
+```ini
+layerrule = blur, sylvaris-cc
+layerrule = ignorealpha 0.3, sylvaris-cc
+```
+
+```kdl
+layer-rule {
+    match namespace="^sylvaris-cc$"
+    background-effect {
+        blur true
+    }
+}
+```
+
 ## Commands
 
 ```sh
