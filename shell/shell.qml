@@ -8,7 +8,7 @@ ShellRoot {
     id: root
 
     property var parts: ({})
-    readonly property var boot: [Tokens, Config, Settings, Theme, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot]
+    readonly property var boot: [Tokens, Config, Settings, Theme, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
 
     function part(name: string): var {
         return root.parts[name] === undefined ? null : root.parts[name];
@@ -67,6 +67,13 @@ ShellRoot {
                 active: Hotspot.active,
                 profileExists: Hotspot.profileExists,
                 error: Hotspot.error
+            },
+            displays: {
+                available: Displays.available,
+                key: Displays.key,
+                outputs: Displays.outputs.map(o => o.name),
+                countdown: Displays.countdown,
+                error: Displays.error
             },
             parts: Object.keys(root.parts),
             config: Config.values,
