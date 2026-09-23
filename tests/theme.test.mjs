@@ -1,6 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { DEFAULT_THEME, COLOR_KEYS, parseHex, withAlpha, validateTheme, tokens, nextThemeId, parseArgb, mixArgb, mixTokens } from "../shell/lib/theme.mjs"
+import { DEFAULT_THEME, COLOR_KEYS, parseHex, withAlpha, validateTheme, tokens, nextThemeId, parseArgb, mixArgb, mixTokens, catalogEntry } from "../shell/lib/theme.mjs"
 
 const warm = {
     id: "warm",
@@ -118,4 +118,28 @@ test("nextThemeId cycles through sorted ids", () => {
     assert.equal(nextThemeId(["noir", "dachshund"], "noir"), "dachshund")
     assert.equal(nextThemeId(["b", "a"], "missing"), "a")
     assert.equal(nextThemeId([], "x"), "")
+})
+
+test("tokens expose the opaque surface as pane", () => {
+    const t = tokens(validateTheme(warm).theme)
+    assert.equal(t.pane, warm.colors.surface)
+})
+
+test("catalogEntry uses the theme name and fields", () => {
+    const e = catalogEntry("warm", warm)
+    assert.equal(e.id, "warm")
+    assert.equal(e.name, warm.name)
+    assert.equal(e.colors.accent, warm.colors.accent)
+})
+
+test("catalogEntry falls back to the id when the name is missing or blank", () => {
+    assert.equal(catalogEntry("coal", Object.assign({}, warm, { name: undefined })).name, "coal")
+    assert.equal(catalogEntry("coal", Object.assign({}, warm, { name: "  " })).name, "coal")
+})
+
+test("catalogEntry survives a broken theme", () => {
+    const e = catalogEntry("junk", [1, 2])
+    assert.equal(e.name, "junk")
+    assert.equal(e.wallpaper, "")
+    assert.equal(e.colors.accent, DEFAULT_THEME.colors.accent)
 })

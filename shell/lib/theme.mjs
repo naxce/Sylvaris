@@ -109,6 +109,7 @@ export function tokens(theme) {
     const c = theme.colors
     const a = theme.alpha
     return {
+        pane: c.surface,
         base: c.base,
         surface: withAlpha(c.base, a.surface),
         glass: withAlpha(c.base, a.glass),
@@ -172,4 +173,10 @@ export function nextThemeId(ids, current) {
     const sorted = ids.slice().sort()
     const i = sorted.indexOf(current)
     return i < 0 ? sorted[0] : sorted[(i + 1) % sorted.length]
+}
+
+export function catalogEntry(id, raw) {
+    const t = validateTheme(raw).theme
+    const named = isObject(raw) && typeof raw.name === "string" && raw.name.trim() !== ""
+    return { id: id, name: named ? raw.name : id, description: t.description, wallpaper: t.wallpaper, colors: t.colors }
 }

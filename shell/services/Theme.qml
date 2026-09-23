@@ -54,6 +54,25 @@ Singleton {
     property color textDim: root.tk.textDim
     property color textSoft: root.tk.textSoft
     property color danger: root.tk.danger
+    property color pane: root.tk.pane
+    property var catalog: ({})
+    property string hookError: ""
+    property string queued: ""
+
+    function remember(id: string, text: string): void {
+        const p = S.parseJson(text);
+        const e = T.catalogEntry(id, p.ok ? p.value : null);
+        e.wallpaper = S.expandHome(e.wallpaper, root.home);
+        const next = Object.assign({}, root.catalog);
+        next[id] = e;
+        root.catalog = next;
+    }
+
+    function runHook(id: string): void {
+        const hook = S.expandHome(Config.values.themeHook, root.home);
+        hookProc.command = hook !== "" ? ["sh", "-c", hook + " \"$1\"", "sylvaris-theme", id] : ["sh", "-c", "mkdir -p \"$(dirname \"$1\")\" && printf %s \"$2\" > \"$1\"", "sylvaris-theme", root.stateFile, id];
+        hookProc.running = true;
+    }
 
 
     onTargetChanged: {
@@ -98,11 +117,11 @@ Singleton {
     function apply(id: string): void {
         if (id === "")
             return;
-        const hook = S.expandHome(Config.values.themeHook, root.home);
-        if (hook !== "")
-            Quickshell.execDetached(["sh", "-c", hook + " \"$1\"", "sylvaris-theme", id]);
-        else
-            Quickshell.execDetached(["sh", "-c", "mkdir -p \"$(dirname \"$1\")\" && printf %s \"$2\" > \"$1\"", "sylvaris-theme", root.stateFile, id]);
+        if (hookProc.running) {
+            root.queued = id;
+            return;
+        }
+        root.runHook(id);
     }
 
     function cycle(): void {
@@ -140,5 +159,30 @@ Singleton {
         nameFilters: ["*.json"]
         showDirs: false
         onCountChanged: root.refreshIds()
+    }
+
+    Process {
+        id: hookProc
+        onExited: code => {
+            root.hookError = code === 0 ? "" : "The theme hook failed with exit code " + code;
+            if (root.queued !== "") {
+                const next = root.queued;
+                root.queued = "";
+                root.runHook(next);
+            }
+        }
+    }
+
+    Instantiator {
+        model: root.ids
+        delegate: FileView {
+            required property string modelData
+            path: root.themesDir + "/" + modelData + ".json"
+            watchChanges: true
+            printErrors: false
+            onFileChanged: reload()
+            onLoaded: root.remember(modelData, text())
+            onLoadFailed: root.remember(modelData, "")
+        }
     }
 }

@@ -96,7 +96,9 @@ ShellRoot {
                 name: Theme.theme.name,
                 errors: Theme.errors,
                 ids: Theme.ids,
-                tokens: Theme.target
+                tokens: Theme.target,
+                catalog: Object.keys(Theme.catalog).sort(),
+                hookError: Theme.hookError
             }
         };
     }
