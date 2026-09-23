@@ -83,10 +83,39 @@ layer-rule {
 sylvaris                 # start the shell
 sylvaris cc              # toggle SylvarisCC (also: open, close)
 sylvaris view orbit-wifi # open SylvarisCC on a view
+sylvaris tp              # toggle SylvarisTP, the theme picker (also: open, close)
+sylvaris tp next         # move the picker's carousel (also: prev, apply)
 sylvaris state           # print the shell state as JSON
 ```
 
+SylvarisTP opens on the focused monitor with the current theme in front. Arrow keys, the mouse wheel, dragging or clicking a side card move the carousel; once it rests for half a second the whole desktop previews that theme through your `themeHook`. Enter or **Apply theme** keeps it, Esc or a click on the backdrop brings back the theme you started with. The CC's Theme button and `sylvaris view tp` open it too.
+
 Views: `compact`, `orbit-bluetooth`, `orbit-wifi`, `calendar`, `outputs`, `displays`, `hotspot`. Add `:<key>` to focus a device or network, for example `sylvaris view orbit-bluetooth:AA:BB:CC:DD:EE:FF`.
+
+## Resin Glass
+
+Every Sylvaris surface is drawn in Resin Glass: a translucent body the compositor blurs, the theme's accent suspended in it, a soft light that drifts like liquid and leans toward the pointer, a lit rim and a fine grain. Tune it with a `glass` block in `config.json` (or from Nix) and in `settings.json`; `settings.json` wins, and changes apply live.
+
+| Key | Default | Range | What it does |
+|---|---|---|---|
+| `enabled` | `true` | | `false` brings back the solid look |
+| `opacity` | `0.55` | 0–1 | panel body |
+| `layerOpacity` | `0.35` | 0–1 | tiles, rows, nodes and cards on top of a panel |
+| `tint` | `0.14` | 0–1 | accent suspended in the glass |
+| `sheen` | `0.35` | 0–1 | the drifting light |
+| `flow` | `1` | 0–3 | how fast the light drifts, `0` stops it |
+| `rim` | `0.5` | 0–1 | brightness of the lit edge |
+| `grain` | `0.035` | 0–0.2 | noise that keeps gradients smooth |
+
+```nix
+programs.sylvaris.settings.glass = {
+  opacity = 0.5;
+  sheen = 0.45;
+  flow = 0.6;
+};
+```
+
+Invalid values keep the previous layer's value and show a notice in the CC. Blur comes from your compositor (see the layer rules above); sway has no blur, so there the glass is translucency only.
 
 ## Configuration
 
