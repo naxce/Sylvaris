@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Shapes
 import qs
 import qs.services
 import qs.components
@@ -9,6 +10,7 @@ Item {
     required property string modelData
     required property int index
     property real time: 0
+    property real enter: 1
     property point pointer: Qt.point(-1, -1)
     readonly property var entry: Theme.catalog[root.modelData] === undefined ? null : Theme.catalog[root.modelData]
     readonly property real depth: PathView.depth === undefined ? 1 : PathView.depth
@@ -25,7 +27,7 @@ Item {
     height: Tokens.tpCardHeight
     scale: root.depth
     z: root.depth * 100
-    opacity: 0.35 + 0.65 * Math.max(0, (root.depth - 0.55) / 0.45)
+    opacity: (0.35 + 0.65 * Math.max(0, (root.depth - 0.55) / 0.45)) * root.enter
 
     Behavior on leanX {
         NumberAnimation {
@@ -63,7 +65,7 @@ Item {
             angle: root.leanY
         },
         Translate {
-            y: root.bob
+            y: root.bob + (1 - root.enter) * 320
         }
     ]
 
@@ -93,20 +95,55 @@ Item {
         }
     }
 
-    RoundClip {
-        anchors.fill: fallback
-        radius: fallback.radius
-        visible: wall.status === Image.Ready
+    Image {
+        id: wall
+        x: fallback.x
+        y: fallback.y
+        width: fallback.width
+        height: fallback.height
+        visible: false
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+        smooth: true
+        mipmap: true
+        sourceSize.width: Tokens.tpCardWidth * 2
+        source: root.entry === null || root.entry.wallpaper === "" ? "" : "file://" + root.entry.wallpaper
+    }
 
-        Image {
-            id: wall
-            anchors.fill: parent
-            fillMode: Image.PreserveAspectCrop
-            asynchronous: true
-            smooth: true
-            mipmap: true
-            sourceSize.width: Tokens.tpCardWidth * 2
-            source: root.entry === null || root.entry.wallpaper === "" ? "" : "file://" + root.entry.wallpaper
+    ShaderEffectSource {
+        id: wallTexture
+        x: fallback.x
+        y: fallback.y
+        width: fallback.width
+        height: fallback.height
+        visible: false
+        sourceItem: wall
+        hideSource: true
+        mipmap: true
+        smooth: true
+    }
+
+    Shape {
+        x: fallback.x
+        y: fallback.y
+        width: fallback.width
+        height: fallback.height
+        visible: wall.status === Image.Ready
+        layer.enabled: true
+        layer.samples: 8
+        layer.smooth: true
+
+        ShapePath {
+            strokeWidth: -1
+            fillItem: wallTexture
+
+            PathRectangle {
+                x: 0
+                y: 0
+                width: fallback.width
+                height: fallback.height
+                radius: fallback.radius
+            }
         }
     }
 

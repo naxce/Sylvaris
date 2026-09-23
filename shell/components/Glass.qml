@@ -148,7 +148,7 @@ Item {
         source: Qt.resolvedUrl("../assets/grain.png")
         fillMode: Image.Tile
         opacity: Resin.grain
-        smooth: false
+        smooth: true
     }
 
     Shape {

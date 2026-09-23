@@ -68,6 +68,16 @@ layerrule = blur, sylvaris-cc
 layerrule = ignorealpha 0.3, sylvaris-cc
 ```
 
+SylvarisTP animates itself, so turn off Hyprland's own layer animation for it:
+
+```lua
+hl.layer_rule({ name = "sylvaris_tp", match = { namespace = "sylvaris-tp" }, no_anim = true })
+```
+
+```ini
+layerrule = noanim, sylvaris-tp
+```
+
 ```kdl
 layer-rule {
     match namespace="^sylvaris-cc$"

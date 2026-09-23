@@ -27,8 +27,9 @@ Scope {
 
     signal opened
 
-    function stagger(k: int): real {
-        return Math.max(0, Math.min(1, (root.reveal - k * 0.14) / 0.72));
+    function phase(a: real, b: real): real {
+        const t = Math.max(0, Math.min(1, (root.reveal - a) / (b - a)));
+        return 1 - Math.pow(1 - t, 3);
     }
 
     function open(): void {
@@ -110,8 +111,7 @@ Scope {
         target: root
         property: "reveal"
         to: 1
-        duration: 420
-        easing.type: Easing.OutCubic
+        duration: 1500
     }
 
     NumberAnimation {
@@ -119,8 +119,7 @@ Scope {
         target: root
         property: "reveal"
         to: 0
-        duration: 280
-        easing.type: Easing.InCubic
+        duration: 1100
     }
 
     Timer {
@@ -200,94 +199,118 @@ Scope {
         Item {
             id: backdrop
             anchors.fill: parent
-            opacity: Math.min(1, root.reveal * 1.6)
             readonly property bool gpu: backdrop.GraphicsInfo.api !== GraphicsInfo.Software && backdrop.GraphicsInfo.api !== GraphicsInfo.Unknown
+
+            Item {
+                anchors.fill: parent
+                opacity: root.phase(0, 0.18)
+
+                Rectangle {
+                    anchors.fill: parent
+                    color: Theme.base
+                }
+
+                Image {
+                    anchors.fill: parent
+                    visible: backdrop.gpu
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    sourceSize.width: 2560
+                    source: !backdrop.gpu || Theme.wallpaper === "" ? "" : "file://" + Theme.wallpaper
+                }
+            }
 
             Rectangle {
                 anchors.fill: parent
+                opacity: root.phase(0.12, 0.45)
                 color: root.frontEntry === null ? Theme.base : root.frontEntry.colors.base
             }
 
-            Repeater {
-                model: root.ids
-                delegate: Item {
-                    id: layerItem
-                    required property string modelData
-                    readonly property var e: Theme.catalog[modelData] === undefined ? null : Theme.catalog[modelData]
-                    anchors.fill: parent
-                    opacity: modelData === root.front ? 1 : 0
-                    visible: opacity > 0
+            Item {
+                anchors.fill: parent
+                opacity: root.phase(0.12, 0.45)
 
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: 400
-                        }
-                    }
-
-                    Rectangle {
+                Repeater {
+                    model: root.ids
+                    delegate: Item {
+                        id: layerItem
+                        required property string modelData
+                        readonly property var e: Theme.catalog[modelData] === undefined ? null : Theme.catalog[modelData]
                         anchors.fill: parent
-                        visible: backdrop.gpu && layerItem.e !== null
-                        gradient: Gradient {
-                            GradientStop {
-                                position: 0
-                                color: layerItem.e === null ? Theme.base : layerItem.e.colors.base
-                            }
-                            GradientStop {
-                                position: 1
-                                color: layerItem.e === null ? Theme.base : Qt.darker(layerItem.e.colors.accentDeep, 2.2)
+                        opacity: modelData === root.front ? 1 : 0
+                        visible: opacity > 0
+
+                        Behavior on opacity {
+                            NumberAnimation {
+                                duration: 400
                             }
                         }
-                    }
 
-                    Item {
-                        anchors.fill: parent
-                        scale: 1.06 + 0.02 * Math.sin(root.time * 0.11)
-
-                        transform: Translate {
-                            x: 22 * Math.sin(root.time * 0.07)
-                            y: 14 * Math.cos(root.time * 0.05)
-                        }
-
-                        Image {
-                            id: wall
+                        Rectangle {
                             anchors.fill: parent
-                            anchors.margins: -64
-                            visible: false
-                            fillMode: Image.PreserveAspectCrop
-                            asynchronous: true
-                            sourceSize.width: 1280
-                            source: !backdrop.gpu || layerItem.e === null || layerItem.e.wallpaper === "" ? "" : "file://" + layerItem.e.wallpaper
-                        }
-
-                        MultiEffect {
-                            anchors.fill: wall
-                            visible: backdrop.gpu && wall.status === Image.Ready
-                            source: wall
-                            blurEnabled: true
-                            blur: 1
-                            blurMax: 32
-                            saturation: 0.1
-                            brightness: -0.35
-                        }
-                    }
-
-                    Rectangle {
-                        anchors.fill: parent
-                        visible: backdrop.gpu && wall.status === Image.Ready
-                        color: Qt.alpha(layerItem.e === null ? "#000000" : layerItem.e.colors.base, 0.35)
-                    }
-
-                    Rectangle {
-                        anchors.fill: parent
-                        visible: Resin.enabled && Resin.tint > 0 && layerItem.e !== null
-                        gradient: Gradient {
-                            GradientStop {
-                                position: 0
-                                color: Qt.alpha(layerItem.e === null ? "#000000" : layerItem.e.colors.accent, Resin.tint * 0.6)
+                            visible: backdrop.gpu && layerItem.e !== null
+                            gradient: Gradient {
+                                GradientStop {
+                                    position: 0
+                                    color: layerItem.e === null ? Theme.base : layerItem.e.colors.base
+                                }
+                                GradientStop {
+                                    position: 1
+                                    color: layerItem.e === null ? Theme.base : Qt.darker(layerItem.e.colors.accentDeep, 2.2)
+                                }
                             }
-                            GradientStop {
-                                position: 0.55
-                                color: "transparent"
+                        }
+
+                        Item {
+                            anchors.fill: parent
+                            scale: 1.06 + 0.02 * Math.sin(root.time * 0.11)
+
+                            transform: Translate {
+                                x: 22 * Math.sin(root.time * 0.07)
+                                y: 14 * Math.cos(root.time * 0.05)
+                            }
+
+                            Image {
+                                id: wall
+                                anchors.fill: parent
+                                anchors.margins: -64
+                                visible: false
+                                fillMode: Image.PreserveAspectCrop
+                                asynchronous: true
+                                sourceSize.width: 1280
+                                source: !backdrop.gpu || layerItem.e === null || layerItem.e.wallpaper === "" ? "" : "file://" + layerItem.e.wallpaper
+                            }
+
+                            MultiEffect {
+                                anchors.fill: wall
+                                visible: backdrop.gpu && wall.status === Image.Ready
+                                source: wall
+                                blurEnabled: true
+                                blur: 1
+                                blurMax: 32
+                                saturation: 0.1
+                                brightness: -0.35
+                            }
+                        }
+
+                        Rectangle {
+                            anchors.fill: parent
+                            visible: backdrop.gpu && wall.status === Image.Ready
+                            color: Qt.alpha(layerItem.e === null ? "#000000" : layerItem.e.colors.base, 0.35)
+                        }
+
+                        Rectangle {
+                            anchors.fill: parent
+                            visible: Resin.enabled && Resin.tint > 0 && layerItem.e !== null
+                            gradient: Gradient {
+                                GradientStop {
+                                    position: 0
+                                    color: Qt.alpha(layerItem.e === null ? "#000000" : layerItem.e.colors.accent, Resin.tint * 0.6)
+                                }
+                                GradientStop {
+                                    position: 0.55
+                                    color: "transparent"
+                                }
                             }
                         }
                     }
@@ -295,11 +318,11 @@ Scope {
             }
 
             Image {
+                opacity: Resin.grain * root.phase(0.12, 0.45)
                 visible: Resin.enabled && Resin.grain > 0
                 anchors.fill: parent
                 source: Qt.resolvedUrl("../assets/grain.png")
                 fillMode: Image.Tile
-                opacity: Resin.grain
                 smooth: false
             }
 
@@ -344,7 +367,6 @@ Scope {
             PathView {
                 id: carousel
                 anchors.fill: parent
-                opacity: root.stagger(0)
                 model: root.ids
                 pathItemCount: Math.min(count, 7)
                 preferredHighlightBegin: 0
@@ -356,10 +378,6 @@ Scope {
                 onCurrentIndexChanged: {
                     if (root.shown && currentIndex >= 0 && currentIndex < root.ids.length)
                         ThemePreview.settle(root.ids[currentIndex]);
-                }
-
-                transform: Translate {
-                    y: (1 - root.stagger(0)) * 160
                 }
 
                 path: Path {
@@ -429,6 +447,7 @@ Scope {
                 }
 
                 delegate: ThemeCard {
+                    enter: root.phase(0.28 + 0.16 * (1 - depth) / 0.45, 0.66 + 0.16 * (1 - depth) / 0.45)
                     time: root.time
                     pointer: root.pointer
                     onPicked: i => {
@@ -456,7 +475,7 @@ Scope {
             Text {
                 visible: carousel.count === 0
                 anchors.centerIn: parent
-                opacity: root.stagger(0)
+                opacity: root.phase(0.28, 0.66)
                 text: "No themes found"
                 color: Theme.textDim
                 font.family: Tokens.fontUi
@@ -468,10 +487,10 @@ Scope {
                 y: 1440 - 170 - nameText.height
                 width: nameColumn.width
                 height: nameColumn.height
-                opacity: root.stagger(1)
+                opacity: root.phase(0.45, 0.86)
 
                 transform: Translate {
-                    y: (1 - root.stagger(1)) * 160
+                    y: (1 - root.phase(0.45, 0.86)) * 240
                 }
 
                 Column {
@@ -515,11 +534,11 @@ Scope {
                 y: 1440 - 140 - height
                 width: applyLabel.implicitWidth + 68
                 height: applyLabel.implicitHeight + 40
-                opacity: root.stagger(2)
+                opacity: root.phase(0.58, 0.94)
                 scale: applyArea.pressed ? 0.96 : applyArea.containsMouse ? 1.03 : 1
 
                 transform: Translate {
-                    y: (1 - root.stagger(2)) * 160
+                    y: (1 - root.phase(0.58, 0.94)) * 220
                 }
 
                 Behavior on scale {
@@ -559,10 +578,10 @@ Scope {
                 y: 1440 - 50 - height
                 width: hint.implicitWidth + 40
                 height: hint.implicitHeight + 16
-                opacity: root.stagger(2)
+                opacity: root.phase(0.66, 1)
 
                 transform: Translate {
-                    y: (1 - root.stagger(2)) * 160
+                    y: (1 - root.phase(0.66, 1)) * 180
                 }
 
                 Glass {
