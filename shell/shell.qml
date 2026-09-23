@@ -8,7 +8,7 @@ ShellRoot {
     id: root
 
     property var parts: ({})
-    readonly property var boot: [Tokens, Config, Settings, Theme]
+    readonly property var boot: [Tokens, Config, Settings, Theme, Compositor]
 
     function part(name: string): var {
         return root.parts[name] === undefined ? null : root.parts[name];
@@ -17,6 +17,11 @@ ShellRoot {
     function stateObject(): var {
         return {
             version: 1,
+            compositor: {
+                name: Compositor.name,
+                focused: Compositor.focusedName(),
+                screens: Compositor.screenNames()
+            },
             parts: Object.keys(root.parts),
             config: Config.values,
             configNotice: Config.notice,
