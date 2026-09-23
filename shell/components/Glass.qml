@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Shapes
+import Quickshell.Widgets
 import qs
 import qs.services
 
@@ -94,39 +95,50 @@ Item {
         }
     }
 
-    Shape {
+    ClippingRectangle {
         visible: root.on && root.panel && Resin.sheen > 0
         anchors.fill: parent
-        preferredRendererType: Shape.CurveRenderer
+        radius: root.radius
+        color: "transparent"
 
-        ShapePath {
-            strokeWidth: -1
-            fillGradient: RadialGradient {
-                centerX: root.light.x
-                centerY: root.light.y
-                focalX: root.light.x
-                focalY: root.light.y
-                centerRadius: Math.max(root.width, root.height) * 0.55
-                GradientStop {
-                    position: 0
-                    color: Qt.alpha(Theme.accentHi, Resin.sheen * 0.35)
-                }
-                GradientStop {
-                    position: 0.45
-                    color: Qt.alpha(Theme.text, Resin.sheen * 0.06)
-                }
-                GradientStop {
-                    position: 1
-                    color: "transparent"
-                }
-            }
+        Shape {
+            id: sheen
+            readonly property real r: Math.max(root.width, root.height) * 0.55
+            x: root.light.x - sheen.r
+            y: root.light.y - sheen.r
+            width: sheen.r * 2
+            height: sheen.r * 2
 
-            PathRectangle {
-                x: 0
-                y: 0
-                width: root.width
-                height: root.height
-                radius: root.radius
+            ShapePath {
+                strokeWidth: -1
+                fillGradient: RadialGradient {
+                    centerX: sheen.r
+                    centerY: sheen.r
+                    focalX: sheen.r
+                    focalY: sheen.r
+                    centerRadius: sheen.r
+                    GradientStop {
+                        position: 0
+                        color: Qt.alpha(Theme.accentHi, Resin.sheen * 0.35)
+                    }
+                    GradientStop {
+                        position: 0.45
+                        color: Qt.alpha(Theme.text, Resin.sheen * 0.06)
+                    }
+                    GradientStop {
+                        position: 1
+                        color: "transparent"
+                    }
+                }
+
+                PathAngleArc {
+                    centerX: sheen.r
+                    centerY: sheen.r
+                    radiusX: sheen.r
+                    radiusY: sheen.r
+                    startAngle: 0
+                    sweepAngle: 360
+                }
             }
         }
     }
