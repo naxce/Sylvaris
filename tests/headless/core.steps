@@ -1,0 +1,11 @@
+sleep 1.5
+ipc state
+write sylvaris/settings.json {"version":1,"cc":{"corner":"top-left"}}
+sleep 1
+ipc state
+write sylvaris/theme-state missing
+sleep 1
+ipc state
+write sylvaris/theme-state warm
+sleep 1
+ipc state

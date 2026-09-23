@@ -1,11 +1,14 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs
+import qs.services
 
 ShellRoot {
     id: root
 
     property var parts: ({})
+    readonly property var boot: [Tokens, Config, Settings, Theme]
 
     function part(name: string): var {
         return root.parts[name] === undefined ? null : root.parts[name];
@@ -14,7 +17,19 @@ ShellRoot {
     function stateObject(): var {
         return {
             version: 1,
-            parts: Object.keys(root.parts)
+            parts: Object.keys(root.parts),
+            config: Config.values,
+            configNotice: Config.notice,
+            settings: Settings.values,
+            settingsNotice: Settings.notice,
+            theme: {
+                id: Theme.currentId,
+                active: Theme.theme.id,
+                name: Theme.theme.name,
+                errors: Theme.errors,
+                ids: Theme.ids,
+                tokens: Theme.target
+            }
         };
     }
 

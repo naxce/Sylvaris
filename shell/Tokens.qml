@@ -1,0 +1,56 @@
+pragma Singleton
+
+import QtQuick
+import Quickshell
+
+Singleton {
+    readonly property int ccCompactWidth: 460
+    readonly property int ccExpandedWidth: 620
+    readonly property int ccHeight: 660
+    readonly property int edgeMargin: 12
+    readonly property int panelPaddingX: 28
+    readonly property int panelPaddingY: 30
+    readonly property int gap: 12
+    readonly property int headerGap: 16
+    readonly property int radiusPanel: 24
+    readonly property int radiusCard: 18
+    readonly property int radiusTile: 18
+    readonly property int radiusRow: 14
+    readonly property int radiusNode: 16
+    readonly property int radiusGlass: 28
+    readonly property int tileHeight: 76
+    readonly property int tileIcon: 44
+    readonly property int tileIconRadius: 14
+    readonly property int tileIconFont: 22
+    readonly property int rowHeight: 52
+    readonly property int sliderHeight: 44
+    readonly property int avatarSize: 56
+    readonly property int artSize: 64
+    readonly property int cardPadding: 14
+    readonly property int clockSize: 52
+    readonly property int dateSize: 17
+    readonly property int titleSize: 17
+    readonly property int bodySize: 15
+    readonly property int nodeSize: 14
+    readonly property int smallSize: 13
+    readonly property int tinySize: 12
+    readonly property string fontUi: "Inter"
+    readonly property string fontMono: "JetBrainsMono Nerd Font"
+    readonly property int openDuration: 180
+    readonly property int morphDuration: 600
+    readonly property int fadeDuration: 400
+    readonly property int nodeMoveDuration: 450
+    readonly property int colorDuration: 400
+    readonly property var morphCurve: [0.2, 0.8, 0.2, 1, 1, 1]
+    readonly property int haloSize: 118
+    readonly property int haloRim: 3
+    readonly property int haloRimOffset: 9
+    readonly property int coreLabelOffset: 78
+    readonly property int orbitCenterY: 282
+    readonly property int nodeLabelMax: 130
+    readonly property int segmentedSide: 140
+    readonly property int segmentedBottom: 22
+    readonly property int segmentedHeight: 50
+    readonly property int powerSize: 46
+    readonly property int moonSize: 38
+}

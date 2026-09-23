@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "themesDir": "~/.config/sylvaris/themes",
+  "themeStateFile": "~/.config/sylvaris/theme-state",
+  "toggles": [
+    { "id": "performance", "label": "Performance", "icon": "󱓞", "on": "", "off": "" }
+  ]
+}
