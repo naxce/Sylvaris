@@ -18,9 +18,15 @@ Rectangle {
     implicitHeight: Math.max(40, row.implicitHeight + 20)
     radius: Tokens.radiusNode
     color: root.selected ? Theme.accent : Theme.node
+
+    Behavior on color {
+        ColorAnimation {
+            duration: Tokens.stateDuration
+        }
+    }
     border.width: 1
     border.color: Theme.lineStrong
-    scale: hover.hovered ? 1.04 : 1
+    scale: area.pressed ? 0.95 : hover.hovered ? 1.04 : 1
 
     Behavior on scale {
         NumberAnimation {
@@ -34,6 +40,7 @@ Rectangle {
     }
 
     MouseArea {
+        id: area
         anchors.fill: parent
         onClicked: root.clicked()
     }
@@ -48,6 +55,12 @@ Rectangle {
             text: root.icon
             size: 20
             color: root.selected ? Theme.onAccent : root.danger ? Theme.danger : Theme.accent
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: Tokens.stateDuration
+                }
+            }
         }
 
         Column {
@@ -58,6 +71,12 @@ Rectangle {
                 text: root.label
                 elide: Text.ElideRight
                 color: root.selected ? Theme.onAccent : Theme.text
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: Tokens.stateDuration
+                    }
+                }
                 font.family: Tokens.fontUi
                 font.pixelSize: Tokens.nodeSize
                 font.weight: root.bold ? Font.DemiBold : Font.Normal
@@ -69,6 +88,12 @@ Rectangle {
                 text: root.sub
                 elide: Text.ElideRight
                 color: root.selected ? Theme.onAccent : Theme.textDim
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: Tokens.stateDuration
+                    }
+                }
                 font.family: Tokens.fontUi
                 font.pixelSize: Tokens.tinySize
             }

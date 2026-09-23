@@ -32,13 +32,12 @@ Item {
             ctx.reset();
             if (!loaded)
                 return;
-            ctx.save();
+            ctx.drawImage(root.source, 0, 0, width, height);
+            ctx.globalCompositeOperation = "destination-in";
             ctx.beginPath();
             ctx.roundedRect(0, 0, width, height, root.radius, root.radius);
-            ctx.closePath();
-            ctx.clip();
-            ctx.drawImage(root.source, 0, 0, width, height);
-            ctx.restore();
+            ctx.fill();
+            ctx.globalCompositeOperation = "source-over";
         }
     }
 

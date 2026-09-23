@@ -19,8 +19,22 @@ Item {
         anchors.fill: parent
         radius: Tokens.radiusTile
         color: hover.hovered ? Theme.tintMid : Theme.tint
+
+        Behavior on color {
+            ColorAnimation {
+                duration: Tokens.stateDuration
+            }
+        }
         border.width: 1
         border.color: Theme.cardLine
+        scale: bodyArea.pressed ? 0.97 : 1
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: 120
+                easing.type: Easing.OutCubic
+            }
+        }
 
         HoverHandler {
             id: hover
@@ -28,6 +42,7 @@ Item {
         }
 
         MouseArea {
+            id: bodyArea
             anchors.fill: parent
             onClicked: root.bodyClicked()
         }
@@ -39,16 +54,37 @@ Item {
             width: Tokens.tileIcon
             height: Tokens.tileIcon
             radius: Tokens.tileIconRadius
+            scale: iconArea.pressed ? 0.88 : 1
+
+            Behavior on scale {
+                NumberAnimation {
+                    duration: 120
+                    easing.type: Easing.OutCubic
+                }
+            }
             color: root.active ? Theme.accent : Theme.tintStrong
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: Tokens.stateDuration
+                }
+            }
 
             Glyph {
                 anchors.centerIn: parent
                 text: root.icon
                 size: Tokens.tileIconFont
                 color: root.active ? Theme.onAccent : Theme.text
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: Tokens.stateDuration
+                    }
+                }
             }
 
             MouseArea {
+                id: iconArea
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: root.iconClicked()

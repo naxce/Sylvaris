@@ -106,8 +106,20 @@ Item {
                 height: o.height / o.scale * root.fit.factor
                 radius: 8
                 color: modelData === root.selected ? Theme.fill : Theme.tintStrong
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: Tokens.stateDuration
+                    }
+                }
                 border.width: modelData === root.selected ? 2 : 1
                 border.color: modelData === root.selected ? Theme.accent : Theme.lineStrong
+
+                Behavior on border.color {
+                    ColorAnimation {
+                        duration: Tokens.stateDuration
+                    }
+                }
 
                 Text {
                     anchors.centerIn: parent
@@ -164,11 +176,23 @@ Item {
                     radius: 17
                     color: modelData === root.selected ? Theme.accent : Theme.tintMid
 
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Tokens.stateDuration
+                        }
+                    }
+
                     Text {
                         id: chipText
                         anchors.centerIn: parent
                         text: modelData + (root.draft[modelData].enabled ? "" : " · off")
                         color: modelData === root.selected ? Theme.onAccent : Theme.text
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Tokens.stateDuration
+                            }
+                        }
                         font.family: Tokens.fontUi
                         font.pixelSize: Tokens.smallSize
                     }
@@ -213,6 +237,12 @@ Item {
                     height: 32
                     radius: 10
                     color: on ? Theme.fill : Theme.tintSoft
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Tokens.stateDuration
+                        }
+                    }
                     border.width: on ? 1 : 0
                     border.color: Theme.accent
 
@@ -251,6 +281,12 @@ Item {
                     height: 32
                     radius: 10
                     color: on ? Theme.fill : Theme.tintSoft
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Tokens.stateDuration
+                        }
+                    }
                     border.width: on ? 1 : 0
                     border.color: Theme.accent
 

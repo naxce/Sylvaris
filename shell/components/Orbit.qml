@@ -53,6 +53,7 @@ Item {
     }
 
     Shape {
+        preferredRendererType: Shape.CurveRenderer
         anchors.fill: parent
 
         ShapePath {

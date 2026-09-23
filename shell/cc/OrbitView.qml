@@ -456,6 +456,12 @@ Item {
                 radius: 12
                 color: rowHover.hovered ? Theme.tintMid : "transparent"
 
+                Behavior on color {
+                    ColorAnimation {
+                        duration: Tokens.stateDuration
+                    }
+                }
+
                 HoverHandler {
                     id: rowHover
                     cursorShape: Qt.PointingHandCursor

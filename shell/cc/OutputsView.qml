@@ -28,6 +28,12 @@ Item {
                 height: 56
                 radius: Tokens.radiusRow
                 color: modelData.current ? Theme.tintStrong : rowHover.hovered ? Theme.tintMid : Theme.tintSoft
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: Tokens.stateDuration
+                    }
+                }
                 border.width: modelData.current ? 1 : 0
                 border.color: Theme.accent
 

@@ -30,6 +30,12 @@ Rectangle {
                 radius: 12
                 color: on ? Theme.accent : "transparent"
 
+                Behavior on color {
+                    ColorAnimation {
+                        duration: Tokens.stateDuration
+                    }
+                }
+
                 Row {
                     anchors.centerIn: parent
                     spacing: 8
@@ -40,12 +46,24 @@ Rectangle {
                         text: modelData.icon === undefined ? "" : modelData.icon
                         size: 16
                         color: on ? Theme.onAccent : Theme.text
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Tokens.stateDuration
+                            }
+                        }
                     }
 
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: modelData.label
                         color: on ? Theme.onAccent : Theme.text
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Tokens.stateDuration
+                            }
+                        }
                         font.family: Tokens.fontUi
                         font.pixelSize: Tokens.nodeSize
                         font.weight: Font.DemiBold

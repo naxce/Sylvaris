@@ -3,6 +3,7 @@ import QtQuick.Shapes
 import qs.services
 
 Shape {
+    preferredRendererType: Shape.CurveRenderer
     id: root
 
     property var geometry: ({

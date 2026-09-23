@@ -19,6 +19,7 @@ Item {
     height: Tokens.haloSize
 
     Shape {
+        preferredRendererType: Shape.CurveRenderer
         id: glow
         anchors.centerIn: parent
         width: root.width + 80
@@ -74,6 +75,7 @@ Item {
     }
 
     Shape {
+        preferredRendererType: Shape.CurveRenderer
         id: disc
         anchors.fill: parent
 
@@ -106,6 +108,7 @@ Item {
     }
 
     Shape {
+        preferredRendererType: Shape.CurveRenderer
         id: rim
         anchors.centerIn: parent
         width: root.rimOuter * 2

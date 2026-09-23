@@ -13,7 +13,21 @@ Rectangle {
     implicitHeight: Tokens.rowHeight
     implicitWidth: row.implicitWidth + 32
     radius: Tokens.radiusRow
+    scale: area.pressed ? 0.96 : 1
+
+    Behavior on scale {
+        NumberAnimation {
+            duration: 120
+            easing.type: Easing.OutCubic
+        }
+    }
     color: hover.hovered ? Theme.tintMid : Theme.tintSoft
+
+    Behavior on color {
+        ColorAnimation {
+            duration: Tokens.stateDuration
+        }
+    }
 
     HoverHandler {
         id: hover
@@ -21,6 +35,7 @@ Rectangle {
     }
 
     MouseArea {
+        id: area
         anchors.fill: parent
         onClicked: root.clicked()
     }
