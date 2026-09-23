@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+dir="${SYLVARIS_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/sylvaris}"
+
+usage() {
+    cat <<'EOF'
+Usage: sylvaris [command]
+
+  (no command)             start the shell
+  cc [toggle|open|close]   control SylvarisCC (default: toggle)
+  view <name>              open SylvarisCC on a view
+  state                    print the shell state as JSON
+EOF
+}
+
+call() {
+    exec qs -p "$dir" ipc call sylvaris "$@"
+}
+
+case "${1:-}" in
+"")
+    exec qs -p "$dir" -n
+    ;;
+cc)
+    action="${2:-toggle}"
+    case "$action" in
+    toggle | open | close) ;;
+    *)
+        echo "sylvaris: unknown action '$action'" >&2
+        exit 2
+        ;;
+    esac
+    call "$action" cc
+    ;;
+view)
+    if [ -z "${2:-}" ]; then
+        usage >&2
+        exit 2
+    fi
+    call view "$2"
+    ;;
+state)
+    call state
+    ;;
+-h | --help)
+    usage
+    ;;
+*)
+    echo "sylvaris: unknown command '$1'" >&2
+    usage >&2
+    exit 2
+    ;;
+esac
