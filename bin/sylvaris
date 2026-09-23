@@ -9,7 +9,8 @@ Usage: sylvaris [command]
 
   (no command)             start the shell
   cc [toggle|open|close]   control SylvarisCC (default: toggle)
-  view <name>              open SylvarisCC on a view
+  view <name>              open SylvarisCC on a view (tp opens SylvarisTP)
+  tp [toggle|open|close|next|prev|apply]  control SylvarisTP (default: toggle)
   state                    print the shell state as JSON
 EOF
 }
@@ -32,6 +33,21 @@ cc)
         ;;
     esac
     call "$action" cc
+    ;;
+tp)
+    action="${2:-toggle}"
+    case "$action" in
+    toggle | open | close)
+        call "$action" tp
+        ;;
+    next | prev | apply)
+        call tp "$action"
+        ;;
+    *)
+        echo "sylvaris: unknown action '$action'" >&2
+        exit 2
+        ;;
+    esac
     ;;
 view)
     if [ -z "${2:-}" ]; then

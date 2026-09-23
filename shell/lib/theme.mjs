@@ -176,7 +176,8 @@ export function nextThemeId(ids, current) {
 }
 
 export function catalogEntry(id, raw) {
-    const t = validateTheme(raw).theme
     const named = isObject(raw) && typeof raw.name === "string" && raw.name.trim() !== ""
-    return { id: id, name: named ? raw.name : id, description: t.description, wallpaper: t.wallpaper, colors: t.colors }
+    const name = named ? raw.name : id
+    const t = validateTheme(isObject(raw) ? Object.assign({}, raw, { id: ID.test(id) ? id : "theme", name: name }) : raw).theme
+    return { id: id, name: name, description: t.description, wallpaper: t.wallpaper, colors: t.colors }
 }

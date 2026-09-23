@@ -256,7 +256,7 @@ Item {
                 width: (bottomRow.width - bottomRow.spare) / (Displays.available ? 2 : 1)
                 icon: Icons.GLYPHS.theme
                 label: "Theme"
-                onClicked: Theme.cycle()
+                onClicked: root.openView("tp")
             }
 
             RowButton {

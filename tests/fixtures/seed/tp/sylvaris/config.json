@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "themesDir": "~/.config/sylvaris/themes",
+  "themeStateFile": "~/.config/sylvaris/theme-state",
+  "themeHook": "f() { printf '%s\\n' \"$1\" >> \"$HOME/hook.log\"; printf %s \"$1\" > \"$HOME/.config/sylvaris/theme-state\"; }; f"
+}

@@ -15,6 +15,8 @@ Scope {
     property var screenInfo: null
     readonly property string corner: Settings.values.cc.corner
     readonly property bool expanded: root.view !== "compact"
+    signal partRequested(string name)
+
     readonly property var views: ["compact", "orbit-bluetooth", "orbit-wifi", "calendar", "outputs", "displays", "hotspot"]
 
     function applyView(name: string): void {
@@ -50,6 +52,11 @@ Scope {
         root.shown = false;
         root.view = "compact";
         root.focusKey = "";
+    }
+
+    function handOff(name: string): void {
+        root.close();
+        root.partRequested(name);
     }
 
     function toggle(): void {
@@ -246,7 +253,7 @@ Scope {
                 opacity: root.expanded ? 0 : 1
                 visible: opacity > 0
                 enabled: !root.expanded
-                onOpenView: name => root.applyView(name)
+                onOpenView: name => name === "tp" ? root.handOff(name) : root.applyView(name)
 
                 Behavior on opacity {
                     NumberAnimation {

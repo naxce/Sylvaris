@@ -143,3 +143,9 @@ test("catalogEntry survives a broken theme", () => {
     assert.equal(e.wallpaper, "")
     assert.equal(e.colors.accent, DEFAULT_THEME.colors.accent)
 })
+
+test("catalogEntry keeps a nameless theme's own colors", () => {
+    const e = catalogEntry("coal", Object.assign({}, warm, { name: undefined, id: undefined }))
+    assert.equal(e.colors.accent, warm.colors.accent)
+    assert.equal(e.name, "coal")
+})

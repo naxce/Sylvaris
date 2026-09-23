@@ -4,12 +4,14 @@ import Quickshell.Io
 import qs
 import qs.services
 import qs.cc
+import qs.tp
 
 ShellRoot {
     id: root
 
     property var parts: ({
-            cc: ccPart
+            cc: ccPart,
+            tp: tpPart
         })
     readonly property var boot: [Tokens, Config, Settings, Theme, Resin, ThemePreview, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
 
@@ -86,6 +88,12 @@ ShellRoot {
                 focus: ccPart.focusKey,
                 screen: ccPart.screenInfo ? ccPart.screenInfo.name : ""
             },
+            tp: {
+                open: tpPart.shown,
+                front: tpPart.front,
+                original: ThemePreview.original,
+                applied: ThemePreview.applied
+            },
             config: Config.values,
             configNotice: Config.notice,
             settings: Settings.values,
@@ -109,6 +117,20 @@ ShellRoot {
 
     SylvarisCC {
         id: ccPart
+        onPartRequested: name => {
+            const p = root.part(name);
+            if (p !== null)
+                p.open();
+        }
+        onShownChanged: {
+            if (ccPart.shown)
+                tpPart.cancel();
+        }
+    }
+
+    SylvarisTP {
+        id: tpPart
+        onOpened: ccPart.close()
     }
 
     IpcHandler {
@@ -139,10 +161,26 @@ ShellRoot {
         }
 
         function view(name: string): string {
+            if (name === "tp") {
+                tpPart.open();
+                return "ok";
+            }
             const p = root.part("cc");
             if (p === null)
                 return "unknown part: cc";
             p.setView(name);
+            return "ok";
+        }
+
+        function tp(action: string): string {
+            if (action === "next")
+                tpPart.step(1);
+            else if (action === "prev")
+                tpPart.step(-1);
+            else if (action === "apply")
+                tpPart.commit();
+            else
+                return "unknown tp action: " + action;
             return "ok";
         }
 
