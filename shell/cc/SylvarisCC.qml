@@ -78,6 +78,8 @@ Scope {
             return outputsView;
         if (v === "hotspot")
             return hotspotView;
+        if (v === "displays")
+            return displaysView;
         return null;
     }
 
@@ -112,6 +114,14 @@ Scope {
         id: hotspotView
 
         HotspotView {
+            onCloseRequested: root.applyView("compact")
+        }
+    }
+
+    Component {
+        id: displaysView
+
+        DisplaysView {
             onCloseRequested: root.applyView("compact")
         }
     }
