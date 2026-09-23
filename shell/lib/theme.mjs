@@ -1,0 +1,175 @@
+export const COLOR_KEYS = ["base", "surface", "accent", "accentHi", "accentDeep", "onAccent", "text", "textDim", "textSoft", "danger"]
+export const ALPHA_KEYS = ["surface", "glass", "line", "tint"]
+
+export const DEFAULT_THEME = {
+    version: 1,
+    id: "sylvaris",
+    name: "Sylvaris",
+    description: "Moss and slate",
+    wallpaper: "",
+    colors: {
+        base: "#121417",
+        surface: "#1d2126",
+        accent: "#5fb3a1",
+        accentHi: "#86d1bf",
+        accentDeep: "#3f8a7a",
+        onAccent: "#0c1412",
+        text: "#e4ece9",
+        textDim: "#8fa39d",
+        textSoft: "#c3d2cd",
+        danger: "#e0705a"
+    },
+    alpha: { surface: 0.9, glass: 0.62, line: 0.16, tint: 0.08 }
+}
+
+const HEX = /^#([0-9a-fA-F]{6})$/
+const ID = /^[a-z0-9_-]+$/
+
+function isObject(v) {
+    return v !== null && typeof v === "object" && !Array.isArray(v)
+}
+
+function clone(v) {
+    return JSON.parse(JSON.stringify(v))
+}
+
+function hex2(n) {
+    const s = n.toString(16)
+    return s.length === 1 ? "0" + s : s
+}
+
+export function parseHex(s) {
+    const m = typeof s === "string" ? HEX.exec(s) : null
+    if (m === null)
+        return null
+    const n = parseInt(m[1], 16)
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 }
+}
+
+export function withAlpha(hex, alpha) {
+    const c = parseHex(hex)
+    if (c === null)
+        return "#00000000"
+    const a = Math.round(Math.min(1, Math.max(0, alpha)) * 255)
+    return "#" + hex2(a) + hex2(c.r) + hex2(c.g) + hex2(c.b)
+}
+
+export function validateTheme(raw) {
+    if (!isObject(raw))
+        return { ok: false, theme: clone(DEFAULT_THEME), errors: ["theme is not an object"] }
+    const errors = []
+    if (typeof raw.id !== "string" || !ID.test(raw.id))
+        errors.push("id must match [a-z0-9_-]+")
+    if (typeof raw.name !== "string" || raw.name.length === 0)
+        errors.push("name is required")
+    if (errors.length > 0)
+        return { ok: false, theme: clone(DEFAULT_THEME), errors: errors }
+
+    const rc = isObject(raw.colors) ? raw.colors : {}
+    const colors = {}
+    for (const key of COLOR_KEYS) {
+        if (parseHex(rc[key]) !== null) {
+            colors[key] = rc[key].toLowerCase()
+            continue
+        }
+        if (rc[key] !== undefined)
+            errors.push("invalid color " + key)
+        colors[key] = key === "textSoft" && parseHex(rc.text) !== null ? rc.text.toLowerCase() : DEFAULT_THEME.colors[key]
+    }
+
+    const ra = isObject(raw.alpha) ? raw.alpha : {}
+    const alpha = {}
+    for (const key of ALPHA_KEYS) {
+        const a = ra[key]
+        if (typeof a === "number" && a >= 0 && a <= 1) {
+            alpha[key] = a
+            continue
+        }
+        if (a !== undefined)
+            errors.push("invalid alpha " + key)
+        alpha[key] = DEFAULT_THEME.alpha[key]
+    }
+
+    return {
+        ok: true,
+        errors: errors,
+        theme: {
+            version: 1,
+            id: raw.id,
+            name: raw.name,
+            description: typeof raw.description === "string" ? raw.description : "",
+            wallpaper: typeof raw.wallpaper === "string" ? raw.wallpaper : "",
+            colors: colors,
+            alpha: alpha
+        }
+    }
+}
+
+export function tokens(theme) {
+    const c = theme.colors
+    const a = theme.alpha
+    return {
+        base: c.base,
+        surface: withAlpha(c.base, a.surface),
+        glass: withAlpha(c.base, a.glass),
+        node: withAlpha(c.surface, 0.94),
+        line: withAlpha(c.accentDeep, a.line),
+        lineStrong: withAlpha(c.accentDeep, 0.24),
+        cardLine: withAlpha(c.accentDeep, 0.14),
+        tint: withAlpha(c.accentDeep, a.tint),
+        tintSoft: withAlpha(c.accentDeep, 0.06),
+        tintMid: withAlpha(c.accentDeep, 0.1),
+        tintStrong: withAlpha(c.accentDeep, 0.16),
+        moon: withAlpha(c.accentDeep, 0.4),
+        fill: withAlpha(c.accent, 0.35),
+        glow: withAlpha(c.accent, 0.25),
+        silk: withAlpha(c.accentHi, 0.8),
+        sonar: withAlpha(c.accentHi, 0.7),
+        accent: c.accent,
+        accentHi: c.accentHi,
+        accentDeep: c.accentDeep,
+        onAccent: c.onAccent,
+        text: c.text,
+        textDim: c.textDim,
+        textSoft: c.textSoft,
+        danger: c.danger
+    }
+}
+
+export function parseArgb(s) {
+    if (typeof s !== "string")
+        return null
+    const m8 = /^#([0-9a-fA-F]{8})$/.exec(s)
+    if (m8 !== null) {
+        const n = parseInt(m8[1], 16)
+        return { a: Math.floor(n / 16777216) & 255, r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 }
+    }
+    const c = parseHex(s)
+    return c === null ? null : { a: 255, r: c.r, g: c.g, b: c.b }
+}
+
+export function mixArgb(from, to, t) {
+    const b = parseArgb(to)
+    if (b === null)
+        return "#00000000"
+    const a = parseArgb(from)
+    const k = Math.min(1, Math.max(0, t))
+    const src = a === null ? b : a
+    const lerp = (x, y) => Math.round(x + (y - x) * k)
+    return "#" + hex2(lerp(src.a, b.a)) + hex2(lerp(src.r, b.r)) + hex2(lerp(src.g, b.g)) + hex2(lerp(src.b, b.b))
+}
+
+export function mixTokens(from, to, t) {
+    const out = {}
+    for (const key of Object.keys(to))
+        out[key] = mixArgb(from && from[key] !== undefined ? from[key] : to[key], to[key], t)
+    return out
+}
+
+export function nextThemeId(ids, current) {
+    if (!Array.isArray(ids) || ids.length === 0)
+        return ""
+    const sorted = ids.slice().sort()
+    const i = sorted.indexOf(current)
+    return i < 0 ? sorted[0] : sorted[(i + 1) % sorted.length]
+}
