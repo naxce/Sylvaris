@@ -1,0 +1,176 @@
+export const CORNERS = ["top-left", "top-center", "top-right"]
+
+export const DEFAULT_CONFIG = {
+    version: 1,
+    themesDir: "~/.config/sylvaris/themes",
+    themeHook: "",
+    themeStateFile: "~/.local/state/sylvaris/theme",
+    avatar: "~/.face",
+    lockCommand: "loginctl lock-session",
+    terminal: "kitty",
+    toggles: [],
+    commands: []
+}
+
+export const DEFAULT_SETTINGS = {
+    version: 1,
+    cc: { corner: "top-right" },
+    nightLight: { enabled: false, temperature: 4000 },
+    displays: { layouts: {} },
+    toggleState: {},
+    hotspot: { ssid: "Sylvaris", band: "bg" }
+}
+
+const TOGGLE_ID = /^[a-z0-9_-]+$/
+const STRING_KEYS = ["themesDir", "themeHook", "themeStateFile", "avatar", "lockCommand", "terminal"]
+const DEFAULT_TOGGLE_ICON = String.fromCodePoint(0xF0521)
+
+function isObject(v) {
+    return v !== null && typeof v === "object" && !Array.isArray(v)
+}
+
+function clone(v) {
+    return v === undefined ? undefined : JSON.parse(JSON.stringify(v))
+}
+
+function str(v, fallback) {
+    return typeof v === "string" ? v : fallback
+}
+
+export function parseJson(text) {
+    if (text === null || text === undefined || String(text).trim() === "")
+        return { ok: true, value: {} }
+    try {
+        const value = JSON.parse(text)
+        if (!isObject(value))
+            return { ok: false, error: "top level is not an object" }
+        return { ok: true, value: value }
+    } catch (e) {
+        return { ok: false, error: String(e && e.message ? e.message : e) }
+    }
+}
+
+export function expandHome(path, home) {
+    if (typeof path !== "string")
+        return path
+    if (path === "~")
+        return home
+    if (path.indexOf("~/") === 0)
+        return home + path.slice(1)
+    return path
+}
+
+export function deepMerge(base, over) {
+    if (!isObject(base) || !isObject(over))
+        return clone(over === undefined ? base : over)
+    const out = clone(base)
+    for (const key of Object.keys(over)) {
+        if (over[key] === undefined)
+            continue
+        out[key] = isObject(base[key]) && isObject(over[key]) ? deepMerge(base[key], over[key]) : clone(over[key])
+    }
+    return out
+}
+
+export function migrate(raw) {
+    const v = isObject(raw) ? clone(raw) : {}
+    if (typeof v.version !== "number")
+        v.version = 1
+    return v
+}
+
+function normalizeToggle(def) {
+    if (!isObject(def) || typeof def.id !== "string" || !TOGGLE_ID.test(def.id) || typeof def.label !== "string")
+        return null
+    return Object.assign({}, def, {
+        icon: str(def.icon, DEFAULT_TOGGLE_ICON),
+        on: str(def.on, ""),
+        off: str(def.off, ""),
+        status: str(def.status, "")
+    })
+}
+
+export function validateConfig(raw) {
+    const v = migrate(raw)
+    for (const key of STRING_KEYS)
+        v[key] = str(v[key], DEFAULT_CONFIG[key])
+    const seen = {}
+    const toggles = []
+    if (Array.isArray(v.toggles)) {
+        for (const def of v.toggles) {
+            const t = normalizeToggle(def)
+            if (t !== null && !seen[t.id]) {
+                seen[t.id] = true
+                toggles.push(t)
+            }
+        }
+    }
+    v.toggles = toggles
+    v.commands = Array.isArray(v.commands) ? v.commands : []
+    return v
+}
+
+export function validateSettings(raw) {
+    const v = migrate(raw)
+    const d = DEFAULT_SETTINGS
+
+    const cc = isObject(v.cc) ? v.cc : {}
+    v.cc = Object.assign({}, cc, { corner: CORNERS.includes(cc.corner) ? cc.corner : d.cc.corner })
+
+    const nl = isObject(v.nightLight) ? v.nightLight : {}
+    const t = nl.temperature
+    v.nightLight = Object.assign({}, nl, {
+        enabled: nl.enabled === true,
+        temperature: Number.isInteger(t) && t >= 1000 && t <= 10000 ? t : d.nightLight.temperature
+    })
+
+    const displays = isObject(v.displays) ? v.displays : {}
+    v.displays = Object.assign({}, displays, { layouts: isObject(displays.layouts) ? displays.layouts : {} })
+
+    const ts = isObject(v.toggleState) ? v.toggleState : {}
+    const toggleState = {}
+    for (const key of Object.keys(ts)) {
+        if (typeof ts[key] === "boolean")
+            toggleState[key] = ts[key]
+    }
+    v.toggleState = toggleState
+
+    const hs = isObject(v.hotspot) ? v.hotspot : {}
+    const ssid = hs.ssid
+    v.hotspot = Object.assign({}, hs, {
+        ssid: typeof ssid === "string" && ssid.length >= 1 && ssid.length <= 32 ? ssid : d.hotspot.ssid,
+        band: hs.band === "a" ? "a" : "bg"
+    })
+    return v
+}
+
+export function merge(config, settings) {
+    return deepMerge(validateConfig(config), validateSettings(settings))
+}
+
+export function getPath(obj, path) {
+    let cur = obj
+    for (const part of path.split(".")) {
+        if (!isObject(cur) || !(part in cur))
+            return undefined
+        cur = cur[part]
+    }
+    return cur
+}
+
+export function setPath(obj, path, value) {
+    const parts = path.split(".")
+    const out = isObject(obj) ? clone(obj) : {}
+    let cur = out
+    for (let i = 0; i < parts.length - 1; i++) {
+        if (!isObject(cur[parts[i]]))
+            cur[parts[i]] = {}
+        cur = cur[parts[i]]
+    }
+    cur[parts[parts.length - 1]] = clone(value)
+    return out
+}
+
+export function serialize(obj) {
+    return JSON.stringify(obj, null, 2) + "\n"
+}
