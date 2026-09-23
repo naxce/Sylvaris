@@ -1,0 +1,50 @@
+[
+  {
+    "name": "HDMI-A-1",
+    "description": "Example TV (HDMI-A-1)",
+    "make": "Example",
+    "model": "TV",
+    "serial": "0x0",
+    "physical_size": { "width": 640, "height": 360 },
+    "enabled": false,
+    "modes": [
+      { "width": 1920, "height": 1080, "refresh": 60.0, "preferred": true, "current": false },
+      { "width": 1280, "height": 720, "refresh": 60.0, "preferred": false, "current": false }
+    ]
+  },
+  {
+    "name": "DP-1",
+    "description": "Example Monitor A (DP-1)",
+    "make": "Example",
+    "model": "Monitor A",
+    "serial": "0x1",
+    "physical_size": { "width": 530, "height": 300 },
+    "enabled": true,
+    "modes": [
+      { "width": 1920, "height": 1080, "refresh": 179.964005, "preferred": false, "current": true },
+      { "width": 1920, "height": 1080, "refresh": 60.0, "preferred": true, "current": false },
+      { "width": 1920, "height": 1080, "refresh": 60.0, "preferred": false, "current": false }
+    ],
+    "position": { "x": 0, "y": 500 },
+    "transform": "normal",
+    "scale": 1.0,
+    "adaptive_sync": false
+  },
+  {
+    "name": "DP-2",
+    "description": "Example Monitor B (DP-2)",
+    "make": "Example",
+    "model": "Monitor B",
+    "serial": "0x2",
+    "physical_size": { "width": 600, "height": 340 },
+    "enabled": true,
+    "modes": [
+      { "width": 2560, "height": 1440, "refresh": 200.013, "preferred": false, "current": true },
+      { "width": 2560, "height": 1440, "refresh": 59.951, "preferred": true, "current": false }
+    ],
+    "position": { "x": 1920, "y": 0 },
+    "transform": "normal",
+    "scale": 1.0,
+    "adaptive_sync": false
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "index": 52,
+    "name": "alsa_card.pci-0000_00_1f.3",
+    "active_profile": "output:analog-stereo",
+    "profiles": {
+      "off": { "description": "Off", "sinks": 0, "sources": 0, "priority": 0, "available": true }
+    }
+  },
+  {
+    "index": 80,
+    "name": "bluez_card.00_11_22_33_44_01",
+    "active_profile": "a2dp-sink",
+    "profiles": {
+      "off": { "description": "Off", "sinks": 0, "sources": 0, "priority": 0, "available": true },
+      "a2dp-sink-sbc": { "description": "High Fidelity Playback (A2DP Sink, codec SBC)", "sinks": 1, "sources": 0, "priority": 18, "available": true },
+      "a2dp-sink": { "description": "High Fidelity Playback (A2DP Sink, codec AAC)", "sinks": 1, "sources": 0, "priority": 19, "available": true },
+      "headset-head-unit-cvsd": { "description": "Headset Head Unit (HSP/HFP, codec CVSD)", "sinks": 1, "sources": 1, "priority": 1, "available": true },
+      "headset-head-unit": { "description": "Headset Head Unit (HSP/HFP, codec mSBC)", "sinks": 1, "sources": 1, "priority": 2, "available": true }
+    }
+  },
+  {
+    "index": 81,
+    "name": "bluez_card.00_11_22_33_44_05",
+    "active_profile": "headset-head-unit",
+    "profiles": {
+      "a2dp-sink": { "description": "High Fidelity Playback (A2DP Sink)", "sinks": 1, "sources": 0, "priority": 19, "available": false },
+      "a2dp-sink-sbc": { "description": "High Fidelity Playback (A2DP Sink, codec SBC)", "sinks": 1, "sources": 0, "priority": 18, "available": true },
+      "headset-head-unit": { "description": "Headset Head Unit (HSP/HFP)", "sinks": 1, "sources": 1, "priority": 2, "available": true }
+    }
+  }
+]
