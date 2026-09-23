@@ -27,3 +27,9 @@ export function cancel(state) {
         return { state: idle(), apply: "" }
     return { state: idle(), apply: state.original !== "" && state.applied !== state.original ? state.original : "" }
 }
+
+export function wheelStep(acc, delta) {
+    const next = acc + delta
+    const steps = -Math.trunc(next / 120)
+    return { acc: next + steps * 120, steps: steps }
+}

@@ -5,6 +5,7 @@ import Quickshell.Wayland
 import qs
 import qs.services
 import qs.components
+import "../lib/preview.mjs" as P
 
 Scope {
     id: root
@@ -12,6 +13,7 @@ Scope {
     property bool shown: false
     property bool wanted: false
     property var screenInfo: null
+    property real wheelAcc: 0
     readonly property var ids: Theme.ids
     readonly property string front: carousel.count > 0 && carousel.currentIndex >= 0 && carousel.currentIndex < root.ids.length ? root.ids[carousel.currentIndex] : ""
     readonly property var frontEntry: root.front !== "" && Theme.catalog[root.front] !== undefined ? Theme.catalog[root.front] : null
@@ -30,6 +32,7 @@ Scope {
             carousel.positionViewAtIndex(Math.max(0, i), PathView.Beginning);
             carousel.currentIndex = Math.max(0, i);
             ThemePreview.begin(Theme.currentId);
+            root.wheelAcc = 0;
             root.shown = true;
             root.opened();
         });
@@ -279,8 +282,17 @@ Scope {
                     }
                 }
 
+                TapHandler {
+                    onTapped: root.cancel()
+                }
+
                 WheelHandler {
-                    onWheel: event => root.step(event.angleDelta.y < 0 || event.angleDelta.x < 0 ? 1 : -1)
+                    onWheel: event => {
+                        const r = P.wheelStep(root.wheelAcc, event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x);
+                        root.wheelAcc = r.acc;
+                        for (let i = 0; i < Math.abs(r.steps); i++)
+                            root.step(r.steps > 0 ? 1 : -1);
+                    }
                 }
             }
 

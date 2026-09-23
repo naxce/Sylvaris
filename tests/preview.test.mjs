@@ -1,6 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { idle, begin, settle, fire, commit, cancel } from "../shell/lib/preview.mjs"
+import { idle, begin, settle, fire, commit, cancel, wheelStep } from "../shell/lib/preview.mjs"
 
 test("begin remembers the original theme", () => {
     assert.deepEqual(begin("warm"), { active: true, original: "warm", applied: "warm", pending: "" })
@@ -50,4 +50,29 @@ test("calls while idle do nothing", () => {
     assert.equal(fire(idle()).apply, "")
     assert.equal(commit(idle(), "x").apply, "")
     assert.equal(cancel(idle()).apply, "")
+})
+
+test("a mouse wheel notch moves one card", () => {
+    assert.deepEqual(wheelStep(0, -120), { acc: 0, steps: 1 })
+    assert.deepEqual(wheelStep(0, 120), { acc: 0, steps: -1 })
+})
+
+test("touchpad deltas add up to one card per 120 units", () => {
+    let acc = 0
+    let steps = 0
+    for (let i = 0; i < 15; i++) {
+        const r = wheelStep(acc, -8)
+        acc = r.acc
+        steps += r.steps
+    }
+    assert.equal(steps, 1)
+    assert.equal(acc, 0)
+})
+
+test("a zero delta moves nothing", () => {
+    assert.deepEqual(wheelStep(-40, 0), { acc: -40, steps: 0 })
+})
+
+test("a large delta moves several cards and keeps the remainder", () => {
+    assert.deepEqual(wheelStep(0, -250), { acc: -10, steps: 2 })
 })
