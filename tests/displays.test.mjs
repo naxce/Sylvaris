@@ -72,6 +72,17 @@ test("fitScale fits enabled outputs into a box", () => {
     assert.deepEqual(fitScale({}, 564, 360, 24), { factor: 1, minX: 0, minY: 0 })
 })
 
+test("modeLabel shows decimals when another mode rounds to the same label", () => {
+    const modes = [
+        { width: 1920, height: 1080, refresh: 119.93 },
+        { width: 1920, height: 1080, refresh: 119.879 },
+        { width: 1280, height: 720, refresh: 119.9 }
+    ]
+    assert.equal(modeLabel(modes[0], modes), "1920×1080 · 119.93 Hz")
+    assert.equal(modeLabel(modes[1], modes), "1920×1080 · 119.88 Hz")
+    assert.equal(modeLabel(modes[2], modes), "1280×720 · 120 Hz")
+})
+
 test("modeLabel is human readable", () => {
     assert.equal(modeLabel({ width: 2560, height: 1440, refresh: 200.013 }), "2560×1440 · 200 Hz")
 })

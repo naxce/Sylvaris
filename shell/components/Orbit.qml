@@ -33,8 +33,12 @@ Item {
 
     onKeySignatureChanged: enterAnim.restart()
 
+    HoverHandler {
+        id: hover
+    }
+
     FrameAnimation {
-        running: root.visible
+        running: root.visible && !hover.hovered
         onTriggered: root.t += frameTime
     }
 

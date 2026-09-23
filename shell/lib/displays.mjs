@@ -130,8 +130,10 @@ export function fitScale(snap, boxW, boxH, pad) {
     return { factor: factor, minX: minX, minY: minY }
 }
 
-export function modeLabel(mode) {
-    return mode.width + "×" + mode.height + " · " + Math.round(mode.refresh) + " Hz"
+export function modeLabel(mode, modes) {
+    const r = Math.round(mode.refresh)
+    const clash = (modes || []).some(m => Math.abs(m.refresh - mode.refresh) > 0.001 && m.width === mode.width && m.height === mode.height && Math.round(m.refresh) === r)
+    return mode.width + "×" + mode.height + " · " + (clash ? Number(mode.refresh).toFixed(2) : r) + " Hz"
 }
 
 export function canApply(snap) {

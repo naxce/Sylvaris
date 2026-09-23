@@ -219,7 +219,7 @@ Item {
                     Text {
                         id: modeText
                         anchors.centerIn: parent
-                        text: D.modeLabel(modelData)
+                        text: D.modeLabel(modelData, root.modes)
                         color: Theme.text
                         font.family: Tokens.fontUi
                         font.pixelSize: Tokens.tinySize
