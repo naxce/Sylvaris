@@ -1,0 +1,11 @@
+sleep 1.5
+ipc open cc
+sleep 0.6
+shot glass-on
+write sylvaris/settings.json {"version":1,"glass":{"enabled":false}}
+sleep 1
+ipc state
+shot glass-off
+write sylvaris/settings.json {"version":1,"glass":{"opacity":7}}
+sleep 1
+ipc state

@@ -11,7 +11,7 @@ ShellRoot {
     property var parts: ({
             cc: ccPart
         })
-    readonly property var boot: [Tokens, Config, Settings, Theme, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
+    readonly property var boot: [Tokens, Config, Settings, Theme, Resin, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
 
     function part(name: string): var {
         return root.parts[name] === undefined ? null : root.parts[name];
@@ -90,6 +90,10 @@ ShellRoot {
             configNotice: Config.notice,
             settings: Settings.values,
             settingsNotice: Settings.notice,
+            glass: {
+                values: Resin.values,
+                notice: Resin.notice
+            },
             theme: {
                 id: Theme.currentId,
                 active: Theme.theme.id,

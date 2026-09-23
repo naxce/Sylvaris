@@ -192,7 +192,7 @@ Item {
         Text {
             width: parent.width
             visible: text !== ""
-            text: Config.notice !== "" ? Config.notice : Settings.notice !== "" ? Settings.notice : (Theme.errors.length > 0 ? Theme.errors[0] : "")
+            text: Config.notice !== "" ? Config.notice : Settings.notice !== "" ? Settings.notice : Resin.notice !== "" ? Resin.notice : (Theme.errors.length > 0 ? Theme.errors[0] : "")
             wrapMode: Text.WordWrap
             color: Theme.danger
             font.family: Tokens.fontUi
