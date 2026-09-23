@@ -72,6 +72,12 @@ Scope {
     function componentFor(v: string): var {
         if (v === "orbit-bluetooth" || v === "orbit-wifi")
             return orbitView;
+        if (v === "calendar")
+            return calendarView;
+        if (v === "outputs")
+            return outputsView;
+        if (v === "hotspot")
+            return hotspotView;
         return null;
     }
 
@@ -82,6 +88,30 @@ Scope {
             mode: root.view === "orbit-wifi" ? "wifi" : "bluetooth"
             initialFocus: root.focusKey
             onModeRequested: m => root.applyView("orbit-" + m)
+            onCloseRequested: root.applyView("compact")
+        }
+    }
+
+    Component {
+        id: calendarView
+
+        CalendarView {
+            onCloseRequested: root.applyView("compact")
+        }
+    }
+
+    Component {
+        id: outputsView
+
+        OutputsView {
+            onCloseRequested: root.applyView("compact")
+        }
+    }
+
+    Component {
+        id: hotspotView
+
+        HotspotView {
             onCloseRequested: root.applyView("compact")
         }
     }

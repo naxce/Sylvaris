@@ -1,0 +1,10 @@
+sleep 1.5
+ipc view calendar
+sleep 1.2
+shot calendar
+ipc view outputs
+sleep 1.2
+shot outputs
+ipc view hotspot
+sleep 1.2
+shot hotspot
