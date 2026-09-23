@@ -171,7 +171,7 @@ nix flake check
 tests/headless/run.sh tests/headless/out/compact tests/headless/compact.steps tests/fixtures/seed/warm
 ```
 
-`tests/headless/run.sh` starts a headless sway with no visible output, runs Sylvaris inside it with `SYLVARIS_DEMO=1` (fixture devices instead of real ones), drives it over IPC and saves screenshots. It never touches your real devices or screens. `docs/design/reference.html` is the visual source of truth.
+`tests/headless/run.sh` starts a headless sway with no visible output, runs Sylvaris inside it with `SYLVARIS_DEMO=1` (fixture devices instead of real ones), drives it over IPC and saves screenshots. It never touches your real devices or screens. It renders in software by default; set `HL_RENDERER=gles2 HL_QT_BACKEND=opengl` to render on the GPU, which texture-filled shapes such as album art and theme photos need. `docs/design/reference.html` is the visual source of truth.
 
 ## Credits
 

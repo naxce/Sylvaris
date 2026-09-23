@@ -38,7 +38,7 @@ cleanup() {
 trap cleanup EXIT
 
 env -i HOME="$home" PATH="$PATH" XDG_RUNTIME_DIR="$rt" \
-    WLR_BACKENDS=headless WLR_LIBINPUT_NO_DEVICES=1 WLR_RENDERER=pixman \
+    WLR_BACKENDS=headless WLR_LIBINPUT_NO_DEVICES=1 WLR_RENDERER="${HL_RENDERER:-pixman}" \
     sway -c "$out/sway.conf" >"$out/sway.log" 2>&1 &
 sway_pid=$!
 
@@ -57,7 +57,7 @@ sock="$rt/$(command ls "$rt" | grep -m1 '^sway-ipc')"
 
 hl_env=(env -i HOME="$home" PATH="${HL_QS_PATH:-$PATH}" XDG_RUNTIME_DIR="$rt"
     XDG_CONFIG_HOME="$home/.config" WAYLAND_DISPLAY="$display" SWAYSOCK="$sock"
-    QT_QUICK_BACKEND=software SYLVARIS_DEMO="${SYLVARIS_DEMO:-1}" SYLVARIS_TRACE=1
+    QT_QUICK_BACKEND="${HL_QT_BACKEND:-software}" SYLVARIS_DEMO="${SYLVARIS_DEMO:-1}" SYLVARIS_TRACE=1
     USER="${USER:-user}" LANG="${LANG:-C.UTF-8}")
 if [ -n "${HL_NIRI_SOCKET:-}" ]; then
     hl_env+=(NIRI_SOCKET="$HL_NIRI_SOCKET")

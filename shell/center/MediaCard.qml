@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Shapes
 import qs
 import qs.services
 import qs.components
@@ -19,14 +20,13 @@ Rectangle {
         offBorder: Theme.cardLine
     }
 
-
     Rectangle {
         id: artBox
-        x: Tokens.cardPadding
-        anchors.verticalCenter: parent.verticalCenter
-        width: Tokens.artSize
-        height: Tokens.artSize
-        radius: Tokens.radiusRow
+        width: root.height
+        height: root.height
+        topLeftRadius: root.radius
+        bottomLeftRadius: root.radius
+        antialiasing: true
         gradient: Gradient {
             orientation: Gradient.Vertical
             GradientStop {
@@ -38,11 +38,49 @@ Rectangle {
                 color: Theme.surface
             }
         }
+    }
 
-        RoundImage {
-            anchors.fill: parent
-            radius: Tokens.radiusRow
-            source: Media.art
+    Image {
+        id: art
+        anchors.fill: artBox
+        visible: false
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+        smooth: true
+        mipmap: true
+        sourceSize.height: root.height * 2
+        source: Media.art
+    }
+
+    ShaderEffectSource {
+        id: artTexture
+        anchors.fill: artBox
+        visible: false
+        sourceItem: art
+        hideSource: true
+        mipmap: true
+        smooth: true
+    }
+
+    Shape {
+        anchors.fill: artBox
+        visible: art.status === Image.Ready
+        layer.enabled: true
+        layer.samples: 8
+        layer.smooth: true
+
+        ShapePath {
+            strokeWidth: -1
+            fillItem: artTexture
+
+            PathRectangle {
+                x: 0
+                y: 0
+                width: artBox.width
+                height: artBox.height
+                topLeftRadius: root.radius
+                bottomLeftRadius: root.radius
+            }
         }
     }
 
