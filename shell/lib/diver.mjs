@@ -197,6 +197,24 @@ const api = (function () {
     return dayKey(d);
   }
 
+  function untilAfter(due, rule, n) {
+    const r = validRule(rule);
+    if (!r || !parseDay(due) || !(n >= 1)) return null;
+    let key = first(due, r);
+    for (let i = 1; i < n && key; i++) key = step(key, Object.assign({}, r, { until: undefined }));
+    return key;
+  }
+
+  function splitText(text) {
+    const lines = String(text || "").split("\n");
+    return { title: lines[0], notes: lines.slice(1).join("\n") };
+  }
+
+  function joinText(title, notes) {
+    const n = String(notes || "").trim();
+    return String(title || "").trim() + (n ? "\n" + n : "");
+  }
+
   function occurrences(task, from, to) {
     if (!task || !task.due || task.done) return [];
     const rule = ruleOf(task);
@@ -501,7 +519,7 @@ const api = (function () {
     return mergeList(base || [], local || [], remote || [], "groups", ["subs", "dives", null]);
   }
 
-  return { DAY, REPEATS, ENERGY, UNITS, ruleOf, legacy, uid, dayKey, parseDay, isTime, at, migrate, tasks, find, step, occurrences, reminders, agenda, overdue, busyDays, complete, plain, merge3, quick };
+  return { DAY, REPEATS, ENERGY, UNITS, ruleOf, legacy, untilAfter, splitText, joinText, uid, dayKey, parseDay, isTime, at, migrate, tasks, find, step, occurrences, reminders, agenda, overdue, busyDays, complete, plain, merge3, quick };
 })();
 
-export const { DAY, REPEATS, ENERGY, UNITS, ruleOf, legacy, uid, dayKey, parseDay, isTime, at, migrate, tasks, find, step, occurrences, reminders, agenda, overdue, busyDays, complete, plain, merge3, quick } = api;
+export const { DAY, REPEATS, ENERGY, UNITS, ruleOf, legacy, untilAfter, splitText, joinText, uid, dayKey, parseDay, isTime, at, migrate, tasks, find, step, occurrences, reminders, agenda, overdue, busyDays, complete, plain, merge3, quick } = api;
