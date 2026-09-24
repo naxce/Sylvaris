@@ -25,10 +25,12 @@ export const DEFAULT_SETTINGS = {
     toggleState: {},
     hotspot: { ssid: "Sylvaris", band: "bg" },
     notifications: { dnd: false, timeout: 5000, corner: "top-right" },
-    pad: { columns: 7, rows: 5 },
+    pad: { columns: 7, rows: 5, mode: "launchpad" },
     bar: DEFAULT_BAR,
     deck: DEFAULT_DECK,
-    media: { eq: DEFAULT_EQ, airpods: "" }
+    media: { eq: DEFAULT_EQ, airpods: "" },
+    motion: { scale: 1, reduced: false },
+    performance: false
 }
 
 export const DEFAULT_GLASS = { enabled: true, opacity: 0.55, layerOpacity: 0.35, tint: 0.14, sheen: 0.35, flow: 1, rim: 0.5, grain: 0.035 }
@@ -179,11 +181,19 @@ export function validateSettings(raw) {
     const pad = isObject(v.pad) ? v.pad : {}
     v.pad = Object.assign({}, pad, {
         columns: intIn(pad.columns, 3, 10, d.pad.columns),
-        rows: intIn(pad.rows, 2, 8, d.pad.rows)
+        rows: intIn(pad.rows, 2, 8, d.pad.rows),
+        mode: pad.mode === "list" ? "list" : "launchpad"
     })
 
     v.bar = validateBar(v.bar)
     v.deck = validateDeck(v.deck)
+
+    const motion = isObject(v.motion) ? v.motion : {}
+    v.motion = Object.assign({}, motion, {
+        scale: typeof motion.scale === "number" && motion.scale >= 0.25 && motion.scale <= 2 ? motion.scale : d.motion.scale,
+        reduced: motion.reduced === true
+    })
+    v.performance = v.performance === true
 
     const media = isObject(v.media) ? v.media : {}
     v.media = Object.assign({}, media, {

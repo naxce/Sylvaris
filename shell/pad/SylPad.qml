@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
 import qs
@@ -26,6 +25,43 @@ Scope {
     readonly property var results: P.search(Apps.list, root.query)
     readonly property var pageList: P.pages(root.results, root.perPage)
     readonly property int page: pagesView.currentIndex
+    readonly property bool listMode: Settings.values.pad.mode === "list"
+    property int wave: 0
+
+    function phase(a: real, b: real): real {
+        const t = Math.max(0, Math.min(1, (root.reveal - a) / (b - a)));
+        return 1 - Math.pow(1 - t, 3);
+    }
+
+    function handleKey(event: var): void {
+        const keys = {
+            [Qt.Key_Left]: "left",
+            [Qt.Key_Right]: "right",
+            [Qt.Key_Up]: "up",
+            [Qt.Key_Down]: "down",
+            [Qt.Key_PageUp]: "pageUp",
+            [Qt.Key_PageDown]: "pageDown"
+        };
+        if (event.key === Qt.Key_Escape) {
+            if (root.query !== "")
+                root.query = "";
+            else
+                root.close();
+        } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            const i = root.selected >= 0 ? root.selected : root.listMode && root.results.length > 0 ? 0 : -1;
+            if (i >= 0)
+                root.launch(root.results[i]);
+        } else if (root.listMode && (event.key === Qt.Key_Up || event.key === Qt.Key_Down || event.key === Qt.Key_Tab)) {
+            const d = event.key === Qt.Key_Up ? -1 : 1;
+            root.selected = Math.max(0, Math.min(root.results.length - 1, root.selected + d));
+        } else if (!root.listMode && keys[event.key] !== undefined) {
+            const from = root.selected < 0 ? root.page * root.perPage - (keys[event.key] === "right" ? 1 : 0) : root.selected;
+            root.select(P.move(Math.max(0, from), keys[event.key], root.results.length, root.columns, root.perPage));
+        } else {
+            return;
+        }
+        event.accepted = true;
+    }
 
     signal opened
 
@@ -38,7 +74,7 @@ Scope {
                 return;
             root.screenInfo = Compositor.screenFor(Compositor.focusedName());
             root.query = "";
-            root.selected = -1;
+            root.selected = root.listMode ? 0 : -1;
             root.shown = true;
             pagesView.currentIndex = 0;
             hideAnim.stop();
@@ -63,7 +99,7 @@ Scope {
         root.wanted = true;
         root.screenInfo = screen;
         root.query = "";
-        root.selected = -1;
+        root.selected = root.listMode ? 0 : -1;
         root.shown = true;
         pagesView.currentIndex = 0;
         hideAnim.stop();
@@ -95,15 +131,17 @@ Scope {
             root.selected = Math.min(root.results.length - 1, pagesView.currentIndex * root.perPage);
     }
 
-    onQueryChanged: root.select(root.query === "" || root.results.length === 0 ? -1 : 0)
+    onQueryChanged: {
+        root.select(root.query === "" && !root.listMode || root.results.length === 0 ? -1 : 0);
+        root.wave++;
+    }
 
     NumberAnimation {
         id: showAnim
         target: root
         property: "reveal"
         to: 1
-        duration: 320
-        easing.type: Easing.OutCubic
+        duration: Math.round(760 * Tokens.pace)
     }
 
     NumberAnimation {
@@ -111,8 +149,9 @@ Scope {
         target: root
         property: "reveal"
         to: 0
-        duration: 200
-        easing.type: Easing.InCubic
+        duration: Tokens.exitDuration + 80
+        easing.type: Easing.BezierSpline
+        easing.bezierCurve: Tokens.exitCurve
         onFinished: root.shown = false
     }
 
@@ -131,65 +170,35 @@ Scope {
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "sylpad"
         WlrLayershell.keyboardFocus: root.wanted ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+        BackgroundEffect.blurRegion: root.listMode && Resin.enabled && root.reveal > 0.05 ? listBlur : null
+
+        Region {
+            id: listBlur
+            readonly property real s: listPanel.scale
+            x: Math.round(listPanel.x + listPanel.width * (1 - s) / 2)
+            y: Math.round(listPanel.y + listPanel.height * (1 - s) / 2)
+            width: Math.round(listPanel.width * s)
+            height: Math.round(listPanel.height * s)
+            radius: Tokens.radiusPanel * s
+        }
 
         onVisibleChanged: {
-            if (visible)
+            if (!visible)
+                return;
+            if (root.listMode)
+                listSearch.forceActiveFocus();
+            else
                 search.forceActiveFocus();
         }
 
         Item {
             id: backdrop
             anchors.fill: parent
-            opacity: root.reveal
-            readonly property bool gpu: backdrop.GraphicsInfo.api !== GraphicsInfo.Software && backdrop.GraphicsInfo.api !== GraphicsInfo.Unknown
+            visible: !root.listMode
+            opacity: root.phase(0, 0.35)
 
-            Rectangle {
+            Backdrop {
                 anchors.fill: parent
-                color: Theme.base
-            }
-
-            Image {
-                id: wall
-                anchors.fill: parent
-                anchors.margins: -64
-                visible: false
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                sourceSize.width: 1280
-                source: !backdrop.gpu || Theme.wallpaper === "" ? "" : "file://" + Theme.wallpaper
-            }
-
-            MultiEffect {
-                anchors.fill: wall
-                visible: backdrop.gpu && wall.status === Image.Ready
-                source: wall
-                blurEnabled: true
-                blur: 1
-                blurMax: 48
-                saturation: 0.2
-                brightness: -0.3
-            }
-
-            Rectangle {
-                anchors.fill: parent
-                gradient: Gradient {
-                    GradientStop {
-                        position: 0
-                        color: Qt.alpha(Theme.base, 0.35)
-                    }
-                    GradientStop {
-                        position: 1
-                        color: Qt.alpha(Qt.darker(Theme.accentDeep, 2.4), 0.55)
-                    }
-                }
-            }
-
-            Image {
-                visible: Resin.enabled && Resin.grain > 0
-                opacity: Resin.grain
-                anchors.fill: parent
-                source: Qt.resolvedUrl("../assets/grain.png")
-                fillMode: Image.Tile
             }
 
             MouseArea {
@@ -198,17 +207,30 @@ Scope {
             }
         }
 
+        MouseArea {
+            anchors.fill: parent
+            visible: root.listMode
+            onClicked: root.close()
+
+            Rectangle {
+                anchors.fill: parent
+                color: Qt.alpha("#000000", 0.28 * root.phase(0, 0.4))
+            }
+        }
+
         Item {
             id: stage
             anchors.fill: parent
-            opacity: root.reveal
-            scale: 1.08 - 0.08 * root.reveal
+            visible: !root.listMode
+            opacity: hideAnim.running ? root.reveal : 1
+            scale: hideAnim.running ? 0.94 + 0.06 * root.reveal : 1
 
             Item {
                 id: searchBox
                 anchors.horizontalCenter: parent.horizontalCenter
-                y: Math.round(parent.height * 0.07)
-                width: Tokens.padSearchWidth
+                y: Math.round(parent.height * 0.07) - 40 * (1 - root.phase(0.1, 0.5))
+                opacity: root.phase(0.1, 0.5)
+                width: Tokens.padSearchWidth * (0.85 + 0.15 * root.phase(0.1, 0.5))
                 height: Tokens.padSearchHeight
 
                 Glass {
@@ -254,31 +276,7 @@ Scope {
                     text: root.query
                     onTextEdited: root.query = text
 
-                    Keys.onPressed: event => {
-                        const keys = {
-                            [Qt.Key_Left]: "left",
-                            [Qt.Key_Right]: "right",
-                            [Qt.Key_Up]: "up",
-                            [Qt.Key_Down]: "down",
-                            [Qt.Key_PageUp]: "pageUp",
-                            [Qt.Key_PageDown]: "pageDown"
-                        };
-                        if (event.key === Qt.Key_Escape) {
-                            if (root.query !== "")
-                                root.query = "";
-                            else
-                                root.close();
-                        } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                            if (root.selected >= 0)
-                                root.launch(root.results[root.selected]);
-                        } else if (keys[event.key] !== undefined) {
-                            const from = root.selected < 0 ? root.page * root.perPage - (keys[event.key] === "right" ? 1 : 0) : root.selected;
-                            root.select(P.move(Math.max(0, from), keys[event.key], root.results.length, root.columns, root.perPage));
-                        } else {
-                            return;
-                        }
-                        event.accepted = true;
-                    }
+                    Keys.onPressed: event => root.handleKey(event)
                 }
             }
 
@@ -292,7 +290,7 @@ Scope {
                 orientation: ListView.Horizontal
                 snapMode: ListView.SnapOneItem
                 highlightRangeMode: ListView.StrictlyEnforceRange
-                highlightMoveDuration: 380
+                highlightMoveDuration: Tokens.moveDuration
                 boundsBehavior: Flickable.StopAtBounds
                 clip: false
                 model: root.pageList
@@ -318,8 +316,38 @@ Scope {
                                 required property int index
                                 readonly property int flat: pageItem.index * root.perPage + index
                                 readonly property bool current: root.selected === cell.flat
+                                readonly property real col: cell.index % root.columns - (root.columns - 1) / 2
+                                readonly property real row: Math.floor(cell.index / root.columns) - (root.rows - 1) / 2
+                                readonly property real ring: Math.sqrt(cell.col * cell.col + cell.row * cell.row) / Math.sqrt(Math.pow(root.columns / 2, 2) + Math.pow(root.rows / 2, 2))
+                                readonly property real arrive: root.phase(0.2 + 0.35 * cell.ring, 0.62 + 0.35 * cell.ring)
+                                property real pop: 1
                                 width: parent.cellW
                                 height: parent.cellH
+                                opacity: cell.arrive * cell.pop
+                                scale: (0.6 + 0.4 * cell.arrive) * (0.85 + 0.15 * cell.pop)
+
+                                transform: Translate {
+                                    x: cell.col * 26 * (1 - cell.arrive)
+                                    y: cell.row * 26 * (1 - cell.arrive) + 18 * (1 - cell.arrive)
+                                }
+
+                                Connections {
+                                    target: root
+                                    function onWaveChanged() {
+                                        popAnim.restart();
+                                    }
+                                }
+
+                                NumberAnimation {
+                                    id: popAnim
+                                    target: cell
+                                    property: "pop"
+                                    from: 0
+                                    to: 1
+                                    duration: Tokens.enterDuration + Math.round(cell.ring * 160 * Tokens.pace)
+                                    easing.type: Easing.BezierSpline
+                                    easing.bezierCurve: Tokens.enterCurve
+                                }
 
                                 Item {
                                     anchors.centerIn: parent
@@ -471,7 +499,8 @@ Scope {
                 id: dots
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom
-                anchors.bottomMargin: Math.round(parent.height * 0.06)
+                anchors.bottomMargin: Math.round(parent.height * 0.06) - 30 * (1 - root.phase(0.55, 0.95))
+                opacity: root.phase(0.55, 0.95)
                 spacing: 10
                 visible: root.pageList.length > 1
 
@@ -486,8 +515,15 @@ Scope {
 
                         Behavior on width {
                             NumberAnimation {
+                                duration: Tokens.moveDuration
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Tokens.springCurve
+                            }
+                        }
+
+                        Behavior on color {
+                            ColorAnimation {
                                 duration: Tokens.stateDuration
-                                easing.type: Easing.OutCubic
                             }
                         }
 
@@ -499,6 +535,251 @@ Scope {
                         }
                     }
                 }
+            }
+        }
+    
+        Item {
+            id: listPanel
+            visible: root.listMode
+            anchors.centerIn: parent
+            width: Tokens.padListWidth
+            height: listSearchBox.height + Math.min(root.results.length, 8) * Tokens.padListRow + 36 + (root.results.length === 0 ? 60 : 0)
+            opacity: Math.min(1, root.reveal * 1.6)
+            scale: 0.94 + 0.06 * root.reveal
+
+            transform: Translate {
+                y: (1 - root.reveal) * -12
+            }
+
+            Behavior on height {
+                NumberAnimation {
+                    duration: Tokens.moveDuration
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Tokens.moveCurve
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+            }
+
+            Glass {
+                anchors.fill: parent
+                radius: Tokens.radiusPanel
+                raised: true
+                offColor: Theme.surface
+                offBorder: Theme.line
+            }
+
+            Item {
+                id: listSearchBox
+                x: 14
+                y: 14
+                width: parent.width - 28
+                height: Tokens.padSearchHeight
+
+                Glass {
+                    anchors.fill: parent
+                    radius: Tokens.radiusRow
+                    inner: true
+                    offBorder: Theme.cardLine
+                }
+
+                Glyph {
+                    id: listGlyph
+                    x: 16
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: Icons.GLYPHS.search
+                    size: 18
+                    color: Theme.accent
+                }
+
+                Text {
+                    anchors.left: listGlyph.right
+                    anchors.leftMargin: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: listSearch.text === ""
+                    text: "Run an application"
+                    color: Theme.textDim
+                    font.family: Tokens.fontUi
+                    font.pixelSize: Tokens.bodySize
+                }
+
+                TextInput {
+                    id: listSearch
+                    anchors.left: listGlyph.right
+                    anchors.leftMargin: 12
+                    anchors.right: parent.right
+                    anchors.rightMargin: 16
+                    anchors.verticalCenter: parent.verticalCenter
+                    color: Theme.text
+                    selectionColor: Theme.accent
+                    selectedTextColor: Theme.onAccent
+                    font.family: Tokens.fontUi
+                    font.pixelSize: Tokens.bodySize
+                    clip: true
+                    text: root.query
+                    onTextEdited: root.query = text
+                    Keys.onPressed: event => root.handleKey(event)
+                }
+            }
+
+            ListView {
+                id: listView
+                x: 14
+                anchors.top: listSearchBox.bottom
+                anchors.topMargin: 10
+                width: parent.width - 28
+                height: Math.min(root.results.length, 8) * Tokens.padListRow
+                clip: true
+                model: root.results
+                currentIndex: root.selected
+                highlightMoveDuration: Tokens.stateDuration + 40
+                highlightFollowsCurrentItem: true
+                boundsBehavior: Flickable.StopAtBounds
+
+                highlight: Item {
+                    Glass {
+                        anchors.fill: parent
+                        radius: Tokens.radiusRow
+                        inner: true
+                        lit: true
+                        litColor: Qt.alpha(Theme.accent, 0.3)
+                        offBorder: Theme.cardLine
+                    }
+
+                    Rectangle {
+                        x: 0
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 3
+                        height: parent.height * 0.5
+                        radius: 1.5
+                        color: Theme.accent
+                    }
+                }
+
+                delegate: Item {
+                    id: rowItem
+                    required property var modelData
+                    required property int index
+                    property real pop: 1
+                    readonly property real arrive: root.phase(0.15 + 0.05 * Math.min(rowItem.index, 8), 0.6 + 0.05 * Math.min(rowItem.index, 8))
+                    width: listView.width
+                    height: Tokens.padListRow
+                    opacity: rowItem.arrive * rowItem.pop
+
+                    transform: Translate {
+                        x: 16 * (1 - rowItem.arrive * rowItem.pop)
+                    }
+
+                    Connections {
+                        target: root
+                        function onWaveChanged() {
+                            rowPop.restart();
+                        }
+                    }
+
+                    NumberAnimation {
+                        id: rowPop
+                        target: rowItem
+                        property: "pop"
+                        from: 0
+                        to: 1
+                        duration: Tokens.enterDuration + Math.min(rowItem.index, 8) * Tokens.staggerStep
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Tokens.enterCurve
+                    }
+
+                    Rectangle {
+                        x: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 30
+                        height: 30
+                        radius: 9
+                        visible: rowIcon.status !== Image.Ready
+                        gradient: Gradient {
+                            GradientStop {
+                                position: 0
+                                color: Theme.accentHi
+                            }
+                            GradientStop {
+                                position: 1
+                                color: Theme.accentDeep
+                            }
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: rowItem.modelData.name.charAt(0).toUpperCase()
+                            color: Theme.onAccent
+                            font.family: Tokens.fontUi
+                            font.pixelSize: 14
+                            font.weight: Font.DemiBold
+                        }
+                    }
+
+                    Image {
+                        id: rowIcon
+                        x: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 30
+                        height: 30
+                        source: Apps.icon(rowItem.modelData)
+                        sourceSize.width: 60
+                        sourceSize.height: 60
+                        asynchronous: true
+                        smooth: true
+                        mipmap: true
+                    }
+
+                    Column {
+                        anchors.left: rowIcon.right
+                        anchors.leftMargin: 14
+                        anchors.right: parent.right
+                        anchors.rightMargin: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 1
+
+                        Text {
+                            width: parent.width
+                            text: rowItem.modelData.name
+                            elide: Text.ElideRight
+                            color: Theme.text
+                            font.family: Tokens.fontUi
+                            font.pixelSize: Tokens.bodySize
+                            font.weight: rowItem.index === root.selected ? Font.DemiBold : Font.Medium
+                        }
+
+                        Text {
+                            width: parent.width
+                            visible: text !== ""
+                            text: rowItem.modelData.genericName || rowItem.modelData.comment || ""
+                            elide: Text.ElideRight
+                            color: Theme.textDim
+                            font.family: Tokens.fontUi
+                            font.pixelSize: Tokens.tinySize
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onEntered: root.selected = rowItem.index
+                        onClicked: root.launch(rowItem.modelData)
+                    }
+                }
+            }
+
+            Text {
+                visible: root.results.length === 0
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: listSearchBox.bottom
+                anchors.topMargin: 26
+                text: "Nothing matches “" + root.query + "”"
+                color: Theme.textDim
+                font.family: Tokens.fontUi
+                font.pixelSize: Tokens.bodySize
             }
         }
     }

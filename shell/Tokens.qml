@@ -4,6 +4,19 @@ import QtQuick
 import Quickshell
 
 Singleton {
+    id: root
+
+    property real motion: 1
+    property bool lite: false
+    readonly property real pace: root.lite ? 0.55 : root.motion
+    readonly property int enterDuration: Math.round(340 * root.pace)
+    readonly property int exitDuration: Math.round(190 * root.pace)
+    readonly property int moveDuration: Math.round(420 * root.pace)
+    readonly property int staggerStep: Math.round(22 * root.pace)
+    readonly property var enterCurve: [0.05, 0.7, 0.1, 1, 1, 1]
+    readonly property var exitCurve: [0.3, 0, 0.8, 0.15, 1, 1]
+    readonly property var moveCurve: [0.2, 0, 0, 1, 1, 1]
+    readonly property var springCurve: [0.34, 1.4, 0.64, 1, 1, 1]
     readonly property int centerCompactWidth: 460
     readonly property int centerExpandedWidth: 620
     readonly property int centerHeight: 660
@@ -36,12 +49,12 @@ Singleton {
     readonly property int tinySize: 12
     readonly property string fontUi: "Inter"
     readonly property string fontMono: "JetBrainsMono Nerd Font"
-    readonly property int openDuration: 180
-    readonly property int morphDuration: 600
-    readonly property int fadeDuration: 400
-    readonly property int nodeMoveDuration: 450
-    readonly property int colorDuration: 400
-    readonly property int stateDuration: 160
+    readonly property int openDuration: root.enterDuration
+    readonly property int morphDuration: Math.round(520 * root.pace)
+    readonly property int fadeDuration: Math.round(260 * root.pace)
+    readonly property int nodeMoveDuration: Math.round(450 * root.pace)
+    readonly property int colorDuration: Math.round(400 * root.pace)
+    readonly property int stateDuration: Math.round(160 * root.pace)
     readonly property int previewDelay: 500
     readonly property int themeCardWidth: 560
     readonly property int themeCardHeight: 760
@@ -81,6 +94,8 @@ Singleton {
     readonly property int padCellHeight: 176
     readonly property int padSearchWidth: 440
     readonly property int padSearchHeight: 50
+    readonly property int padListWidth: 640
+    readonly property int padListRow: 54
     readonly property int barHeight: 46
     readonly property int barMargin: 10
     readonly property int barRadius: 18

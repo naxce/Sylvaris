@@ -87,6 +87,10 @@ Singleton {
                             error: r.error
                         }) + "\n");
                         client.flush();
+                    } else if (line.indexOf(I.SEP) >= 0) {
+                        client.write(root.run(r.words) + "\n");
+                        client.flush();
+                        client.connected = false;
                     } else if (r.words[0] === "watch") {
                         root.watch(client, r.words.slice(1));
                     } else {

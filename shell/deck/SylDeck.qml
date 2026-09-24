@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Shapes
 import Quickshell
 import Quickshell.Wayland
 import qs
@@ -51,6 +52,10 @@ Scope {
 
     function slots(): var {
         const out = [];
+        if (root.cfg.power === "start")
+            out.push({
+                kind: "power"
+            });
         if (root.cfg.pad === "start")
             out.push({
                 kind: "pad"
@@ -78,6 +83,15 @@ Scope {
                 kind: "pad"
             });
         }
+        if (root.cfg.power === "end") {
+            if (out.length > 0 && root.cfg.pad !== "end")
+                out.push({
+                    kind: "gap"
+                });
+            out.push({
+                kind: "power"
+            });
+        }
         return out;
     }
 
@@ -102,8 +116,8 @@ Scope {
             }
             implicitHeight: root.size * 1.5 + Tokens.deckPadding * 2 + Tokens.deckMargin + 40
             color: "transparent"
-            exclusionMode: root.cfg.autohide ? ExclusionMode.Ignore : ExclusionMode.Normal
-            exclusiveZone: root.cfg.autohide ? 0 : root.size + Tokens.deckPadding * 2 + Tokens.deckMargin
+            exclusionMode: root.cfg.autohide || !root.cfg.reserve ? ExclusionMode.Ignore : ExclusionMode.Normal
+            exclusiveZone: root.cfg.autohide || !root.cfg.reserve ? 0 : root.size + Tokens.deckPadding * 2 + Tokens.deckMargin
             WlrLayershell.layer: WlrLayer.Top
             WlrLayershell.namespace: "syldeck"
             mask: Region {
@@ -113,8 +127,9 @@ Scope {
 
             Behavior on reveal {
                 NumberAnimation {
-                    duration: Tokens.stateDuration + 120
-                    easing.type: Easing.OutCubic
+                    duration: deck.hidden ? Tokens.exitDuration + 80 : Tokens.enterDuration
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: deck.hidden ? Tokens.exitCurve : Tokens.enterCurve
                 }
             }
 
@@ -149,12 +164,15 @@ Scope {
                 id: dock
                 anchors.horizontalCenter: parent.horizontalCenter
                 y: parent.height - height - Tokens.deckMargin + (1 - deck.reveal) * (height + Tokens.deckMargin + 4)
+                opacity: 0.3 + 0.7 * deck.reveal
+                scale: 0.96 + 0.04 * deck.reveal
+                transformOrigin: Item.Bottom
                 width: row.width + Tokens.deckPadding * 2
                 height: root.size + Tokens.deckPadding * 2
 
                 HoverHandler {
                     id: dockHover
-                    onPointChanged: deck.pointer = dockHover.hovered && root.cfg.magnify ? dockHover.point.position.x - Tokens.deckPadding : -1
+                    onPointChanged: deck.pointer = dockHover.hovered && root.cfg.effect === "magnify" ? dockHover.point.position.x - Tokens.deckPadding : -1
                     onHoveredChanged: {
                         if (!hovered)
                             deck.pointer = -1;
@@ -164,8 +182,30 @@ Scope {
                 Glass {
                     anchors.fill: parent
                     radius: Tokens.deckRadius
+                    flowing: false
                     offColor: Theme.surface
                     offBorder: Theme.line
+                }
+
+                Rectangle {
+                    x: Tokens.deckRadius
+                    width: parent.width - Tokens.deckRadius * 2
+                    height: 1
+                    gradient: Gradient {
+                        orientation: Gradient.Horizontal
+                        GradientStop {
+                            position: 0
+                            color: "transparent"
+                        }
+                        GradientStop {
+                            position: 0.5
+                            color: Qt.alpha(Theme.accentHi, 0.55)
+                        }
+                        GradientStop {
+                            position: 1
+                            color: "transparent"
+                        }
+                    }
                 }
 
                 Row {
@@ -183,7 +223,9 @@ Scope {
                             required property var modelData
                             required property int index
                             readonly property real rest: slot.index * (root.size + row.spacing) + root.size / 2
-                            readonly property real scaleNow: deck.pointer < 0 || slot.modelData.kind === "gap" ? 1 : B.magnify(slot.rest - deck.pointer, root.reach)
+                            readonly property bool fixed: slot.modelData.kind !== "app"
+                            readonly property real scaleNow: deck.pointer < 0 || slot.fixed ? 1 : B.magnify(slot.rest - deck.pointer, root.reach)
+                            readonly property real bloom: root.cfg.effect === "bloom" && !slot.fixed && tileArea.containsMouse ? 1 : 0
                             readonly property var appItem: slot.modelData.kind === "app" ? slot.modelData.item : null
                             readonly property var appEntry: slot.appItem === null ? null : root.entry(slot.appItem.id)
                             readonly property bool focused: slot.appItem !== null && slot.appItem.windows.some(i => root.windows[i].activated)
@@ -200,23 +242,112 @@ Scope {
                                 }
                             }
 
-                            Rectangle {
+                            Column {
                                 visible: slot.modelData.kind === "gap"
                                 anchors.centerIn: parent
-                                width: 1
-                                height: root.size * 0.7
-                                color: Qt.alpha(Theme.text, 0.2)
+                                spacing: root.size * 0.12
+
+                                Repeater {
+                                    model: 3
+
+                                    delegate: Rectangle {
+                                        required property int index
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        width: index === 1 ? 5 : 3
+                                        height: width
+                                        rotation: 45
+                                        antialiasing: true
+                                        color: Qt.alpha(index === 1 ? Theme.accent : Theme.text, index === 1 ? 0.8 : 0.3)
+                                    }
+                                }
+                            }
+
+                            Shape {
+                                id: glow
+                                visible: opacity > 0
+                                opacity: slot.bloom
+                                anchors.centerIn: parent
+                                width: root.size * 1.5
+                                height: width
+                                preferredRendererType: Shape.CurveRenderer
+
+                                Behavior on opacity {
+                                    NumberAnimation {
+                                        duration: Tokens.stateDuration + 80
+                                    }
+                                }
+
+                                ShapePath {
+                                    strokeWidth: -1
+                                    fillGradient: RadialGradient {
+                                        centerX: glow.width / 2
+                                        centerY: glow.height / 2
+                                        focalX: glow.width / 2
+                                        focalY: glow.height / 2
+                                        centerRadius: glow.width / 2
+                                        GradientStop {
+                                            position: 0
+                                            color: Qt.alpha(Theme.accent, 0.45)
+                                        }
+                                        GradientStop {
+                                            position: 1
+                                            color: "transparent"
+                                        }
+                                    }
+
+                                    PathAngleArc {
+                                        centerX: glow.width / 2
+                                        centerY: glow.height / 2
+                                        radiusX: glow.width / 2
+                                        radiusY: glow.height / 2
+                                        startAngle: 0
+                                        sweepAngle: 360
+                                    }
+                                }
                             }
 
                             Item {
                                 id: tile
                                 visible: slot.modelData.kind !== "gap"
                                 anchors.fill: parent
-                                scale: tileArea.pressed ? 0.9 : 1
+                                scale: tileArea.pressed ? 0.88 : 1 + 0.1 * slot.bloom
+
+                                transform: Translate {
+                                    y: -7 * slot.bloom
+                                }
 
                                 Behavior on scale {
                                     NumberAnimation {
-                                        duration: 120
+                                        duration: Tokens.stateDuration + 60
+                                        easing.type: Easing.BezierSpline
+                                        easing.bezierCurve: Tokens.springCurve
+                                    }
+                                }
+
+                                Item {
+                                    anchors.fill: parent
+                                    visible: slot.modelData.kind === "power"
+
+                                    Glass {
+                                        anchors.fill: parent
+                                        anchors.margins: 3
+                                        radius: width / 2
+                                        inner: true
+                                        hot: tileArea.containsMouse
+                                        offBorder: Theme.cardLine
+                                    }
+
+                                    Glyph {
+                                        anchors.centerIn: parent
+                                        text: Icons.GLYPHS.power
+                                        size: parent.height * 0.4
+                                        color: tileArea.containsMouse ? Theme.danger : Theme.text
+
+                                        Behavior on color {
+                                            ColorAnimation {
+                                                duration: Tokens.stateDuration
+                                            }
+                                        }
                                     }
                                 }
 
@@ -289,6 +420,8 @@ Scope {
                                     onClicked: mouse => {
                                         if (slot.modelData.kind === "pad") {
                                             root.request("pad", "", deck.modelData);
+                                        } else if (slot.modelData.kind === "power") {
+                                            root.request("power", "", deck.modelData);
                                         } else if (mouse.button === Qt.RightButton) {
                                             menu.popupFor(slot);
                                         } else if (mouse.button === Qt.MiddleButton) {
@@ -300,30 +433,51 @@ Scope {
                                 }
                             }
 
-                            Row {
-                                visible: slot.appItem !== null && slot.appItem.windows.length > 0
+                            Rectangle {
+                                readonly property int count: slot.appItem === null ? 0 : slot.appItem.windows.length
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.top: parent.bottom
-                                anchors.topMargin: 2
-                                spacing: 3
+                                anchors.topMargin: 3
+                                width: count === 0 ? 0 : slot.focused ? root.size * 0.46 : count > 1 ? 14 : 6
+                                height: 3
+                                radius: 1.5
+                                opacity: count === 0 ? 0 : 1
+                                color: slot.focused ? Theme.accent : Qt.alpha(Theme.text, 0.55)
 
-                                Repeater {
-                                    model: slot.appItem === null ? 0 : Math.min(3, slot.appItem.windows.length)
+                                Behavior on width {
+                                    NumberAnimation {
+                                        duration: Tokens.moveDuration
+                                        easing.type: Easing.BezierSpline
+                                        easing.bezierCurve: Tokens.springCurve
+                                    }
+                                }
 
-                                    delegate: Rectangle {
-                                        width: 4
-                                        height: 4
-                                        radius: 2
-                                        color: slot.focused ? Theme.accent : Qt.alpha(Theme.text, 0.6)
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: Tokens.stateDuration
+                                    }
+                                }
+
+                                Behavior on opacity {
+                                    NumberAnimation {
+                                        duration: Tokens.stateDuration
                                     }
                                 }
                             }
 
                             Item {
-                                visible: tileArea.containsMouse && !menu.visible && slot.modelData.kind !== "gap"
+                                opacity: tileArea.containsMouse && !menu.visible && slot.modelData.kind !== "gap" ? 1 : 0
+                                visible: opacity > 0
+                                scale: 0.9 + 0.1 * opacity
+
+                                Behavior on opacity {
+                                    NumberAnimation {
+                                        duration: Tokens.stateDuration
+                                    }
+                                }
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.bottom: parent.top
-                                anchors.bottomMargin: 10
+                                anchors.bottomMargin: 12 + 7 * slot.bloom
                                 width: tipText.implicitWidth + 22
                                 height: 28
 
@@ -338,7 +492,7 @@ Scope {
                                 Text {
                                     id: tipText
                                     anchors.centerIn: parent
-                                    text: slot.modelData.kind === "pad" ? "Apps" : slot.appItem === null ? "" : root.nameOf(slot.appItem.id)
+                                    text: slot.modelData.kind === "pad" ? "Apps" : slot.modelData.kind === "power" ? "Power" : slot.appItem === null ? "" : root.nameOf(slot.appItem.id)
                                     color: Theme.text
                                     font.family: Tokens.fontUi
                                     font.pixelSize: Tokens.smallSize

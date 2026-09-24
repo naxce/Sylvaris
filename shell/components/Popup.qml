@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Wayland
 import qs
 import qs.services
+import "../lib/motion.mjs" as M
 
 Scope {
     id: root
@@ -17,11 +18,28 @@ Scope {
     property bool shown: false
     property bool wanted: false
     property var screenInfo: null
+    property real phase: 0
     default property alias content: body.data
     readonly property Item panel: panel
+    readonly property bool live: root.shown || root.phase > 0
+    readonly property real grow: 0.94 + 0.06 * root.phase
+    readonly property var visual: M.scaledRect(0, 0, win.width, win.height, root.corner, root.grow, (1 - root.phase) * 10 * M.rise(root.corner))
 
     signal opened
     signal closed
+
+    function originItem(): int {
+        const o = M.origin(root.corner);
+        const table = [[Item.TopLeft, Item.Top, Item.TopRight], [Item.Left, Item.Center, Item.Right], [Item.BottomLeft, Item.Bottom, Item.BottomRight]];
+        return table[o.v * 2][o.h * 2];
+    }
+
+    function reveal(): void {
+        root.shown = true;
+        exitAnim.stop();
+        enterAnim.restart();
+        root.opened();
+    }
 
     function open(): void {
         if (root.wanted)
@@ -31,15 +49,18 @@ Scope {
             if (!root.wanted)
                 return;
             root.screenInfo = Compositor.screenFor(Compositor.focusedName());
-            root.shown = true;
-            root.opened();
+            root.reveal();
         });
     }
 
     function close(): void {
         const was = root.wanted;
         root.wanted = false;
-        root.shown = false;
+        if (root.shown) {
+            root.shown = false;
+            enterAnim.stop();
+            exitAnim.restart();
+        }
         if (was)
             root.closed();
     }
@@ -50,9 +71,10 @@ Scope {
             return;
         }
         root.wanted = true;
+        if (root.phase > 0 && root.screenInfo !== screen)
+            root.phase = 0;
         root.screenInfo = screen;
-        root.shown = true;
-        root.opened();
+        root.reveal();
     }
 
     function toggle(): void {
@@ -60,6 +82,26 @@ Scope {
             root.close();
         else
             root.open();
+    }
+
+    NumberAnimation {
+        id: enterAnim
+        target: root
+        property: "phase"
+        to: 1
+        duration: Tokens.enterDuration
+        easing.type: Easing.BezierSpline
+        easing.bezierCurve: Tokens.enterCurve
+    }
+
+    NumberAnimation {
+        id: exitAnim
+        target: root
+        property: "phase"
+        to: 0
+        duration: Tokens.exitDuration
+        easing.type: Easing.BezierSpline
+        easing.bezierCurve: Tokens.exitCurve
     }
 
     PanelWindow {
@@ -71,7 +113,7 @@ Scope {
             left: true
             right: true
         }
-        color: Qt.alpha("#000000", root.dim)
+        color: Qt.alpha("#000000", root.dim * root.phase)
         exclusionMode: ExclusionMode.Normal
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.namespace: "sylcatcher"
@@ -84,7 +126,7 @@ Scope {
 
     PanelWindow {
         id: win
-        visible: root.shown
+        visible: root.live
         screen: root.screenInfo
         anchors {
             top: root.corner.indexOf("top") === 0
@@ -107,46 +149,36 @@ Scope {
         WlrLayershell.namespace: root.namespace
         WlrLayershell.keyboardFocus: root.shown && root.keyboard ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
         mask: Region {
-            item: panel
+            item: root.shown ? panel : null
         }
-        BackgroundEffect.blurRegion: Resin.enabled ? blur : null
+        BackgroundEffect.blurRegion: Resin.enabled && root.phase > 0.02 ? blur : null
 
         Region {
             id: blur
-            item: panel
-            radius: root.radius
+            x: Math.round(root.visual.x)
+            y: Math.round(root.visual.y)
+            width: Math.round(root.visual.w)
+            height: Math.round(root.visual.h)
+            radius: root.radius * root.grow
         }
 
         onVisibleChanged: {
-            if (!visible)
-                return;
-            panel.enter = 0;
-            enterAnim.restart();
-            panel.forceActiveFocus();
+            if (visible)
+                panel.forceActiveFocus();
         }
 
         Item {
             id: panel
 
-            property real enter: 1
-
             anchors.fill: parent
-            opacity: panel.enter
+            opacity: Math.min(1, root.phase * 1.6)
+            scale: root.grow
+            transformOrigin: root.originItem()
             focus: true
             Keys.onEscapePressed: root.close()
 
             transform: Translate {
-                y: (1 - panel.enter) * (root.corner.indexOf("bottom") === 0 ? 8 : -8)
-            }
-
-            NumberAnimation {
-                id: enterAnim
-                target: panel
-                property: "enter"
-                from: 0
-                to: 1
-                duration: Tokens.openDuration
-                easing.type: Easing.OutCubic
+                y: (1 - root.phase) * 10 * M.rise(root.corner)
             }
 
             Glass {

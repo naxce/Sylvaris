@@ -12,16 +12,26 @@ Item {
     property bool lit: false
     property int badge: 0
     property bool mono: false
+    property bool compact: false
     default property alias extra: row.data
     readonly property bool hovered: area.containsMouse
 
     signal clicked(var mouse)
     signal wheel(int steps)
 
-    implicitWidth: row.implicitWidth + 20
+    implicitWidth: root.compact ? Tokens.barItemHeight : row.implicitWidth + 20
     implicitHeight: Tokens.barItemHeight
     width: Math.max(implicitWidth, implicitHeight)
     height: implicitHeight
+    scale: area.pressed ? 0.9 : 1
+
+    Behavior on scale {
+        NumberAnimation {
+            duration: Tokens.stateDuration
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Tokens.springCurve
+        }
+    }
 
     Glass {
         anchors.fill: parent
@@ -49,10 +59,16 @@ Item {
             text: root.glyph
             size: Tokens.barGlyph
             color: root.lit ? Theme.onAccent : root.tint
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: Tokens.stateDuration
+                }
+            }
         }
 
         Text {
-            visible: root.label !== ""
+            visible: root.label !== "" && !root.compact
             anchors.verticalCenter: parent.verticalCenter
             text: root.label
             color: root.lit ? Theme.onAccent : Theme.text
@@ -63,7 +79,8 @@ Item {
     }
 
     Rectangle {
-        visible: root.badge > 0
+        visible: scale > 0
+        scale: root.badge > 0 ? 1 : 0
         x: parent.width - width + 2
         y: -1
         width: Math.max(16, badgeText.implicitWidth + 8)
@@ -72,6 +89,14 @@ Item {
         color: Theme.accent
         border.width: 2
         border.color: Qt.alpha(Theme.base, 0.6)
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: Tokens.enterDuration
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Tokens.springCurve
+            }
+        }
 
         Text {
             id: badgeText

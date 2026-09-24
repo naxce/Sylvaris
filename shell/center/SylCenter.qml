@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import qs
 import qs.services
 import qs.components
+import "../lib/motion.mjs" as M
 
 Scope {
     id: root
@@ -13,6 +14,10 @@ Scope {
     property string view: "compact"
     property string focusKey: ""
     property var screenInfo: null
+    property real phase: 0
+    property bool settled: true
+    readonly property bool live: root.shown || root.phase > 0
+    readonly property real grow: 0.94 + 0.06 * root.phase
     readonly property string corner: Settings.values.center.corner
     readonly property bool expanded: root.view !== "compact"
     signal partRequested(string name)
@@ -27,9 +32,19 @@ Scope {
     }
 
     function showOn(screen: var, initial: string): void {
+        if (!root.shown) {
+            root.settled = false;
+            if (root.screenInfo !== screen)
+                root.phase = 0;
+        }
         root.screenInfo = screen;
         root.applyView(initial);
-        root.shown = true;
+        if (!root.shown) {
+            root.shown = true;
+            exitAnim.stop();
+            enterAnim.restart();
+            Qt.callLater(() => root.settled = true);
+        }
         Dnd.refresh();
         Toggles.refresh();
         Hotspot.refresh();
@@ -61,9 +76,11 @@ Scope {
 
     function close(): void {
         root.wanted = false;
+        if (!root.shown)
+            return;
         root.shown = false;
-        root.view = "compact";
-        root.focusKey = "";
+        enterAnim.stop();
+        exitAnim.restart();
     }
 
     function handOff(name: string): void {
@@ -106,6 +123,34 @@ Scope {
         if (v === "displays")
             return displaysView;
         return null;
+    }
+
+    NumberAnimation {
+        id: enterAnim
+        target: root
+        property: "phase"
+        to: 1
+        duration: Tokens.enterDuration
+        easing.type: Easing.BezierSpline
+        easing.bezierCurve: Tokens.enterCurve
+    }
+
+    NumberAnimation {
+        id: exitAnim
+        target: root
+        property: "phase"
+        to: 0
+        duration: Tokens.exitDuration
+        easing.type: Easing.BezierSpline
+        easing.bezierCurve: Tokens.exitCurve
+        onFinished: {
+            if (!root.shown) {
+                root.settled = false;
+                root.view = "compact";
+                root.focusKey = "";
+                Qt.callLater(() => root.settled = true);
+            }
+        }
     }
 
     Component {
@@ -174,7 +219,7 @@ Scope {
 
     PanelWindow {
         id: win
-        visible: root.shown
+        visible: root.live
         screen: root.screenInfo
         anchors {
             top: true
@@ -195,21 +240,23 @@ Scope {
         WlrLayershell.namespace: "sylcenter"
         WlrLayershell.keyboardFocus: root.shown ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
         mask: Region {
-            item: panel
+            item: root.shown ? panel : null
         }
-        BackgroundEffect.blurRegion: Resin.enabled ? blur : null
+        BackgroundEffect.blurRegion: Resin.enabled && root.phase > 0.02 ? blur : null
 
         Region {
             id: blur
-            item: panel
-            radius: Tokens.radiusPanel
+            readonly property var r: M.scaledRect(panel.x, panel.y, panel.width, panel.height, root.corner, root.grow, (1 - root.phase) * -10)
+            x: Math.round(blur.r.x)
+            y: Math.round(blur.r.y)
+            width: Math.round(blur.r.w)
+            height: Math.round(blur.r.h)
+            radius: Tokens.radiusPanel * root.grow
         }
 
         onVisibleChanged: {
             if (!visible)
                 return;
-            panel.enter = 0;
-            enterAnim.restart();
             panel.forceActiveFocus();
             if (Quickshell.env("SYLVARIS_TRACE") === "1")
                 console.log("SYLVARIS_SHOWN " + Date.now());
@@ -218,21 +265,22 @@ Scope {
         Item {
             id: panel
 
-            property real enter: 1
-
             width: root.expanded ? Tokens.centerExpandedWidth : Tokens.centerCompactWidth
             height: root.expanded ? Tokens.centerHeight : compact.implicitHeight
             x: root.corner === "top-left" ? 0 : root.corner === "top-right" ? win.width - width : (win.width - width) / 2
-            opacity: panel.enter
+            opacity: Math.min(1, root.phase * 1.6)
+            scale: root.grow
+            transformOrigin: root.corner === "top-left" ? Item.TopLeft : root.corner === "top-right" ? Item.TopRight : Item.Top
             focus: true
             clip: true
             Keys.onEscapePressed: root.back()
 
             transform: Translate {
-                y: (1 - panel.enter) * -8
+                y: (1 - root.phase) * -10
             }
 
             Behavior on width {
+                enabled: root.settled
                 NumberAnimation {
                     duration: Tokens.morphDuration
                     easing.type: Easing.BezierSpline
@@ -241,21 +289,12 @@ Scope {
             }
 
             Behavior on height {
+                enabled: root.settled
                 NumberAnimation {
                     duration: Tokens.morphDuration
                     easing.type: Easing.BezierSpline
                     easing.bezierCurve: Tokens.morphCurve
                 }
-            }
-
-            NumberAnimation {
-                id: enterAnim
-                target: panel
-                property: "enter"
-                from: 0
-                to: 1
-                duration: Tokens.openDuration
-                easing.type: Easing.OutCubic
             }
 
             Glass {
@@ -275,6 +314,7 @@ Scope {
                 onOpenView: name => name === "theme" || name === "media" || name === "settings" ? root.handOff(name) : root.applyView(name)
 
                 Behavior on opacity {
+                    enabled: root.settled
                     NumberAnimation {
                         duration: Tokens.fadeDuration
                     }
@@ -289,6 +329,7 @@ Scope {
                 sourceComponent: root.componentFor(root.view)
 
                 Behavior on opacity {
+                    enabled: root.settled
                     NumberAnimation {
                         duration: Tokens.fadeDuration
                     }

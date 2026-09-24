@@ -11,15 +11,19 @@ Singleton {
 
     readonly property var cfg: Settings.values.media.eq
     readonly property bool enabled: root.cfg.enabled || root.cfg.spatial
-    readonly property var effective: root.cfg.enabled ? root.cfg : Object.assign({}, root.cfg, {
-        bands: E.PRESETS.flat
-    })
     readonly property string path: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/sylvaris/eq.conf"
     readonly property var node: root.find("sylvaris_eq")
-    readonly property bool running: filter.running
+    readonly property var outNode: root.find("sylvaris_eq_out")
+    readonly property bool running: root.node !== null
     property string target: ""
-    property bool pending: false
     property string error: ""
+
+    function effective(): var {
+        const c = Settings.values.media.eq;
+        return c.enabled ? c : Object.assign({}, c, {
+            bands: E.PRESETS.flat
+        });
+    }
 
     function find(name: string): var {
         if (Demo.enabled || !Pipewire.ready)
@@ -33,7 +37,10 @@ Singleton {
 
     function hardwareDefault(): string {
         const s = Pipewire.defaultAudioSink;
-        return s && s.name.indexOf("sylvaris_eq") !== 0 ? s.name : root.target;
+        if (s && s.name.indexOf("sylvaris_eq") !== 0)
+            return s.name;
+        const t = root.outNode !== null && root.outNode.properties ? root.outNode.properties["target.object"] : "";
+        return t || root.target;
     }
 
     function set(patch: var): void {
@@ -53,33 +60,45 @@ Singleton {
         });
     }
 
+    function write(): void {
+        file.setText(E.config(root.effective(), root.target));
+    }
+
     function retarget(name: string): void {
         root.target = name;
-        if (root.enabled)
-            restart.restart();
+        if (!root.enabled)
+            return;
+        root.write();
+        if (root.outNode !== null)
+            Quickshell.execDetached(["pw-metadata", String(root.outNode.id), "target.object", name]);
+    }
+
+    function push(): void {
+        root.write();
+        if (root.node !== null)
+            Quickshell.execDetached(["pw-cli", "set-param", String(root.node.id), "Props", E.paramsText(root.effective())]);
     }
 
     function start(): void {
+        stopLater.stop();
         if (Demo.enabled)
             return;
         if (root.target === "")
             root.target = root.hardwareDefault();
-        file.setText(E.config(root.effective, root.target));
-        if (filter.running) {
-            root.pending = true;
-            filter.running = false;
-        } else {
-            filter.running = true;
+        root.write();
+        root.error = "";
+        launcher.running = true;
+        if (root.node !== null) {
+            root.push();
+            Pipewire.preferredDefaultAudioSink = root.node;
         }
     }
 
     function stop(): void {
-        root.pending = false;
-        restart.stop();
-        filter.running = false;
         const hw = root.find(root.target);
         if (hw !== null)
             Pipewire.preferredDefaultAudioSink = hw;
+        stopLater.restart();
     }
 
     onEnabledChanged: {
@@ -91,7 +110,7 @@ Singleton {
 
     onCfgChanged: {
         if (root.enabled && root.running)
-            restart.restart();
+            pushLater.restart();
     }
 
     onNodeChanged: {
@@ -111,9 +130,18 @@ Singleton {
     }
 
     Timer {
-        id: restart
-        interval: 450
-        onTriggered: root.start()
+        id: pushLater
+        interval: 60
+        onTriggered: root.push()
+    }
+
+    Timer {
+        id: stopLater
+        interval: 1500
+        onTriggered: {
+            if (!root.enabled)
+                Quickshell.execDetached(["pkill", "-f", "^pipewire -c " + root.path + "$"]);
+        }
     }
 
     FileView {
@@ -125,23 +153,14 @@ Singleton {
     }
 
     Process {
-        id: filter
-        command: ["sh", "-c", "pkill -f \"^[^ ]*pipewire -c $1$\"; pipewire -c \"$1\" & p=$!; trap 'kill $p 2>/dev/null; exit' INT TERM; while kill -0 $p 2>/dev/null && kill -0 $PPID 2>/dev/null; do sleep 1; done; kill $p 2>/dev/null", "sylvaris-eq", root.path]
-        onRunningChanged: {
-            if (!running && root.pending) {
-                root.pending = false;
-                running = true;
-            }
-        }
+        id: launcher
+        command: ["sh", "-c", "q=$PPID; p=$(pgrep -of \"^pipewire -c $1$\"); if [ -z \"$p\" ]; then setsid pipewire -c \"$1\" >/dev/null 2>\"$1.log\" & p=$!; fi; pgrep -f \"sylvaris-eq-watch [0-9]\" >/dev/null || setsid sh -c 'while kill -0 $1 2>/dev/null && kill -0 $2 2>/dev/null; do sleep 2; done; kill $2 2>/dev/null' sylvaris-eq-watch $q $p >/dev/null 2>&1 & sleep 1; kill -0 $p 2>/dev/null || { tail -n 1 \"$1.log\" >&2; exit 1; }", "sylvaris-eq", root.path]
         stderr: StdioCollector {
-            onStreamFinished: {
-                const t = text.trim();
-                root.error = t === "" ? "" : t.split("\n").pop();
-            }
+            onStreamFinished: root.error = text.trim()
         }
     }
 
     PwObjectTracker {
-        objects: root.node === null ? [] : [root.node]
+        objects: [root.node, root.outNode].filter(n => n !== null)
     }
 }

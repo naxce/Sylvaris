@@ -1,14 +1,19 @@
-export const MODULES = ["pad", "workspaces", "window", "clock", "media", "tray", "audio", "network", "bluetooth", "battery", "notifications", "center"]
+export const MODULES = ["pad", "workspaces", "window", "clock", "media", "tray", "audio", "network", "bluetooth", "battery", "notifications", "center", "power"]
+export const POSITIONS = ["top", "bottom", "left", "right"]
+export const STYLES = ["islands", "slab"]
 
 export const DEFAULT_BAR = {
     enabled: true,
     floating: true,
+    position: "top",
+    style: "islands",
     left: ["pad", "workspaces", "window"],
     center: ["clock"],
-    right: ["media", "tray", "audio", "network", "bluetooth", "battery", "notifications", "center"]
+    right: ["media", "tray", "audio", "network", "bluetooth", "battery", "notifications", "center", "power"]
 }
 
-export const DEFAULT_DECK = { enabled: false, pinned: [], pad: "start", magnify: true, autohide: false, size: 56 }
+export const DEFAULT_DECK = { enabled: false, pinned: [], pad: "start", power: "none", effect: "bloom", autohide: false, reserve: true, size: 56 }
+export const DECK_EFFECTS = ["bloom", "magnify", "none"]
 
 function isObject(v) {
     return v !== null && typeof v === "object" && !Array.isArray(v)
@@ -33,6 +38,8 @@ export function validateBar(raw) {
     return Object.assign({}, b, {
         enabled: b.enabled !== false,
         floating: b.floating !== false,
+        position: POSITIONS.indexOf(b.position) >= 0 ? b.position : DEFAULT_BAR.position,
+        style: STYLES.indexOf(b.style) >= 0 ? b.style : DEFAULT_BAR.style,
         left: modules(b.left, DEFAULT_BAR.left, taken),
         center: modules(b.center, DEFAULT_BAR.center, taken),
         right: modules(b.right, DEFAULT_BAR.right, taken)
@@ -46,8 +53,10 @@ export function validateDeck(raw) {
         enabled: d.enabled === true,
         pinned: pinned,
         pad: ["start", "end", "none"].indexOf(d.pad) >= 0 ? d.pad : DEFAULT_DECK.pad,
-        magnify: d.magnify !== false,
+        power: ["start", "end", "none"].indexOf(d.power) >= 0 ? d.power : DEFAULT_DECK.power,
+        effect: DECK_EFFECTS.indexOf(d.effect) >= 0 ? d.effect : d.magnify === true ? "magnify" : DEFAULT_DECK.effect,
         autohide: d.autohide === true,
+        reserve: d.reserve !== false,
         size: Number.isInteger(d.size) && d.size >= 36 && d.size <= 96 ? d.size : DEFAULT_DECK.size
     })
 }
@@ -96,4 +105,22 @@ export function magnify(distance, reach) {
     if (d >= reach)
         return 1
     return 1 + 0.45 * Math.pow(Math.cos(d / reach * Math.PI / 2), 2)
+}
+
+export function vertical(position) {
+    return position === "left" || position === "right"
+}
+
+export function drawerArrow(position) {
+    return { top: "down", bottom: "up", left: "right", right: "left" }[position] || "down"
+}
+
+export function popupCorner(position, side) {
+    if (position === "bottom")
+        return side === "left" ? "bottom-left" : side === "center" ? "bottom-center" : "bottom-right"
+    if (position === "left")
+        return "top-left"
+    if (position === "right")
+        return "top-right"
+    return side === "left" ? "top-left" : side === "center" ? "top-center" : "top-right"
 }

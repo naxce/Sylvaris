@@ -11,6 +11,7 @@ Item {
     property bool raised: false
     property bool hot: false
     property bool lit: false
+    property bool flowing: true
     property color litColor: Theme.accent
     property color offColor: root.inner ? Theme.tint : Theme.surface
     property color offBorder: "transparent"
@@ -19,19 +20,21 @@ Item {
 
     readonly property bool on: Resin.enabled
     readonly property bool panel: !root.inner
+    readonly property bool shiny: root.on && root.panel && Resin.sheen > 0 && !Tokens.lite
     readonly property real bodyAlpha: root.inner ? Resin.layerOpacity : root.raised ? Math.max(Resin.opacity, 0.88) : Resin.opacity
-    readonly property real rimAlpha: Resin.rim * (root.inner ? 0.35 : 0.5)
+    readonly property real rimAlpha: Resin.rim * (root.inner ? 0.22 : 0.3)
     readonly property point rest: Qt.point(root.width * (0.5 + 0.32 * Math.sin(root.drift * 0.35)), root.height * (0.14 + 0.05 * Math.sin(root.drift * 0.23 + 1.3)))
 
     HoverHandler {
         id: pointer
-        enabled: root.on && root.panel && Resin.sheen > 0
+        enabled: root.shiny
     }
 
     FrameAnimation {
-        running: root.visible && root.on && root.panel && Resin.sheen > 0 && (Resin.flow > 0 || pointer.hovered)
+        running: root.visible && root.shiny && (pointer.hovered || (root.flowing && Resin.flow > 0))
         onTriggered: {
-            root.drift += frameTime * Resin.flow;
+            if (root.flowing)
+                root.drift += frameTime * Resin.flow;
             const target = pointer.hovered ? pointer.point.position : root.rest;
             const k = Math.min(1, frameTime * 4);
             root.light = Qt.point(root.light.x + (target.x - root.light.x) * k, root.light.y + (target.y - root.light.y) * k);
@@ -41,6 +44,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: root.radius
+        antialiasing: true
         color: root.on ? Qt.alpha(root.inner ? Qt.lighter(Theme.pane, 1.35) : Theme.pane, root.bodyAlpha) : root.offColor
         border.width: root.on ? 0 : 1
         border.color: root.offBorder
@@ -56,6 +60,7 @@ Item {
         visible: root.on && root.panel && Resin.tint > 0
         anchors.fill: parent
         radius: root.radius
+        antialiasing: true
         gradient: Gradient {
             GradientStop {
                 position: 0
@@ -71,8 +76,10 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: root.radius
+        antialiasing: true
         color: Theme.tintMid
         opacity: root.on && root.hot ? 1 : 0
+        visible: opacity > 0
 
         Behavior on opacity {
             NumberAnimation {
@@ -84,8 +91,10 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: root.radius
+        antialiasing: true
         color: root.litColor
         opacity: root.lit ? Resin.litAlpha : 0
+        visible: opacity > 0
 
         Behavior on opacity {
             NumberAnimation {
@@ -94,83 +103,31 @@ Item {
         }
     }
 
-    RoundClip {
-        visible: root.on && root.panel && Resin.sheen > 0
-        anchors.fill: parent
-        radius: root.radius
-
-        Shape {
-            id: sheen
-            readonly property real r: Math.max(root.width, root.height) * 0.55
-            x: root.light.x - sheen.r
-            y: root.light.y - sheen.r
-            width: sheen.r * 2
-            height: sheen.r * 2
-
-            ShapePath {
-                strokeWidth: -1
-                fillGradient: RadialGradient {
-                    centerX: sheen.r
-                    centerY: sheen.r
-                    focalX: sheen.r
-                    focalY: sheen.r
-                    centerRadius: sheen.r
-                    GradientStop {
-                        position: 0
-                        color: Qt.alpha(Theme.accentHi, Resin.sheen * 0.35)
-                    }
-                    GradientStop {
-                        position: 0.45
-                        color: Qt.alpha(Theme.text, Resin.sheen * 0.06)
-                    }
-                    GradientStop {
-                        position: 1
-                        color: "transparent"
-                    }
-                }
-
-                PathAngleArc {
-                    centerX: sheen.r
-                    centerY: sheen.r
-                    radiusX: sheen.r
-                    radiusY: sheen.r
-                    startAngle: 0
-                    sweepAngle: 360
-                }
-            }
-        }
-    }
-
-    Image {
-        visible: root.on && root.panel && Resin.grain > 0
-        anchors.fill: parent
-        anchors.margins: root.radius * 0.3
-        source: Qt.resolvedUrl("../assets/grain.png")
-        fillMode: Image.Tile
-        opacity: Resin.grain
-        smooth: true
-    }
-
     Shape {
-        visible: root.on && Resin.rim > 0 && root.width > 2 && root.height > 2
+        visible: root.shiny && root.width > 2 && root.height > 2
         anchors.fill: parent
         preferredRendererType: Shape.CurveRenderer
 
         ShapePath {
             strokeWidth: -1
-            fillRule: ShapePath.OddEvenFill
-            fillGradient: LinearGradient {
-                x1: 0
-                y1: 0
-                x2: root.width
-                y2: root.height
+            fillGradient: RadialGradient {
+                readonly property real r: Math.max(root.width, root.height) * 0.55
+                centerX: root.light.x
+                centerY: root.light.y
+                focalX: root.light.x
+                focalY: root.light.y
+                centerRadius: r
                 GradientStop {
                     position: 0
-                    color: Qt.alpha(Theme.text, root.rimAlpha)
+                    color: Qt.alpha(Theme.accentHi, Resin.sheen * 0.35)
+                }
+                GradientStop {
+                    position: 0.45
+                    color: Qt.alpha(Theme.text, Resin.sheen * 0.06)
                 }
                 GradientStop {
                     position: 1
-                    color: Qt.alpha(Theme.text, root.rimAlpha * 0.25)
+                    color: "transparent"
                 }
             }
 
@@ -181,14 +138,26 @@ Item {
                 height: root.height
                 radius: root.radius
             }
-
-            PathRectangle {
-                x: 1
-                y: 1
-                width: root.width - 2
-                height: root.height - 2
-                radius: Math.max(0, root.radius - 1)
-            }
         }
+    }
+
+    Image {
+        visible: root.on && root.panel && Resin.grain > 0 && !Tokens.lite
+        anchors.fill: parent
+        anchors.margins: root.radius * 0.3
+        source: Qt.resolvedUrl("../assets/grain.png")
+        fillMode: Image.Tile
+        opacity: Resin.grain
+        smooth: true
+    }
+
+    Rectangle {
+        visible: root.on && Resin.rim > 0
+        anchors.fill: parent
+        radius: root.radius
+        antialiasing: true
+        color: "transparent"
+        border.width: 1
+        border.color: Qt.alpha(Theme.text, root.rimAlpha)
     }
 }

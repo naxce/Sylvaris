@@ -35,8 +35,14 @@ json() {
 }
 
 run() {
-    local reply sep=$'\x1f'
-    reply="$(qs -p "$dir" ipc call sylvaris run "$(printf "%s$sep" "$@")")"
+    local reply="" sep=$'\x1f' req
+    req="$(printf "%s$sep" "$@")"
+    if [ -S "$sock" ] && command -v socat >/dev/null 2>&1; then
+        reply="$(printf '%s\n' "$req" | socat -t 5 - "UNIX-CONNECT:$sock" 2>/dev/null)" || reply=""
+    fi
+    if [ -z "$reply" ]; then
+        reply="$(qs -p "$dir" ipc call sylvaris run "$req")"
+    fi
     printf '%s\n' "$reply"
     case "$reply" in
     error:*) exit 1 ;;

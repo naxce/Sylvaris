@@ -420,6 +420,18 @@ ShellRoot {
         })
 
     Binding {
+        target: Tokens
+        property: "lite"
+        value: Settings.values.performance || Settings.values.toggleState.performance === true
+    }
+
+    Binding {
+        target: Tokens
+        property: "motion"
+        value: Settings.values.motion.reduced ? 0.01 : Settings.values.motion.scale
+    }
+
+    Binding {
         target: Ipc
         property: "commands"
         value: root.commands
