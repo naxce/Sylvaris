@@ -1,0 +1,18 @@
+sleep 1.5
+syl pad
+sleep 0.8
+shot pad
+syl state pad
+bg wtype -k Shift_L -k Next
+sleep 0.8
+syl state pad
+shot pad-2
+bg wtype -k Shift_L -k Prior
+sleep 0.5
+bg wtype -k Shift_L ste
+sleep 0.8
+syl state pad
+shot pad-search
+bg wtype -k Shift_L -k Right -k Return
+sleep 0.8
+syl state pad

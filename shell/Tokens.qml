@@ -76,4 +76,9 @@ Singleton {
     readonly property int toastGap: 10
     readonly property int notifyWidth: 440
     readonly property int notifyHeight: 640
+    readonly property int padIcon: 88
+    readonly property int padCellWidth: 180
+    readonly property int padCellHeight: 176
+    readonly property int padSearchWidth: 440
+    readonly property int padSearchHeight: 50
 }

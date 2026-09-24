@@ -7,6 +7,7 @@ import qs.center
 import qs.theme
 import qs.clock
 import qs.notify
+import qs.pad
 import "lib/ipc.mjs" as I
 
 ShellRoot {
@@ -16,9 +17,10 @@ ShellRoot {
             center: centerPart,
             theme: themePart,
             clock: clockPart,
-            notify: notifyPart
+            notify: notifyPart,
+            pad: padPart
         })
-    readonly property var boot: [Tokens, Ipc, Config, Settings, Sky, Notifications, Theme, Resin, ThemePreview, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
+    readonly property var boot: [Tokens, Ipc, Config, Settings, Sky, Notifications, Apps, Theme, Resin, ThemePreview, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
 
     function solo(keep: var): void {
         for (const name of Object.keys(root.parts)) {
@@ -105,6 +107,15 @@ ShellRoot {
             },
             sky: Sky.state(),
             notifications: Notifications.state(),
+            pad: {
+                open: padPart.wanted,
+                query: padPart.query,
+                results: padPart.results.length,
+                page: padPart.page,
+                pages: padPart.pageList.length,
+                selected: padPart.selected,
+                launched: Apps.lastLaunched
+            },
             config: Config.values,
             configNotice: Config.notice,
             settings: Settings.values,
@@ -156,6 +167,11 @@ ShellRoot {
     SylNotify {
         id: notifyPart
         onOpened: root.solo(notifyPart)
+    }
+
+    SylPad {
+        id: padPart
+        onOpened: root.solo(padPart)
     }
 
     Toasts {}
@@ -217,6 +233,11 @@ ShellRoot {
                         throw new Error("no notification with id " + id);
                     Notifications.invoke(Number(id), action || "default");
                 }
+            },
+            pad: {
+                toggle: () => padPart.toggle(),
+                open: () => padPart.open(),
+                close: () => padPart.close()
             },
             audio: {
                 default: "mute",

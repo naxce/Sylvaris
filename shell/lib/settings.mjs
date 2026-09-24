@@ -21,7 +21,8 @@ export const DEFAULT_SETTINGS = {
     displays: { layouts: {} },
     toggleState: {},
     hotspot: { ssid: "Sylvaris", band: "bg" },
-    notifications: { dnd: false, timeout: 5000, corner: "top-right" }
+    notifications: { dnd: false, timeout: 5000, corner: "top-right" },
+    pad: { columns: 7, rows: 5 }
 }
 
 export const DEFAULT_GLASS = { enabled: true, opacity: 0.55, layerOpacity: 0.35, tint: 0.14, sheen: 0.35, flow: 1, rim: 0.5, grain: 0.035 }
@@ -167,6 +168,12 @@ export function validateSettings(raw) {
         dnd: ns.dnd === true,
         timeout: intIn(ns.timeout, 1000, 60000, d.notifications.timeout),
         corner: CORNERS.includes(ns.corner) ? ns.corner : d.notifications.corner
+    })
+
+    const pad = isObject(v.pad) ? v.pad : {}
+    v.pad = Object.assign({}, pad, {
+        columns: intIn(pad.columns, 3, 10, d.pad.columns),
+        rows: intIn(pad.rows, 2, 8, d.pad.rows)
     })
     return v
 }

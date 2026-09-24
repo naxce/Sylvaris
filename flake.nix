@@ -54,6 +54,7 @@
             pkgs.jq
             pkgs.socat
             pkgs.libnotify
+            pkgs.wtype
             pkgs.dbus
           ];
         };

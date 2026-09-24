@@ -5,6 +5,7 @@ A modular desktop shell built on [Quickshell](https://quickshell.org), made for 
 - **SylCenter**: a control center that morphs from a compact panel into living orbits for Wi-Fi and Bluetooth
 - **SylClock**: the time, a live sky with the real paths of the sun and moon, the moon's phase, sunrise and sunset, and a month calendar
 - **SylNotify**: the notification daemon, with glass toasts and a notification center
+- **SylPad**: a full-screen app launcher in the spirit of Launchpad and the GNOME app grid
 
 SylTheme (theme picker) and SylSettings (full-screen settings) are next.
 
@@ -92,6 +93,7 @@ sylvaris center              # toggle SylCenter (also: open, close)
 sylvaris view orbit-wifi     # open SylCenter on a view
 sylvaris clock               # toggle SylClock (also: open, close)
 sylvaris notify              # toggle the notification center (also: clear, dismiss <id>, invoke <id> [action])
+sylvaris pad                 # toggle SylPad, the app launcher (also: open, close)
 sylvaris theme               # toggle SylTheme (also: open, close, next, prev, apply)
 sylvaris theme set noir      # apply a theme without the picker (also: cycle, list)
 sylvaris audio up 5          # volume (also: down, set 40, mute)
@@ -135,6 +137,10 @@ Sylvaris is your notification daemon, so stop swaync, mako or dunst before start
 | `notifications.corner` | `top-right` | `top-left`, `top-center` or `top-right` |
 
 In `config.json`, `notifications.server = false` hands notifications back to another daemon (DND then drives swaync or mako), and `notifications.history` caps the center (100).
+
+## SylPad
+
+`sylvaris pad` fills the screen with your apps over a blurred copy of the wallpaper, alphabetically, a page at a time. Start typing to search names, descriptions and keywords; arrows move the selection, Enter launches, PageUp/PageDown or the mouse wheel turn pages, Esc clears the search and then closes. Terminal apps open in `terminal` from `config.json`. `pad.columns` (7) and `pad.rows` (5) in `settings.json` set the grid.
 
 ## Resin Glass
 

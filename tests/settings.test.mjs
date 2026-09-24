@@ -177,3 +177,7 @@ test("notification settings and config are validated field by field", () => {
     assert.deepEqual(c.notifications, { server: false, history: 100 })
     assert.deepEqual(validateConfig({}).notifications, { server: true, history: 100 })
 })
+
+test("launcher grid size stays within bounds", () => {
+    assert.deepEqual(validateSettings({ pad: { columns: 40, rows: 3 } }).pad, { columns: 7, rows: 3 })
+})

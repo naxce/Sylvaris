@@ -49,6 +49,51 @@ Singleton {
             ] }
     ]
 
+    readonly property var apps: [
+        { id: "firefox", name: "Firefox", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "kitty", name: "Kitty", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "files", name: "Files", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "steam", name: "Steam", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "spotify", name: "Spotify", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "discord", name: "Discord", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "visual-studio-code", name: "Visual Studio Code", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "gimp", name: "GIMP", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "blender", name: "Blender", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "calculator", name: "Calculator", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "calendar", name: "Calendar", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "clocks", name: "Clocks", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "maps", name: "Maps", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "weather", name: "Weather", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "photos", name: "Photos", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "music", name: "Music", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "videos", name: "Videos", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "text-editor", name: "Text Editor", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "settings", name: "Settings", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "system-monitor", name: "System Monitor", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "disks", name: "Disks", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "fonts", name: "Fonts", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "characters", name: "Characters", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "contacts", name: "Contacts", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "obsidian", name: "Obsidian", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "thunderbird", name: "Thunderbird", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "libreoffice-writer", name: "LibreOffice Writer", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "libreoffice-calc", name: "LibreOffice Calc", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "inkscape", name: "Inkscape", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "krita", name: "Krita", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "obs-studio", name: "OBS Studio", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "vlc", name: "VLC", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "transmission", name: "Transmission", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "signal", name: "Signal", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "telegram", name: "Telegram", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "zoom", name: "Zoom", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "heroic", name: "Heroic", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "lutris", name: "Lutris", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "bottles", name: "Bottles", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "remmina", name: "Remmina", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "virt-manager", name: "Virt Manager", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false },
+        { id: "wireshark", name: "Wireshark", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false }
+    ]
+
     readonly property var cards: [
         { name: "bluez_card.00_11_22_33_44_01", active_profile: "a2dp-sink", profiles: {
                 "a2dp-sink": { available: true },
