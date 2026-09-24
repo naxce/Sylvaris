@@ -8,6 +8,7 @@ self:
 let
   cfg = config.programs.sylvaris;
   json = pkgs.formats.json { };
+  parts = (cfg.settings.parts or { }) // cfg.parts;
 in
 {
   options.programs.sylvaris = {
@@ -26,6 +27,16 @@ in
       description = "Written to ~/.config/sylvaris/config.json. See the README for every key.";
     };
 
+    parts = lib.mkOption {
+      type = lib.types.attrsOf lib.types.bool;
+      default = { };
+      example = {
+        pad = false;
+        media = false;
+      };
+      description = "Parts to exclude (false) or keep (true), written to the parts key of config.json. Tools only excluded parts need are left off the package's PATH.";
+    };
+
     themes = lib.mkOption {
       type = lib.types.attrsOf json.type;
       default = { };
@@ -34,11 +45,20 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    home.packages = [ cfg.package ];
+    assertions = [
+      {
+        assertion = lib.all (name: lib.elem name cfg.package.parts) (lib.attrNames parts);
+        message = "programs.sylvaris.parts: unknown part; valid parts are ${lib.concatStringsSep ", " cfg.package.parts}";
+      }
+    ];
+
+    home.packages = [ (cfg.package.override { sylvarisParts = parts; }) ];
 
     xdg.configFile = lib.mkMerge [
       {
-        "sylvaris/config.json".source = json.generate "sylvaris-config.json" ({ version = 1; } // cfg.settings);
+        "sylvaris/config.json".source = json.generate "sylvaris-config.json" (
+          { version = 1; } // cfg.settings // lib.optionalAttrs (parts != { }) { inherit parts; }
+        );
       }
       (lib.mapAttrs' (
         name: theme:

@@ -17,22 +17,63 @@ import qs.paper
 import qs.diver
 import "lib/ipc.mjs" as I
 import "lib/eq.mjs" as E
+import "lib/settings.mjs" as S
 
 ShellRoot {
     id: root
 
-    property var parts: ({
-            center: centerPart,
-            theme: themePart,
-            clock: clockPart,
-            notify: notifyPart,
-            pad: padPart,
-            media: mediaPart,
-            settings: settingsPart,
-            power: powerPart,
-            paper: paperPart
+    readonly property bool ready: Config.ready && Settings.ready
+    readonly property var live: root.ready ? S.liveParts(Settings.values.parts).concat(S.liveServices(Settings.values.parts)) : []
+    readonly property var loaders: ({
+            center: centerLoader,
+            theme: themeLoader,
+            clock: clockLoader,
+            notify: notifyLoader,
+            pad: padLoader,
+            media: mediaLoader,
+            settings: settingsLoader,
+            power: powerLoader,
+            paper: paperLoader
         })
-    readonly property var boot: [Tokens, Ipc, Config, Settings, Sky, Weather, Diver, Notifications, Apps, Equalizer, Headphones, Theme, Resin, ThemePreview, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
+    readonly property var parts: {
+        const out = {};
+        for (const name of Object.keys(root.loaders)) {
+            if (root.loaders[name].item)
+                out[name] = root.loaders[name].item;
+        }
+        return out;
+    }
+    readonly property var services: ({
+            Sky: () => Sky,
+            Weather: () => Weather,
+            Diver: () => Diver,
+            Notifications: () => Notifications,
+            Apps: () => Apps,
+            Equalizer: () => Equalizer,
+            Headphones: () => Headphones,
+            ThemePreview: () => ThemePreview,
+            Audio: () => Audio,
+            Media: () => Media,
+            NightLight: () => NightLight,
+            Dnd: () => Dnd,
+            Toggles: () => Toggles,
+            BluetoothService: () => BluetoothService,
+            NetworkService: () => NetworkService,
+            Hotspot: () => Hotspot,
+            Displays: () => Displays
+        })
+    readonly property var boot: [Tokens, Ipc, Config, Settings, Theme, Resin, Compositor].concat(root.live.filter(name => root.services[name] !== undefined).map(name => root.services[name]()))
+
+    function on(name: string): bool {
+        return root.live.indexOf(name) >= 0;
+    }
+
+    function need(name: string): var {
+        const p = root.part(name);
+        if (p === null)
+            throw new Error(name + " is excluded by the parts setting; turn it back on with: sylvaris set parts." + name + " true");
+        return p;
+    }
 
     function solo(keep: var): void {
         for (const name of Object.keys(root.parts)) {
@@ -52,7 +93,7 @@ ShellRoot {
     }
 
     function screenOf(p: var): var {
-        return p.wanted && p.screenInfo ? p.screenInfo.name : null;
+        return p !== null && p.wanted && p.screenInfo ? p.screenInfo.name : null;
     }
 
     function part(name: string): var {
@@ -60,91 +101,96 @@ ShellRoot {
     }
 
     function stateObject(): var {
-        return {
+        const center = root.part("center");
+        const clock = root.part("clock");
+        const settings = root.part("settings");
+        const pad = root.part("pad");
+        const theme = root.part("theme");
+        const out = {
             version: 1,
             compositor: Compositor.state(),
-            audio: {
+            audio: root.on("Audio") ? {
                 available: Audio.available,
                 volume: Audio.volume,
                 muted: Audio.muted,
                 output: Audio.outputName,
                 sinks: Audio.sinks
-            },
-            media: Media.state(),
-            eq: Object.assign({
+            } : undefined,
+            media: root.on("Media") ? Media.state() : undefined,
+            eq: root.on("Equalizer") ? Object.assign({
                 running: Equalizer.running,
                 target: Equalizer.target
-            }, Equalizer.cfg),
-            headphones: Headphones.state(),
-            nightLight: {
+            }, Equalizer.cfg) : undefined,
+            headphones: root.on("Headphones") ? Headphones.state() : undefined,
+            nightLight: root.on("NightLight") ? {
                 available: NightLight.available,
                 enabled: NightLight.enabled,
                 temperature: NightLight.temperature,
                 error: NightLight.error
-            },
-            dnd: {
+            } : undefined,
+            dnd: root.on("Dnd") ? {
                 available: Dnd.available,
                 tool: Dnd.tool,
                 enabled: Dnd.enabled
-            },
-            toggles: Toggles.items,
-            bluetooth: {
+            } : undefined,
+            toggles: root.on("Toggles") ? Toggles.items : undefined,
+            bluetooth: root.on("BluetoothService") ? {
                 available: BluetoothService.available,
                 enabled: BluetoothService.enabled,
                 scanning: BluetoothService.scanning,
                 summary: BluetoothService.summary,
                 items: BluetoothService.items,
                 error: BluetoothService.error
-            },
-            network: {
+            } : undefined,
+            network: root.on("NetworkService") ? {
                 available: NetworkService.available,
                 hasWifi: NetworkService.hasWifi,
                 enabled: NetworkService.enabled,
                 summary: NetworkService.summary,
                 items: NetworkService.items,
                 error: NetworkService.error
-            },
-            hotspot: {
+            } : undefined,
+            hotspot: root.on("Hotspot") ? {
                 available: Hotspot.available,
                 active: Hotspot.active,
                 profileExists: Hotspot.profileExists,
                 error: Hotspot.error
-            },
-            displays: {
+            } : undefined,
+            displays: root.on("Displays") ? {
                 available: Displays.available,
                 key: Displays.key,
                 outputs: Displays.outputs.map(o => o.name),
                 countdown: Displays.countdown,
                 enabled: Object.keys(Displays.current).filter(k => Displays.current[k].enabled),
                 error: Displays.error
-            },
-            parts: Object.keys(root.parts),
-            center: {
-                open: centerPart.shown,
-                view: centerPart.view,
-                focus: centerPart.focusKey,
-                screen: centerPart.screenInfo ? centerPart.screenInfo.name : ""
-            },
-            clock: {
-                open: clockPart.shown
-            },
-            settingsPanel: {
-                open: settingsPart.wanted,
-                section: settingsPart.section
-            },
-            sky: Sky.state(),
-            weather: Weather.state(),
-            diver: Diver.state(),
-            notifications: Notifications.state(),
-            pad: {
-                open: padPart.wanted,
-                query: padPart.query,
-                results: padPart.results.length,
-                page: padPart.page,
-                pages: padPart.pageList.length,
-                selected: padPart.selected,
+            } : undefined,
+            parts: root.live.filter(name => root.services[name] === undefined),
+            center: center !== null ? {
+                open: center.shown,
+                view: center.view,
+                focus: center.focusKey,
+                screen: center.screenInfo ? center.screenInfo.name : ""
+            } : undefined,
+            clock: clock !== null ? {
+                open: clock.shown
+            } : undefined,
+            settingsPanel: settings !== null ? {
+                open: settings.wanted,
+                section: settings.section
+            } : undefined,
+            sky: root.on("Sky") ? Sky.state() : undefined,
+            weather: root.on("Weather") ? Weather.state() : undefined,
+            diver: root.on("Diver") ? Diver.state() : undefined,
+            notifications: root.on("Notifications") ? Notifications.state() : undefined,
+            pad: pad !== null ? {
+                open: pad.wanted,
+                query: pad.query,
+                results: pad.results.length,
+                page: pad.page,
+                pages: pad.pageList.length,
+                selected: pad.selected,
                 launched: Apps.lastLaunched
-            },
+            } : undefined,
             config: Config.values,
             configNotice: Config.notice,
             settings: Settings.values,
@@ -162,95 +208,163 @@ ShellRoot {
                 tokens: Theme.target,
                 catalog: Object.keys(Theme.catalog).sort(),
                 hookError: Theme.hookError,
-                open: themePart.shown,
-                front: themePart.front,
-                original: ThemePreview.original,
-                applied: ThemePreview.applied
+                open: theme !== null && theme.shown,
+                front: theme !== null ? theme.front : null,
+                original: theme !== null ? ThemePreview.original : null,
+                applied: theme !== null ? ThemePreview.applied : null
             }
         };
-    }
-
-    SylCenter {
-        id: centerPart
-        onPartRequested: name => {
-            const p = root.part(name);
-            if (p !== null)
-                p.open();
+        for (const key of Object.keys(out)) {
+            if (out[key] === undefined)
+                delete out[key];
         }
-        onShownChanged: {
-            if (centerPart.shown)
-                root.solo(centerPart);
-        }
+        return out;
     }
 
-    SylTheme {
-        id: themePart
-        onOpened: root.solo(themePart)
-    }
+    LazyLoader {
+        id: centerLoader
+        active: root.on("center")
 
-    SylClock {
-        id: clockPart
-        onOpened: root.solo(clockPart)
-    }
-
-    SylNotify {
-        id: notifyPart
-        onOpened: root.solo(notifyPart)
-    }
-
-    SylPad {
-        id: padPart
-        onOpened: root.solo(padPart)
-    }
-
-    SylMedia {
-        id: mediaPart
-        onOpened: root.solo(mediaPart)
-    }
-
-    SylSettings {
-        id: settingsPart
-        onOpened: root.solo(settingsPart)
-        onPartRequested: (name, arg) => {
-            if (name === "center")
-                centerPart.setView(arg);
-            else if (name === "media") {
-                mediaPart.openTab(arg);
-                mediaPart.open();
-            } else if (root.part(name) !== null) {
-                root.part(name).open();
+        SylCenter {
+            id: centerPart
+            onPartRequested: name => {
+                const p = root.part(name);
+                if (p !== null)
+                    p.open();
+            }
+            onShownChanged: {
+                if (centerPart.shown)
+                    root.solo(centerPart);
             }
         }
     }
 
-    SylPower {
-        id: powerPart
-        onOpened: root.solo(powerPart)
+    LazyLoader {
+        id: themeLoader
+        active: root.on("theme")
+
+        SylTheme {
+            id: themePart
+            onOpened: root.solo(themePart)
+        }
     }
 
-    SylPaper {
-        id: paperPart
-        onOpened: root.solo(paperPart)
+    LazyLoader {
+        id: clockLoader
+        active: root.on("clock")
+
+        SylClock {
+            id: clockPart
+            onOpened: root.solo(clockPart)
+        }
     }
 
-    SylDiver {}
+    LazyLoader {
+        id: notifyLoader
+        active: root.on("notify")
 
-    Toasts {}
-
-    SylBar {
-        open: ({
-                center: root.screenOf(centerPart),
-                clock: root.screenOf(clockPart),
-                notify: root.screenOf(notifyPart),
-                pad: root.screenOf(padPart),
-                power: root.screenOf(powerPart)
-            })
-        onRequest: (name, arg, screen) => root.openOn(name, arg, screen)
+        SylNotify {
+            id: notifyPart
+            onOpened: root.solo(notifyPart)
+        }
     }
 
-    SylDeck {
-        padOpen: padPart.wanted
-        onRequest: (name, arg, screen) => root.openOn(name, arg, screen)
+    LazyLoader {
+        id: padLoader
+        active: root.on("pad")
+
+        SylPad {
+            id: padPart
+            onOpened: root.solo(padPart)
+        }
+    }
+
+    LazyLoader {
+        id: mediaLoader
+        active: root.on("media")
+
+        SylMedia {
+            id: mediaPart
+            onOpened: root.solo(mediaPart)
+        }
+    }
+
+    LazyLoader {
+        id: settingsLoader
+        active: root.on("settings")
+
+        SylSettings {
+            id: settingsPart
+            onOpened: root.solo(settingsPart)
+            onPartRequested: (name, arg) => {
+                const p = root.part(name);
+                if (p === null)
+                    return;
+                if (name === "center") {
+                    p.setView(arg);
+                    return;
+                }
+                if (name === "media")
+                    p.openTab(arg);
+                p.open();
+            }
+        }
+    }
+
+    LazyLoader {
+        id: powerLoader
+        active: root.on("power")
+
+        SylPower {
+            id: powerPart
+            onOpened: root.solo(powerPart)
+        }
+    }
+
+    LazyLoader {
+        id: paperLoader
+        active: root.on("paper")
+
+        SylPaper {
+            id: paperPart
+            onOpened: root.solo(paperPart)
+        }
+    }
+
+    LazyLoader {
+        active: root.on("diver")
+
+        SylDiver {}
+    }
+
+    LazyLoader {
+        active: root.on("notify")
+
+        Toasts {}
+    }
+
+    LazyLoader {
+        active: root.on("bar")
+
+        SylBar {
+            open: ({
+                    center: root.screenOf(root.part("center")),
+                    clock: root.screenOf(root.part("clock")),
+                    notify: root.screenOf(root.part("notify")),
+                    pad: root.screenOf(root.part("pad")),
+                    power: root.screenOf(root.part("power"))
+                })
+            onRequest: (name, arg, screen) => root.openOn(name, arg, screen)
+        }
+    }
+
+    LazyLoader {
+        active: root.on("deck")
+
+        SylDeck {
+            padOpen: root.part("pad") !== null && root.part("pad").wanted
+            onRequest: (name, arg, screen) => root.openOn(name, arg, screen)
+        }
     }
 
     function setting(key: string, value: string): string {
@@ -261,31 +375,51 @@ ShellRoot {
         return JSON.stringify(Settings.get(key));
     }
 
-    readonly property var commands: ({
+    readonly property var owners: ({
+            center: "center",
+            clock: "clock",
+            pad: "pad",
+            paper: "paper",
+            power: "power",
+            notify: "Notifications",
+            diver: "Diver",
+            weather: "Weather",
+            audio: "Audio",
+            media: "Media",
+            eq: "Equalizer",
+            headphones: "Headphones",
+            nightlight: "NightLight",
+            dnd: "Dnd",
+            wifi: "NetworkService",
+            bluetooth: "BluetoothService"
+        })
+
+    readonly property var commands: {
+        const all = ({
             center: {
-                toggle: () => centerPart.toggle(),
-                open: () => centerPart.open(),
-                close: () => centerPart.close(),
+                toggle: () => root.need("center").toggle(),
+                open: () => root.need("center").open(),
+                close: () => root.need("center").close(),
                 view: name => {
                     if (name === undefined)
                         throw new Error("usage: center view <name>");
                     if (name === "theme")
-                        themePart.open();
+                        root.need("theme").open();
                     else
-                        centerPart.setView(name);
+                        root.need("center").setView(name);
                 }
             },
             theme: {
-                toggle: () => themePart.toggle(),
-                open: () => themePart.open(),
-                close: () => themePart.close(),
-                next: () => themePart.step(1),
-                prev: () => themePart.step(-1),
-                apply: () => themePart.commit(),
+                toggle: () => root.need("theme").toggle(),
+                open: () => root.need("theme").open(),
+                close: () => root.need("theme").close(),
+                next: () => root.need("theme").step(1),
+                prev: () => root.need("theme").step(-1),
+                apply: () => root.need("theme").commit(),
                 cycle: () => Theme.cycle(),
                 search: (...q) => {
-                    themePart.query = q.join(" ");
-                    return themePart.ids;
+                    root.need("theme").query = q.join(" ");
+                    return root.need("theme").ids;
                 },
                 set: id => {
                     if (Theme.ids.indexOf(id) < 0)
@@ -295,14 +429,14 @@ ShellRoot {
                 list: () => Theme.ids
             },
             clock: {
-                toggle: () => clockPart.toggle(),
-                open: () => clockPart.open(),
-                close: () => clockPart.close()
+                toggle: () => root.need("clock").toggle(),
+                open: () => root.need("clock").open(),
+                close: () => root.need("clock").close()
             },
             notify: {
-                toggle: () => notifyPart.toggle(),
-                open: () => notifyPart.open(),
-                close: () => notifyPart.close(),
+                toggle: () => root.need("notify").toggle(),
+                open: () => root.need("notify").open(),
+                close: () => root.need("notify").close(),
                 clear: () => Notifications.clear(),
                 dismiss: id => {
                     if (Notifications.entry(Number(id)) === null)
@@ -316,9 +450,9 @@ ShellRoot {
                 }
             },
             settings: {
-                toggle: () => settingsPart.toggle(),
-                open: section => settingsPart.showSection(section || ""),
-                close: () => settingsPart.close(),
+                toggle: () => root.need("settings").toggle(),
+                open: section => root.need("settings").showSection(section || ""),
+                close: () => root.need("settings").close(),
                 all: () => Settings.values,
                 get: key => Settings.get(key) === undefined ? null : Settings.get(key),
                 set: (key, ...rest) => root.setting(key || "", rest.join(" "))
@@ -358,26 +492,26 @@ ShellRoot {
                 refresh: () => Weather.refresh()
             },
             paper: {
-                toggle: () => paperPart.toggle(),
-                open: () => paperPart.open(),
-                close: () => paperPart.close(),
-                set: (...p) => paperPart.set(p.join(" ")),
-                next: () => paperPart.step(1),
-                prev: () => paperPart.step(-1),
-                reset: () => paperPart.reset(),
-                current: () => paperPart.current
+                toggle: () => root.need("paper").toggle(),
+                open: () => root.need("paper").open(),
+                close: () => root.need("paper").close(),
+                set: (...p) => root.need("paper").set(p.join(" ")),
+                next: () => root.need("paper").step(1),
+                prev: () => root.need("paper").step(-1),
+                reset: () => root.need("paper").reset(),
+                current: () => root.need("paper").current
             },
             power: {
-                toggle: () => powerPart.toggle(),
-                open: () => powerPart.open(),
-                close: () => powerPart.close(),
-                list: () => powerPart.ids,
-                run: id => powerPart.run(id || "")
+                toggle: () => root.need("power").toggle(),
+                open: () => root.need("power").open(),
+                close: () => root.need("power").close(),
+                list: () => root.need("power").ids,
+                run: id => root.need("power").run(id || "")
             },
             pad: {
-                toggle: () => padPart.toggle(),
-                open: () => padPart.open(),
-                close: () => padPart.close()
+                toggle: () => root.need("pad").toggle(),
+                open: () => root.need("pad").open(),
+                close: () => root.need("pad").close()
             },
             wm: {
                 default: "state",
@@ -407,11 +541,11 @@ ShellRoot {
                 seek: s => Media.seekTo(Number(s)),
                 open: tab => {
                     if (tab !== undefined)
-                        mediaPart.openTab(tab);
-                    mediaPart.open();
+                        root.need("media").openTab(tab);
+                    root.need("media").open();
                 },
-                close: () => mediaPart.close(),
-                panel: () => mediaPart.toggle()
+                close: () => root.need("media").close(),
+                panel: () => root.need("media").toggle()
             },
             eq: {
                 toggle: () => Equalizer.set({
@@ -492,7 +626,14 @@ ShellRoot {
                         state: Theme.stateFile
                     })
             }
-        })
+        });
+        const out = {};
+        for (const name of Object.keys(all)) {
+            if (root.owners[name] === undefined || root.on(root.owners[name]))
+                out[name] = all[name];
+        }
+        return out;
+    }
 
     Binding {
         target: Tokens

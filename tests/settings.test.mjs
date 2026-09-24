@@ -1,8 +1,10 @@
 import { test } from "node:test"
+import { readFileSync, readdirSync } from "node:fs"
 import assert from "node:assert/strict"
 import {
     CORNERS, DEFAULT_CONFIG, DEFAULT_SETTINGS, parseJson, expandHome, deepMerge, migrate,
-    validateConfig, validateSettings, merge, getPath, setPath, serialize, DEFAULT_GLASS, resolveGlass, settingsLayer, effectiveSettings
+    validateConfig, validateSettings, merge, getPath, setPath, serialize, DEFAULT_GLASS, resolveGlass, settingsLayer, effectiveSettings,
+    PARTS, SERVICE_DEPS, liveParts, liveServices
 } from "../shell/lib/settings.mjs"
 
 test("parseJson treats empty text as an empty object", () => {
@@ -194,4 +196,67 @@ test("config.json can hold settings defaults that settings.json overrides", () =
     assert.equal(e.center.corner, "top-left")
     assert.equal(effectiveSettings(config, { center: { corner: "bogus" } }).center.corner, "top-right")
     assert.deepEqual(effectiveSettings({}, {}), validateSettings({}))
+})
+
+test("parts default to every part and keep only boolean false", () => {
+    assert.deepEqual(Object.keys(DEFAULT_SETTINGS.parts), Object.keys(PARTS))
+    assert.ok(Object.values(DEFAULT_SETTINGS.parts).every(v => v === true))
+    const v = validateSettings({ parts: { pad: false, center: "no", nope: false } })
+    assert.equal(v.parts.pad, false)
+    assert.equal(v.parts.center, true)
+    assert.equal("nope" in v.parts, false)
+    assert.equal(effectiveSettings({ parts: { pad: false } }, { parts: { pad: true } }).parts.pad, true)
+    assert.equal(effectiveSettings({ parts: { pad: false } }, {}).parts.pad, false)
+})
+
+const NONE = Object.fromEntries(Object.keys(PARTS).map(k => [k, false]))
+const alone = name => liveServices({ ...NONE, [name]: true })
+
+test("an excluded part contributes nothing to the parts and services shell.qml boots", () => {
+    for (const name of Object.keys(PARTS)) {
+        const flags = validateSettings({ parts: { [name]: false } }).parts
+        assert.equal(liveParts(flags).includes(name), false)
+        const others = new Set(Object.keys(PARTS).filter(n => n !== name).flatMap(alone))
+        assert.deepEqual(new Set(liveServices(flags)), others, name)
+    }
+    assert.deepEqual(liveParts(NONE), [])
+    assert.deepEqual(liveServices(NONE), [])
+    assert.ok(alone("center").includes("Displays"))
+    assert.ok(alone("bar").includes("Equalizer"))
+    assert.equal(liveServices({ ...DEFAULT_SETTINGS.parts, center: false }).includes("Hotspot"), false)
+})
+
+test("shell.qml loads every part only through its parts flag", () => {
+    const qml = readFileSync(new URL("../shell/shell.qml", import.meta.url), "utf8")
+    for (const name of Object.keys(PARTS))
+        assert.match(qml, new RegExp("LazyLoader \\{\\n(        id: \\w+\\n)?        active: root\\.on\\(\"" + name + "\"\\)"), name)
+    const bootLine = qml.split("\n").find(l => l.includes("readonly property var boot:"))
+    for (const svc of Object.keys(SERVICE_DEPS).concat(...Object.values(PARTS)))
+        assert.equal(new RegExp("\\b" + svc + "\\b").test(bootLine), false, svc + " is booted unconditionally")
+})
+
+test("PARTS lists every service a part references", () => {
+    const root = new URL("../shell/", import.meta.url)
+    const core = ["Config", "Settings", "Ipc", "Demo", "Theme", "Resin", "Compositor"]
+    const services = readdirSync(new URL("services/", root)).map(f => f.replace(".qml", "")).filter(n => !core.includes(n))
+    const refs = dir => {
+        const found = new Set()
+        for (const f of readdirSync(new URL(dir + "/", root), { recursive: true }).filter(f => f.endsWith(".qml"))) {
+            const text = readFileSync(new URL(dir + "/" + f, root), "utf8")
+            for (const svc of services.concat("DayAgenda"))
+                if (new RegExp("\\b" + svc + "[.{]").test(text))
+                    found.add(svc)
+        }
+        return found
+    }
+    const agenda = refs("components").has("Diver")
+    for (const name of Object.keys(PARTS)) {
+        const used = refs(name)
+        if (used.has("DayAgenda") && agenda)
+            used.add("Diver")
+        used.delete("DayAgenda")
+        const listed = alone(name)
+        for (const svc of used)
+            assert.ok(listed.includes(svc), name + " uses " + svc)
+    }
 })

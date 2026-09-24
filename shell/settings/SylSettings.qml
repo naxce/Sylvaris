@@ -12,6 +12,7 @@ import "../lib/eq.mjs" as E
 import "../lib/wm.mjs" as W
 import "../lib/power.mjs" as Pw
 import "../lib/icons.mjs" as Icons
+import "../lib/settings.mjs" as S
 
 Scope {
     id: root
@@ -894,6 +895,28 @@ Scope {
                         options: root.corners
                         current: Settings.values.notifications.corner
                         onPicked: key => Settings.set("notifications.corner", key)
+                    }
+                }
+            }
+
+            Card {
+                title: "Parts"
+                note: "An excluded part is not loaded, and neither is anything only it uses. The same switch works without this panel: sylvaris set parts.<name> false"
+
+                Repeater {
+                    model: Object.keys(S.PARTS)
+
+                    delegate: SettingRow {
+                        required property string modelData
+                        required property int index
+                        title: "Syl" + modelData.charAt(0).toUpperCase() + modelData.slice(1)
+                        subtitle: "parts." + modelData
+                        last: index === Object.keys(S.PARTS).length - 1
+
+                        Toggle {
+                            checked: Settings.values.parts[modelData]
+                            onToggled: v => Settings.set("parts." + modelData, v)
+                        }
                     }
                 }
             }

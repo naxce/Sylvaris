@@ -16,6 +16,7 @@ Singleton {
     property string notice: ""
     property string lastWritten: ""
     property bool loadedOnce: false
+    property bool ready: false
 
     onNoticeChanged: {
         if (root.notice !== "")
@@ -77,8 +78,12 @@ Singleton {
         atomicWrites: true
         printErrors: false
         onFileChanged: reload()
-        onLoaded: root.ingest(text())
+        onLoaded: {
+            root.ingest(text());
+            root.ready = true;
+        }
         onLoadFailed: error => {
+            root.ready = true;
             if (error !== FileViewError.FileNotFound)
                 root.notice = "settings.json could not be read";
         }

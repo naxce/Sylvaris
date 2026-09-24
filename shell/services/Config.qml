@@ -13,6 +13,7 @@ Singleton {
     readonly property string path: root.dir + "/config.json"
     property var values: S.validateConfig({})
     property string notice: ""
+    property bool ready: false
 
     onNoticeChanged: {
         if (root.notice !== "")
@@ -37,8 +38,12 @@ Singleton {
         watchChanges: true
         printErrors: false
         onFileChanged: reload()
-        onLoaded: root.ingest(text())
+        onLoaded: {
+            root.ingest(text());
+            root.ready = true;
+        }
         onLoadFailed: error => {
+            root.ready = true;
             if (error !== FileViewError.FileNotFound)
                 root.notice = "config.json could not be read";
         }

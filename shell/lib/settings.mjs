@@ -6,6 +6,36 @@ import { DEFAULT_WEATHER, validateWeather } from "./weather.mjs"
 
 export const CORNERS = ["top-left", "top-center", "top-right"]
 
+export const PARTS = {
+    bar: ["Audio", "BluetoothService", "NetworkService", "Diver", "Dnd", "Media", "Notifications"],
+    center: ["Audio", "BluetoothService", "NetworkService", "Hotspot", "Displays", "NightLight", "Diver", "Dnd", "Toggles", "Media"],
+    clock: ["Diver", "Weather", "Sky"],
+    deck: ["Apps"],
+    diver: ["Diver"],
+    media: ["Headphones", "Equalizer", "Media"],
+    notify: ["Dnd", "Notifications"],
+    pad: ["Apps"],
+    paper: [],
+    power: [],
+    settings: ["Audio", "Equalizer", "NightLight", "Diver", "Weather", "Sky", "Dnd", "Apps", "Notifications"],
+    theme: ["ThemePreview"]
+}
+
+export const SERVICE_DEPS = {
+    Audio: ["Equalizer"],
+    Headphones: ["BluetoothService"],
+    Hotspot: ["NetworkService"],
+    Dnd: ["Notifications"],
+    Weather: ["Sky"]
+}
+
+function partFlags(parts) {
+    const out = {}
+    for (const name of Object.keys(PARTS))
+        out[name] = parts[name] !== false
+    return out
+}
+
 export const DEFAULT_CONFIG = {
     version: 1,
     themesDir: "~/.config/sylvaris/themes",
@@ -38,7 +68,8 @@ export const DEFAULT_SETTINGS = {
     weather: DEFAULT_WEATHER,
     diver: { enabled: true, refresh: 2, notify: true, alarms: true, sound: true, calendar: true },
     constellation: { speed: 1, links: true, ring: true, labels: true, stars: true },
-    performance: false
+    performance: false,
+    parts: partFlags({})
 }
 
 export const DEFAULT_GLASS = { enabled: true, opacity: 0.55, layerOpacity: 0.35, tint: 0.14, sheen: 0.35, flow: 1, rim: 0.5, grain: 0.035 }
@@ -223,12 +254,33 @@ export function validateSettings(raw) {
         stars: cons.stars !== false
     })
 
+    const parts = isObject(v.parts) ? v.parts : {}
+    v.parts = partFlags(parts)
+
     const media = isObject(v.media) ? v.media : {}
     v.media = Object.assign({}, media, {
         eq: validateEq(media.eq),
         airpods: typeof media.airpods === "string" && /^([0-9A-F]{2}:){5}[0-9A-F]{2}$/i.test(media.airpods) ? media.airpods.toUpperCase() : ""
     })
     return v
+}
+
+export function liveParts(parts) {
+    return Object.keys(PARTS).filter(name => !isObject(parts) || parts[name] !== false)
+}
+
+export function liveServices(parts) {
+    const out = []
+    const add = name => {
+        if (out.includes(name))
+            return
+        out.push(name)
+        for (const dep of SERVICE_DEPS[name] || [])
+            add(dep)
+    }
+    for (const name of liveParts(parts))
+        PARTS[name].forEach(add)
+    return out
 }
 
 export function settingsLayer(config) {

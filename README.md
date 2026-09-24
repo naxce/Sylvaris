@@ -53,9 +53,32 @@ A modular desktop shell built on [Quickshell](https://quickshell.org), made for 
 
 ### Without Nix
 
-1. Install `quickshell` (0.3.1 or newer), `wlr-randr`, `wlsunset`, NetworkManager (`nmcli`), `pactl`, `pipewire`, `python3`, `socat`, `wl-clipboard`, and the fonts **Inter** and **JetBrainsMono Nerd Font**.
+1. Install `quickshell` (0.3.1 or newer), `socat`, the fonts **Inter** and **JetBrainsMono Nerd Font**, and the tools below for the parts you keep.
 2. Copy `shell/` to `~/.config/quickshell/sylvaris`.
 3. Put `bin/sylvaris` on your `PATH`.
+
+| Tool | Needed by |
+|---|---|
+| `pipewire` (`pw-cli`, `pw-metadata`, `pw-play`) | bar, center, clock, diver, media, settings |
+| `python3` with `cryptography` | bar, center, clock, diver, media, settings |
+| `notify-send` (libnotify) | bar, center, clock, diver, settings |
+| `pactl` | bar, center, media |
+| `wlsunset` | center, settings |
+| `curl` | clock, settings |
+| NetworkManager (`nmcli`) | center |
+| `wlr-randr` | center |
+| `wl-clipboard` | center |
+
+`python3`, `notify-send` and `pw-play` serve Diver, which the bar, center, clock and settings show too; `python3` also talks to AirPods in media. Wi-Fi in the bar and center reads NetworkManager over D-Bus, so keep the daemon running for those. `socat` makes the `sylvaris` command fast; without it commands fall back to `qs ipc`, but `sylvaris watch` needs it.
+
+Every part can be excluded, which keeps it from loading along with anything only it uses:
+
+```sh
+sylvaris set parts.center false   # exclude SylCenter
+sylvaris set parts.center true    # bring it back, no reinstall or reload
+```
+
+The parts are `bar`, `center`, `clock`, `deck`, `diver`, `media`, `notify`, `pad`, `paper`, `power`, `settings` and `theme`; SylSettings lists them under General. A tool can be left uninstalled once every part in its row is excluded. This is separate from `bar.left`, `bar.center` and `bar.right`, which only choose what the bar shows. With Nix, `programs.sylvaris.parts = { center = false; };` writes the same key into `config.json` and leaves those tools off the package's `PATH`.
 
 ## Start it with your compositor
 
