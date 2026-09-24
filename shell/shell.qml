@@ -14,6 +14,7 @@ import qs.media
 import qs.settings
 import qs.power
 import qs.paper
+import qs.diver
 import "lib/ipc.mjs" as I
 import "lib/eq.mjs" as E
 
@@ -31,7 +32,7 @@ ShellRoot {
             power: powerPart,
             paper: paperPart
         })
-    readonly property var boot: [Tokens, Ipc, Config, Settings, Sky, Weather, Notifications, Apps, Equalizer, Headphones, Theme, Resin, ThemePreview, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
+    readonly property var boot: [Tokens, Ipc, Config, Settings, Sky, Weather, Diver, Notifications, Apps, Equalizer, Headphones, Theme, Resin, ThemePreview, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
 
     function solo(keep: var): void {
         for (const name of Object.keys(root.parts)) {
@@ -133,6 +134,7 @@ ShellRoot {
             },
             sky: Sky.state(),
             weather: Weather.state(),
+            diver: Diver.state(),
             notifications: Notifications.state(),
             pad: {
                 open: padPart.wanted,
@@ -231,6 +233,8 @@ ShellRoot {
         onOpened: root.solo(paperPart)
     }
 
+    SylDiver {}
+
     Toasts {}
 
     SylBar {
@@ -318,6 +322,35 @@ ShellRoot {
                 all: () => Settings.values,
                 get: key => Settings.get(key) === undefined ? null : Settings.get(key),
                 set: (key, ...rest) => root.setting(key || "", rest.join(" "))
+            },
+            diver: {
+                default: "state",
+                state: () => Diver.state(),
+                sync: () => Diver.sync(),
+                pair: code => Diver.pair(code || ""),
+                unpair: () => Diver.unpair(),
+                add: (...words) => {
+                    if (words.length === 0)
+                        throw new Error("usage: diver add <text, e.g. call mom tomorrow 18:00>");
+                    return Diver.add(words.join(" "), "");
+                },
+                done: id => Diver.done(id || ""),
+                snooze: (id, minutes) => Diver.snooze(id || "", Number(minutes || 10)),
+                today: () => Diver.state().today,
+                next: () => Diver.state().next,
+                test: () => {
+                    Diver.alarm = {
+                        rid: "test",
+                        id: "",
+                        at: Date.now(),
+                        start: Date.now(),
+                        before: 0,
+                        alarm: true,
+                        title: "This is how a Diver alarm looks",
+                        path: "test"
+                    };
+                },
+                dismiss: () => Diver.dismiss()
             },
             weather: {
                 default: "state",

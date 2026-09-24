@@ -10,7 +10,11 @@ A modular desktop shell built on [Quickshell](https://quickshell.org), made for 
 - **SylBar**: a floating glass bar with workspaces, the focused window, the clock, media, tray and status
 - **SylDeck**: an optional dock for pinned and running apps along the bottom of the screen
 - **SylMedia**: what's playing, a system-wide equalizer with spatial audio for headphones, AirPods controls and every device's battery
-- **SylSettings**: one screen for everything above
+- **SylTheme**: a full-screen theme picker with live previews and search
+- **SylPower**: a power menu laid out as a constellation around you
+- **SylPaper**: the wallpaper, drawn by Sylvaris, following the theme with smooth transitions
+- **SylDiver**: your [Diver](https://diver.fatum.cc) plans on the desktop: calendar, reminders and alarms
+- **SylSettings**: one screen for everything above, built around a constellation
 
 
 ## Install
@@ -64,28 +68,17 @@ A modular desktop shell built on [Quickshell](https://quickshell.org), made for 
 
 Waybar button: `"on-click": "sylvaris center"`.
 
-Sylvaris surfaces are translucent, so on Hyprland turn on blur behind their layers (`sylbar`, `syldeck`, `sylcenter`, `sylclock`, `sylnotify`):
+Sylvaris asks for blur itself through `ext-background-effect`, shaped exactly like each panel with its rounded corners, and animates every panel on its own. Hyprland 0.56+ and niri support it, so the only rule you want turns off the compositor's own layer animation:
 
 ```lua
-hl.layer_rule({ name = "sylvaris", match = { namespace = "^syl(bar|deck|center|clock|notify)$" }, blur = true, ignore_alpha = 0.3 })
+hl.layer_rule({ name = "sylvaris", match = { namespace = "^syl" }, no_anim = true })
 ```
 
 ```ini
-layerrule = blur, ^syl(bar|deck|center|clock|notify)$
-layerrule = ignorealpha 0.3, ^syl(bar|deck|center|clock|notify)$
+layerrule = noanim, ^syl
 ```
 
-SylTheme animates itself, so turn off Hyprland's own layer animation for it:
-
-```lua
-hl.layer_rule({ name = "syltheme", match = { namespace = "syltheme" }, no_anim = true })
-```
-
-```ini
-layerrule = noanim, syltheme
-```
-
-niri needs no rule: Sylvaris asks for blur itself through `ext-background-effect`, shaped exactly like each panel. A `background-effect { blur true }` layer rule would blur the whole layer surface instead, so leave it out.
+Do not add `blur` or `ignore_alpha` layer rules: they blur by transparency instead of by shape, which leaves jagged edges around the rounded corners. On niri leave out `background-effect { blur true }` for the same reason. sway has no blur, so there the glass is translucency only.
 
 ## Commands (SylIPC)
 
@@ -121,7 +114,7 @@ A part with no action runs its default (usually `toggle`). Errors print `error: 
 
 `sylvaris watch` connects to `$XDG_RUNTIME_DIR/sylvaris/ipc.sock`. It prints every requested topic once, then a line each time one changes: `{"topic":"audio","data":{...}}`. Tools can talk to the socket directly: send one request per line, either plain words (`center toggle`) or a JSON array (`["center","view","orbit-wifi:My Network"]`), and read one JSON reply per line (`{"ok":true,"result":...}`). Sending `["watch","audio"]` turns the connection into a stream.
 
-SylTheme opens on the focused monitor with the current theme in front. Arrow keys, the mouse wheel, dragging or clicking a side card move the carousel; once it rests for half a second the whole desktop previews that theme through your `themeHook`. It slides up over everything, including your bar, and hides the cursor until you move the mouse. Enter or **Apply theme** keeps it, Esc or a click on the backdrop brings back the theme you started with. SylCenter's Theme button and `sylvaris view theme` open it too.
+SylTheme opens on the focused monitor with the current theme in front. Arrow keys, the mouse wheel, dragging or clicking a side card move the carousel; once it rests for half a second the whole desktop previews that theme through your `themeHook`. It slides up over everything, including your bar, and hides the cursor until you move the mouse. Start typing to search themes by name or description (`sylvaris theme search <text>` does it from scripts). Enter or **Apply theme** keeps it, Esc or a click on the backdrop brings back the theme you started with. SylCenter's Theme button and `sylvaris view theme` open it too.
 
 Views: `compact`, `orbit-bluetooth`, `orbit-wifi`, `calendar`, `outputs`, `displays`, `hotspot`. Add `:<key>` to focus a device or network, for example `sylvaris view orbit-bluetooth:AA:BB:CC:DD:EE:FF`.
 
@@ -129,7 +122,9 @@ Views: `compact`, `orbit-bluetooth`, `orbit-wifi`, `calendar`, `outputs`, `displ
 
 `sylvaris clock` opens SylClock. The sky card plots today from midnight to midnight: the sun and the moon sit at their real altitude for your location right now, their paths so far are solid and the rest of the day is dashed, and anything below the line is under the horizon. The sky colour follows the sun through night, twilight, golden hour and day, and stars come out as it gets dark. The moon is drawn in its current phase, mirrored in the southern hemisphere.
 
-Your location comes from the `location` key in `config.json`. Without it, Sylvaris uses the coordinates of your system time zone from `zone1970.tab`, which is close enough for sunrise and sunset to be right to within minutes. Nothing is looked up online.
+Below the sky sits the weather from [Open-Meteo](https://open-meteo.com): now, the next hours as a temperature curve with the chance of rain, and six days ahead. It refreshes every `weather.refresh` minutes (30), in `weather.units` (`metric` or `imperial`); `weather.enabled = false` turns it off. This is the only part that talks to the internet, and it only sends your coordinates. Click a day in the calendar to see and add your Diver plans for it.
+
+Your location comes from the `location` key in `config.json`. Without it, Sylvaris uses the coordinates of your system time zone from `zone1970.tab`, which is close enough for sunrise and sunset to be right to within minutes. Nothing but the weather is looked up online.
 
 ```nix
 programs.sylvaris.settings.location = { latitude = 52.23; longitude = 21.01; };
@@ -151,7 +146,9 @@ In `config.json`, `notifications.server = false` hands notifications back to ano
 
 ## SylPad
 
-`sylvaris pad` fills the screen with your apps over a blurred copy of the wallpaper, alphabetically, a page at a time. Start typing to search names, descriptions and keywords; arrows move the selection, Enter launches, PageUp/PageDown or the mouse wheel turn pages, Esc clears the search and then closes. Terminal apps open in `terminal` from `config.json`. `pad.columns` (7) and `pad.rows` (5) in `settings.json` set the grid.
+`sylvaris pad` fills the screen with your apps over a blurred copy of the wallpaper, alphabetically, a page at a time. Start typing to search names, descriptions and keywords; arrows move the selection, Enter launches, PageUp/PageDown or the mouse wheel turn pages, Esc clears the search and then closes. Terminal apps open in `terminal` from `config.json`. `pad.columns` (7) and `pad.rows` (5) in `settings.json` set the grid. The apps ripple in from the middle when it opens and settle again while you type.
+
+`pad.mode = "list"` turns SylPad into a compact launcher in the middle of the screen, like rofi: a search field and a list you drive with the arrow keys.
 
 ## SylCompositor
 
@@ -172,7 +169,7 @@ The state is the same shape everywhere: each workspace has `index`, `name`, `out
 
 ## SylBar
 
-The bar runs on every screen and reserves its space, so windows and popups sit below it. Everything opens where you clicked: the clock opens SylClock, the options button (󰘮) opens SylCenter, the bell opens SylNotify (middle-click toggles Do Not Disturb), the apps button opens SylPad, and the Wi-Fi, Bluetooth and volume items open their SylCenter views. Scroll over the workspaces to switch, over the volume to change it, over the media title to skip tracks. Right-click tray icons for their menus.
+The bar runs on every screen and reserves its space. It can sit on any edge (`bar.position`: `top`, `bottom`, `left` or `right`; the side ones are vertical) and comes as separate glass islands for each side or as one slab (`bar.style`: `islands` or `slab`). Tray apps live in a drawer behind an arrow that points where it opens, so the bar stays calm. Everything opens where you clicked: the clock opens SylClock, the options button (󰘮) opens SylCenter, the bell opens SylNotify (middle-click toggles Do Not Disturb), the apps button opens SylPad, and the Wi-Fi, Bluetooth and volume items open their SylCenter views. Scroll over the workspaces to switch, over the volume to change it, over the media title to skip tracks. Right-click tray icons for their menus.
 
 Choose the modules and their order in `settings.json`; each module appears once:
 
@@ -185,7 +182,7 @@ Choose the modules and their order in `settings.json`; each module appears once:
 }
 ```
 
-Modules: `pad`, `workspaces`, `window`, `clock`, `media`, `tray`, `audio`, `network`, `bluetooth`, `battery`, `notifications`, `center`. `floating: false` makes the bar span the edge; `enabled: false` turns it off.
+Modules: `pad`, `workspaces`, `window`, `clock`, `media`, `tray`, `audio`, `network`, `bluetooth`, `battery`, `notifications`, `center`, `power` (SylPower) and `diver` (what's next in Diver, with a countdown). On a computer without a battery the battery module hides itself and the rest close the gap. `floating: false` makes the bar span the edge; `enabled: false` turns it off.
 
 ## SylDeck
 
@@ -196,8 +193,10 @@ Turn the deck on with `sylvaris set deck.enabled true` (or `"deck": { "enabled":
 | `enabled` | `false` | show the deck |
 | `pinned` | `[]` | desktop file ids, e.g. `["firefox", "kitty"]` |
 | `pad` | `start` | where the SylPad button goes: `start`, `end` or `none` |
-| `magnify` | `true` | icons grow under the pointer |
+| `power` | `none` | where the SylPower button goes: `start`, `end` or `none` |
+| `effect` | `bloom` | `bloom` lifts the icon under the pointer with a glow, `magnify` grows it and its neighbours, `none` |
 | `autohide` | `false` | slide away until the pointer touches the bottom edge |
+| `reserve` | `true` | keep windows clear of the deck; `false` lets them go underneath |
 | `size` | `56` | icon size, 36–96 |
 
 ## SylMedia
@@ -210,9 +209,36 @@ Right-click the media item in SylBar, click the media card in SylCenter, or run 
 
 **Devices** controls AirPods and Beats while they are connected: battery for each bud and the case, listening mode (off, transparency, adaptive, noise cancellation) and conversation awareness. Sylvaris talks to them directly over Apple's accessory protocol, as documented by the LibrePods project, and finds them by name; set `media.airpods` in `settings.json` to an address to pick a device yourself. Below that is the battery of every device that reports one (mice, keyboards, controllers, headsets, the laptop battery).
 
+## SylPower
+
+`sylvaris power`, the `power` bar module or the deck's power button opens SylPower: your avatar and uptime in the middle and the actions orbiting around it. Arrows or the mouse choose, Enter confirms, and each action has a letter (L lock, S suspend, H hibernate, O log out, R restart, F firmware, P shut down). Anything that closes your session counts down first; press again to do it now, Esc to stay.
+
+| Key (`power.`) | Default | Meaning |
+|---|---|---|
+| `actions` | `["lock", "suspend", "logout", "reboot", "shutdown"]` | which actions show, from `lock`, `suspend`, `hibernate`, `logout`, `reboot`, `firmware`, `shutdown` |
+| `confirm` | `true` | count down before log out, restart, shut down and hibernate |
+| `countdown` | `3` | seconds |
+| `commands` | `{}` | replace a command, e.g. `{ "lock": "hyprlock" }` |
+
+## SylPaper
+
+Sylvaris draws the wallpaper itself on every screen and changes it with the theme, with a zoom, fade or slide (`paper.transition`, `paper.duration`). `sylvaris paper` opens a picker for the images in `paper.folder` (`~/Pictures/wallpapers`): pick one for the current theme or only for this screen, and add blur, dim or an accent tint. `sylvaris paper next|prev|set <path>|reset` do the same from scripts. Stop hyprpaper, swaybg or swww first, or set `paper.enabled = false` to keep them.
+
+## SylDiver
+
+SylDiver brings [Diver](https://diver.fatum.cc) to the desktop. In Diver open settings → connected devices → connect sylvaris, enter your password and run the line it gives you (`sylvaris diver pair <code>`) or paste it into SylSettings → Diver. Your list stays end-to-end encrypted: Sylvaris gets a key for the list and a token you can revoke, never your password.
+
+Then days with plans get dots in SylClock's and SylCenter's calendars, clicking a day shows its plan with a field to add to it ("call Ana 18:00" works), reminders become notifications, and tasks marked as alarms take over the screen with a sound until you snooze (5, 10 or 30 minutes), finish or dismiss them. The `diver` bar module counts down to what's next.
+
+`sylvaris diver add <text>` captures a task into the inbox (dates like "tomorrow 9:00" or "in 20 min" are understood), `diver done <id>`, `diver snooze <id> <minutes>`, `diver today`, `diver next`, `diver sync` and `diver test` (rings a test alarm). `diver.notify`, `diver.alarms`, `diver.sound`, `diver.calendar` and `diver.refresh` (minutes between syncs) are in SylSettings.
+
+## Motion and performance
+
+Every panel opens, moves and closes with one set of curves. `motion.scale` stretches or shortens all of it (1 is the default, 0.5 twice as fast), `motion.reduced = true` makes panels appear without moving. `performance = true`, or the Performance toggle in SylCenter, drops the blurred backdrops, grain, sheen and ambient movement and shortens every animation.
+
 ## SylSettings
 
-The gear in SylCenter, `sylvaris settings` or `sylvaris settings open <section>` opens a settings screen with General, Appearance (themes and Resin Glass), Bar (modules and their order), Deck (pinned apps included), Launcher, Notifications, Sound, Displays, Clock, Commands (copyable keybinds for your compositor) and About. Every switch on it is also a `sylvaris set` away, and values that come from `config.json` are shown with where to change them.
+The gear in SylCenter, `sylvaris settings` or `sylvaris settings open <section>` opens SylSettings over a starfield: every section is a star around the core, and picking one shrinks the constellation to the top and opens the section below it. On the left you tune the constellation itself (drift speed, ring, silk links, labels, starfield), which also changes SylCenter's orbits; on the right are statistics (uptime, the shell's memory, apps, themes, windows, workspaces, screens, notifications) and About. Every switch is also a `sylvaris set` away, and values that come from `config.json` are shown with where to change them.
 
 ## Resin Glass
 

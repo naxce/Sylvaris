@@ -36,15 +36,31 @@ Item {
         antialiasing: true
         color: root.checked ? Theme.onAccent : Theme.text
 
+        scale: toggleArea.pressed ? 0.85 : 1
+
         Behavior on x {
             NumberAnimation {
+                duration: Tokens.stateDuration + 80
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Tokens.springCurve
+            }
+        }
+
+        Behavior on scale {
+            NumberAnimation {
                 duration: Tokens.stateDuration
-                easing.type: Easing.OutCubic
+            }
+        }
+
+        Behavior on color {
+            ColorAnimation {
+                duration: Tokens.stateDuration
             }
         }
     }
 
     MouseArea {
+        id: toggleArea
         anchors.fill: parent
         anchors.margins: -6
         cursorShape: Qt.PointingHandCursor

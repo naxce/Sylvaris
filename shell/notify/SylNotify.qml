@@ -5,6 +5,7 @@ import qs.services
 import qs.components
 import "../lib/notify.mjs" as N
 import "../lib/icons.mjs" as Icons
+import "../lib/motion.mjs" as M
 
 Popup {
     id: root
@@ -139,8 +140,15 @@ Popup {
         delegate: Column {
             id: group
             required property var modelData
+            required property int index
+            readonly property real arrive: M.stagger(root.phase, Math.min(group.index, 6), 7, 0.5)
             width: list.width
             spacing: 8
+            opacity: group.arrive
+
+            transform: Translate {
+                y: 18 * (1 - group.arrive)
+            }
 
             Item {
                 width: parent.width

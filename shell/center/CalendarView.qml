@@ -17,6 +17,10 @@ Item {
     readonly property var cells: C.monthGrid(root.year, root.month, root.firstDay)
     readonly property var labels: C.weekdayLabels(root.firstDay, [0, 1, 2, 3, 4, 5, 6].map(d => Qt.locale().dayName(d, Locale.ShortFormat)))
     readonly property int cellWidth: 66
+    readonly property bool planner: Diver.active
+    readonly property int cellHeight: root.planner ? 42 : 56
+    readonly property var busy: Diver.busy(root.year, root.month)
+    property string picked: Qt.formatDate(root.today, "yyyy-MM-dd")
 
     function shift(delta: int): void {
         const m = C.shiftMonth(root.year, root.month, delta);
@@ -84,10 +88,15 @@ Item {
         Repeater {
             model: root.cells
             delegate: Rectangle {
+                id: dayCell
                 required property var modelData
                 readonly property bool isToday: C.isSameDay(modelData, root.today)
+                readonly property string key: modelData.year + "-" + String(modelData.month + 1).padStart(2, "0") + "-" + String(modelData.day).padStart(2, "0")
+                readonly property int count: root.busy[dayCell.key] || 0
                 width: root.cellWidth
-                height: 56
+                height: root.cellHeight
+                border.width: root.planner && root.picked === dayCell.key ? 1.5 : 0
+                border.color: Theme.accent
                 radius: Tokens.radiusRow
                 color: "transparent"
 
@@ -100,6 +109,32 @@ Item {
                     lit: parent.isToday
                 }
 
+
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 5
+                    spacing: 3
+                    visible: dayCell.count > 0
+
+                    Repeater {
+                        model: Math.min(3, dayCell.count)
+
+                        delegate: Rectangle {
+                            width: 4
+                            height: 4
+                            radius: 2
+                            color: dayCell.isToday ? Theme.onAccent : Theme.accent
+                        }
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    enabled: root.planner
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.picked = dayCell.key
+                }
 
                 Text {
                     anchors.centerIn: parent
@@ -114,7 +149,19 @@ Item {
         }
     }
 
+    DayAgenda {
+        visible: root.planner
+        x: 28
+        y: 96 + 7 * (root.cellHeight + 10) + 4
+        width: parent.width - 56
+        height: parent.height - y - 24
+        day: root.picked
+        rows: 3
+        onClosed: root.picked = Qt.formatDate(root.today, "yyyy-MM-dd")
+    }
+
     RowButton {
+        visible: !root.planner
         x: (parent.width - width) / 2
         y: parent.height - height - 28
         icon: Icons.GLYPHS.check

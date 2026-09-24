@@ -14,6 +14,7 @@
   pipewire,
   python3,
   curl,
+  libnotify,
 }:
 
 stdenvNoCC.mkDerivation {
@@ -49,8 +50,9 @@ stdenvNoCC.mkDerivation {
           procps
           socat
           pipewire
-          python3
+          (python3.withPackages (ps: [ ps.cryptography ]))
           curl
+          libnotify
         ]
       }
     runHook postInstall

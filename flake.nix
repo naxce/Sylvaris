@@ -31,7 +31,7 @@
                 pkgs.nodejs
                 pkgs.qt6.qtdeclarative
                 pkgs.findutils
-                pkgs.python3
+                (pkgs.python3.withPackages (ps: [ ps.cryptography ]))
               ];
             }
             ''

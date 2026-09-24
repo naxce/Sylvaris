@@ -519,11 +519,29 @@ Scope {
                     menu.visible = true;
                 }
 
+                property real phase: 0
+
                 anchor.window: deck
                 implicitWidth: Tokens.deckMenuWidth
                 implicitHeight: menuColumn.implicitHeight + 16
                 color: "transparent"
                 grabFocus: true
+                onVisibleChanged: {
+                    if (visible) {
+                        menu.phase = 0;
+                        menuIn.restart();
+                    }
+                }
+
+                NumberAnimation {
+                    id: menuIn
+                    target: menu
+                    property: "phase"
+                    to: 1
+                    duration: Tokens.enterDuration
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Tokens.enterCurve
+                }
 
                 Glass {
                     anchors.fill: parent
@@ -531,10 +549,16 @@ Scope {
                     raised: true
                     offColor: Theme.surface
                     offBorder: Theme.line
+                    opacity: menu.phase
+                    scale: 0.92 + 0.08 * menu.phase
+                    transformOrigin: Item.Bottom
                 }
 
                 Column {
                     id: menuColumn
+                    opacity: menu.phase
+                    scale: 0.92 + 0.08 * menu.phase
+                    transformOrigin: Item.Bottom
                     x: 8
                     y: 8
                     width: parent.width - 16

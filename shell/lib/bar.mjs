@@ -1,4 +1,4 @@
-export const MODULES = ["pad", "workspaces", "window", "clock", "media", "tray", "audio", "network", "bluetooth", "battery", "notifications", "center", "power"]
+export const MODULES = ["pad", "workspaces", "window", "clock", "media", "tray", "audio", "network", "bluetooth", "battery", "notifications", "center", "power", "diver"]
 export const POSITIONS = ["top", "bottom", "left", "right"]
 export const STYLES = ["islands", "slab"]
 

@@ -36,6 +36,7 @@ export const DEFAULT_SETTINGS = {
     power: DEFAULT_POWER,
     paper: DEFAULT_PAPER,
     weather: DEFAULT_WEATHER,
+    diver: { enabled: true, refresh: 2, notify: true, alarms: true, sound: true, calendar: true },
     constellation: { speed: 1, links: true, ring: true, labels: true, stars: true },
     performance: false
 }
@@ -204,6 +205,15 @@ export function validateSettings(raw) {
     v.power = validatePower(v.power)
     v.paper = validatePaper(v.paper)
     v.weather = validateWeather(v.weather)
+    const dv = isObject(v.diver) ? v.diver : {}
+    v.diver = Object.assign({}, dv, {
+        enabled: dv.enabled !== false,
+        refresh: intIn(dv.refresh, 1, 60, d.diver.refresh),
+        notify: dv.notify !== false,
+        alarms: dv.alarms !== false,
+        sound: dv.sound !== false,
+        calendar: dv.calendar !== false
+    })
     const cons = isObject(v.constellation) ? v.constellation : {}
     v.constellation = Object.assign({}, cons, {
         speed: typeof cons.speed === "number" && cons.speed >= 0 && cons.speed <= 3 ? cons.speed : d.constellation.speed,

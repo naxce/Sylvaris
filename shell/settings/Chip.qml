@@ -14,6 +14,23 @@ Item {
 
     implicitWidth: row.implicitWidth + 24
     implicitHeight: 32
+    scale: area.pressed ? 0.93 : 1
+
+    Behavior on scale {
+        NumberAnimation {
+            duration: Tokens.stateDuration
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Tokens.springCurve
+        }
+    }
+
+    Behavior on implicitWidth {
+        NumberAnimation {
+            duration: Tokens.stateDuration
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Tokens.moveCurve
+        }
+    }
 
     Glass {
         anchors.fill: parent
@@ -35,6 +52,12 @@ Item {
             text: root.glyph
             size: 14
             color: root.lit ? Theme.onAccent : Theme.accent
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: Tokens.stateDuration
+                }
+            }
         }
 
         Text {
@@ -44,6 +67,12 @@ Item {
             font.family: Tokens.fontUi
             font.pixelSize: Tokens.smallSize
             font.weight: Font.Medium
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: Tokens.stateDuration
+                }
+            }
         }
     }
 

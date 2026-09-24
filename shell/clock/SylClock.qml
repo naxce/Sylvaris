@@ -24,6 +24,8 @@ Popup {
     readonly property real light: Math.max(0, Math.min(1, (root.sunAlt + 10) / 22))
     readonly property real dark: Math.max(0, Math.min(1, (-root.sunAlt - 2) / 14))
     readonly property real glow: Math.exp(-Math.pow(root.sunAlt / 7, 2))
+    property string picked: ""
+    readonly property var busy: Diver.busy(root.year, root.month)
 
     namespace: "sylclock"
     corner: Settings.values.clock.corner
@@ -31,6 +33,8 @@ Popup {
     panelHeight: Tokens.clockHeight + (Weather.enabled ? Tokens.clockWeatherHeight + Tokens.gap : 0)
 
     onOpened: {
+        root.picked = "";
+        Diver.sync();
         root.now = new Date();
         root.year = root.now.getFullYear();
         root.month = root.now.getMonth();
@@ -87,6 +91,10 @@ Popup {
         if (Sky.source === "config")
             return Math.abs(Sky.latitude).toFixed(1) + "°" + (Sky.latitude < 0 ? "S" : "N") + "  " + Math.abs(Sky.longitude).toFixed(1) + "°" + (Sky.longitude < 0 ? "W" : "E");
         return "";
+    }
+
+    function keyOf(cell: var): string {
+        return cell.year + "-" + String(cell.month + 1).padStart(2, "0") + "-" + String(cell.day).padStart(2, "0");
     }
 
     function shift(delta: int): void {
@@ -472,8 +480,32 @@ Popup {
                 offBorder: Theme.cardLine
             }
 
+            DayAgenda {
+                anchors.fill: parent
+                anchors.margins: Tokens.cardPadding
+                day: root.picked
+                rows: 4
+                opacity: root.picked !== "" ? 1 : 0
+                visible: opacity > 0
+                onClosed: root.picked = ""
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: Tokens.fadeDuration
+                    }
+                }
+            }
+
             MoonDisc {
                 id: bigMoon
+                opacity: root.picked === "" ? 1 : 0
+                scale: 0.8 + 0.2 * opacity
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: Tokens.fadeDuration
+                    }
+                }
                 x: Tokens.cardPadding + 2
                 anchors.verticalCenter: parent.verticalCenter
                 width: 92
@@ -491,6 +523,8 @@ Popup {
                 anchors.rightMargin: Tokens.cardPadding
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 4
+                opacity: bigMoon.opacity
+                visible: opacity > 0
 
                 Text {
                     width: parent.width
@@ -603,10 +637,50 @@ Popup {
                 Repeater {
                     model: root.cells
                     delegate: Item {
+                        id: dayCell
                         required property var modelData
                         readonly property bool isToday: C.isSameDay(modelData, root.now)
+                        readonly property string key: root.keyOf(modelData)
+                        readonly property int count: root.busy[dayCell.key] || 0
                         width: grid.cell
                         height: Tokens.clockDayHeight
+
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: parent.height + 4
+                            height: width
+                            radius: width / 2
+                            color: "transparent"
+                            border.width: 1.5
+                            border.color: Theme.accent
+                            opacity: root.picked === dayCell.key ? 1 : dayArea.containsMouse ? 0.4 : 0
+
+                            Behavior on opacity {
+                                NumberAnimation {
+                                    duration: Tokens.stateDuration
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.bottom: parent.bottom
+                            anchors.bottomMargin: -3
+                            width: dayCell.count > 1 ? 9 : 4
+                            height: 4
+                            radius: 2
+                            visible: dayCell.count > 0
+                            color: dayCell.isToday ? Theme.onAccent : Theme.accent
+                            z: 2
+                        }
+
+                        MouseArea {
+                            id: dayArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.picked = root.picked === dayCell.key ? "" : dayCell.key
+                        }
 
                         Rectangle {
                             anchors.centerIn: parent

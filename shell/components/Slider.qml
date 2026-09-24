@@ -32,6 +32,15 @@ Rectangle {
         height: parent.height
         clip: true
 
+        Behavior on width {
+            enabled: !drag.pressed
+            NumberAnimation {
+                duration: Tokens.moveDuration
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Tokens.moveCurve
+            }
+        }
+
         Rectangle {
             width: root.width + root.radius
             height: parent.height

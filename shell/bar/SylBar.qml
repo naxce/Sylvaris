@@ -37,7 +37,8 @@ Scope {
                 battery: batteryModule,
                 notifications: notificationsModule,
                 center: centerModule,
-                power: powerModule
+                power: powerModule,
+                diver: diverModule
             })[name] || null;
     }
 
@@ -589,6 +590,24 @@ Scope {
             glyph: Icons.GLYPHS.power
             lit: root.isOpen("power", screenRef)
             onClicked: root.request("power", "", screenRef)
+        }
+    }
+
+    Component {
+        id: diverModule
+
+        BarButton {
+            property var screenRef: null
+            property var win: null
+            readonly property var n: Diver.next
+            readonly property int mins: n === null ? 0 : Math.round((n.start - Diver.now) / 60000)
+            property bool wanted: Diver.active
+            compact: root.vertical || n === null
+            glyph: Diver.alarm !== null ? Icons.GLYPHS.alarm : Icons.GLYPHS.planner
+            tint: Diver.alarm !== null || (n !== null && mins <= 10) ? Theme.danger : Theme.text
+            label: n === null ? "" : Diver.plain(n.task.text).slice(0, 26) + "  " + (mins <= 0 ? "now" : mins < 60 ? mins + "m" : Qt.formatTime(new Date(n.start), "HH:mm"))
+            lit: root.isOpen("clock", screenRef)
+            onClicked: root.request("clock", "", screenRef)
         }
     }
 }
