@@ -36,11 +36,7 @@ ShellRoot {
     function stateObject(): var {
         return {
             version: 1,
-            compositor: {
-                name: Compositor.name,
-                focused: Compositor.focusedName(),
-                screens: Compositor.screenNames()
-            },
+            compositor: Compositor.state(),
             audio: {
                 available: Audio.available,
                 volume: Audio.volume,
@@ -238,6 +234,20 @@ ShellRoot {
                 toggle: () => padPart.toggle(),
                 open: () => padPart.open(),
                 close: () => padPart.close()
+            },
+            wm: {
+                default: "state",
+                state: () => Compositor.state(),
+                workspace: (...a) => Compositor.run("workspace", a),
+                "move-to": (...a) => Compositor.run("move-to", a),
+                focus: (...a) => Compositor.run("focus", a),
+                move: (...a) => Compositor.run("move", a),
+                close: () => Compositor.run("close", []),
+                fullscreen: () => Compositor.run("fullscreen", []),
+                float: () => Compositor.run("float", []),
+                exec: (...a) => Compositor.run("exec", a),
+                reload: () => Compositor.run("reload", []),
+                quit: () => Compositor.run("quit", [])
             },
             audio: {
                 default: "mute",

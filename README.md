@@ -6,6 +6,7 @@ A modular desktop shell built on [Quickshell](https://quickshell.org), made for 
 - **SylClock**: the time, a live sky with the real paths of the sun and moon, the moon's phase, sunrise and sunset, and a month calendar
 - **SylNotify**: the notification daemon, with glass toasts and a notification center
 - **SylPad**: a full-screen app launcher in the spirit of Launchpad and the GNOME app grid
+- **SylCompositor**: one set of commands and one state model for Hyprland, niri and sway
 
 SylTheme (theme picker) and SylSettings (full-screen settings) are next.
 
@@ -94,6 +95,7 @@ sylvaris view orbit-wifi     # open SylCenter on a view
 sylvaris clock               # toggle SylClock (also: open, close)
 sylvaris notify              # toggle the notification center (also: clear, dismiss <id>, invoke <id> [action])
 sylvaris pad                 # toggle SylPad, the app launcher (also: open, close)
+sylvaris wm workspace 3      # the same compositor commands everywhere (see SylCompositor)
 sylvaris theme               # toggle SylTheme (also: open, close, next, prev, apply)
 sylvaris theme set noir      # apply a theme without the picker (also: cycle, list)
 sylvaris audio up 5          # volume (also: down, set 40, mute)
@@ -141,6 +143,23 @@ In `config.json`, `notifications.server = false` hands notifications back to ano
 ## SylPad
 
 `sylvaris pad` fills the screen with your apps over a blurred copy of the wallpaper, alphabetically, a page at a time. Start typing to search names, descriptions and keywords; arrows move the selection, Enter launches, PageUp/PageDown or the mouse wheel turn pages, Esc clears the search and then closes. Terminal apps open in `terminal` from `config.json`. `pad.columns` (7) and `pad.rows` (5) in `settings.json` set the grid.
+
+## SylCompositor
+
+`sylvaris wm` speaks one language to Hyprland (Lua or classic config), niri and sway, so keybinds, scripts and the rest of Sylvaris never care which one is running.
+
+| Command | What it does |
+|---|---|
+| `wm workspace <n\|next\|prev>` | go to a workspace |
+| `wm move-to <n\|next\|prev>` | send the focused window to a workspace |
+| `wm focus <left\|right\|up\|down>` | move focus |
+| `wm move <left\|right\|up\|down>` | move the focused window |
+| `wm close`, `wm fullscreen`, `wm float` | act on the focused window |
+| `wm exec <command>` | run a command |
+| `wm reload`, `wm quit` | reload the compositor's config, or leave the session |
+| `wm` or `sylvaris state compositor` | workspaces, windows and the focused window as JSON |
+
+The state is the same shape everywhere: each workspace has `index`, `name`, `output`, `active`, `focused`, `urgent` and a window count, read live from Hyprland's and sway's IPC and from niri's event stream. Windows come from the Wayland foreign-toplevel protocol, which all three support.
 
 ## Resin Glass
 

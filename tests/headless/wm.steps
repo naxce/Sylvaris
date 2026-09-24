@@ -1,0 +1,11 @@
+sleep 1.5
+syl state compositor
+syl wm workspace 3
+sleep 0.4
+syl state compositor
+syl wm workspace next
+sleep 0.4
+syl state compositor
+syl wm focus sideways
+syl wm exec touch "$HOME/exec-ran"
+sleep 0.4

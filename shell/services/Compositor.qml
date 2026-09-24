@@ -5,7 +5,9 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
 import Quickshell.I3
+import Quickshell.Wayland
 import "../lib/screens.mjs" as Screens
+import "../lib/wm.mjs" as W
 
 Singleton {
     id: root
@@ -13,6 +15,103 @@ Singleton {
     readonly property string name: Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") ? "hyprland" : Quickshell.env("NIRI_SOCKET") ? "niri" : Quickshell.env("SWAYSOCK") ? "sway" : "unknown"
     property string niriFocused: ""
     property var pending: []
+    property var niriState: ({
+            workspaces: [],
+            windows: []
+        })
+    readonly property bool usingLua: root.name === "hyprland" && Hyprland.usingLua
+    readonly property var workspaces: root.name === "hyprland" ? root.hyprWorkspaces() : root.name === "sway" ? root.swayWorkspaces() : root.name === "niri" ? W.niriWorkspaces(root.niriState) : []
+    readonly property var windows: Demo.enabled ? Demo.windows : ToplevelManager.toplevels.values.map(t => ({
+                appId: t.appId,
+                title: t.title,
+                activated: t.activated,
+                minimized: t.minimized,
+                fullscreen: t.fullscreen,
+                handle: t
+            }))
+    readonly property var activeWindow: {
+        for (const w of root.windows) {
+            if (w.activated)
+                return w;
+        }
+        return null;
+    }
+
+    function hyprWorkspaces(): var {
+        return Hyprland.workspaces.values.filter(w => w.id > 0).map(w => ({
+                    id: String(w.id),
+                    index: w.id,
+                    name: w.name,
+                    output: w.monitor ? w.monitor.name : "",
+                    active: w.active,
+                    focused: w.focused,
+                    urgent: w.urgent,
+                    windows: w.toplevels.values.length
+                })).sort(W.order);
+    }
+
+    function swayWorkspaces(): var {
+        return I3.workspaces.values.map(w => ({
+                    id: String(w.id),
+                    index: w.number > 0 ? w.number : 0,
+                    name: w.name,
+                    output: w.monitor ? w.monitor.name : "",
+                    active: w.active,
+                    focused: w.focused,
+                    urgent: w.urgent,
+                    windows: -1
+                })).sort(W.order);
+    }
+
+    function run(verb: string, args: var): void {
+        const t = W.translate(root.name, root.usingLua, verb, args);
+        if (t.command === null)
+            throw new Error(verb + " is not available on " + root.name);
+        if (t.via === "hyprland")
+            Hyprland.dispatch(t.command);
+        else if (t.via === "i3")
+            I3.dispatch(t.command);
+        else
+            Quickshell.execDetached(t.command);
+    }
+
+    function focusWorkspace(ws: var): void {
+        if (ws.focused)
+            return;
+        if (root.name === "niri")
+            Quickshell.execDetached(["sh", "-c", "niri msg action focus-monitor \"$1\" && niri msg action focus-workspace \"$2\"", "sylvaris", ws.output, String(ws.index)]);
+        else
+            root.run("workspace", [String(ws.index)]);
+    }
+
+    function activate(w: var): void {
+        if (w && w.handle)
+            w.handle.activate();
+    }
+
+    function closeWindow(w: var): void {
+        if (w && w.handle)
+            w.handle.close();
+    }
+
+    function state(): var {
+        return {
+            name: root.name,
+            usingLua: root.usingLua,
+            focused: root.focusedName(),
+            screens: root.screenNames(),
+            workspaces: root.workspaces,
+            windows: root.windows.map(w => ({
+                        appId: w.appId,
+                        title: w.title,
+                        activated: w.activated
+                    })),
+            active: root.activeWindow === null ? null : {
+                appId: root.activeWindow.appId,
+                title: root.activeWindow.title
+            }
+        };
+    }
 
     function focusedName(): string {
         if (root.name === "hyprland")
@@ -70,6 +169,22 @@ Singleton {
                 return;
             timeout.stop();
             root.flush();
+        }
+    }
+
+    Process {
+        running: root.name === "niri"
+        command: ["niri", "msg", "--json", "event-stream"]
+        stdout: SplitParser {
+            onRead: line => {
+                try {
+                    const next = W.niriReduce(root.niriState, JSON.parse(line));
+                    if (next !== root.niriState)
+                        root.niriState = next;
+                } catch (e) {
+                    console.warn("sylvaris: could not read a niri event: " + e);
+                }
+            }
         }
     }
 

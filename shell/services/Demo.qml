@@ -94,6 +94,13 @@ Singleton {
         { id: "wireshark", name: "Wireshark", genericName: "", comment: "", keywords: [], icon: "", noDisplay: false, runInTerminal: false }
     ]
 
+    readonly property var windows: [
+        { appId: "firefox", title: "Sylvaris — Mozilla Firefox", activated: true, minimized: false, fullscreen: false, handle: null },
+        { appId: "kitty", title: "~/NixOS", activated: false, minimized: false, fullscreen: false, handle: null },
+        { appId: "kitty", title: "htop", activated: false, minimized: false, fullscreen: false, handle: null },
+        { appId: "spotify", title: "Spotify", activated: false, minimized: false, fullscreen: false, handle: null }
+    ]
+
     readonly property var cards: [
         { name: "bluez_card.00_11_22_33_44_01", active_profile: "a2dp-sink", profiles: {
                 "a2dp-sink": { available: true },
