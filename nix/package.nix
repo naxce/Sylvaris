@@ -11,6 +11,8 @@
   coreutils,
   procps,
   socat,
+  pipewire,
+  python3,
 }:
 
 stdenvNoCC.mkDerivation {
@@ -45,6 +47,8 @@ stdenvNoCC.mkDerivation {
           coreutils
           procps
           socat
+          pipewire
+          python3
         ]
       }
     runHook postInstall

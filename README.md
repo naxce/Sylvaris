@@ -9,6 +9,7 @@ A modular desktop shell built on [Quickshell](https://quickshell.org), made for 
 - **SylCompositor**: one set of commands and one state model for Hyprland, niri and sway
 - **SylBar**: a floating glass bar with workspaces, the focused window, the clock, media, tray and status
 - **SylDeck**: an optional dock for pinned and running apps along the bottom of the screen
+- **SylMedia**: what's playing, a system-wide equalizer with spatial audio for headphones, AirPods controls and every device's battery
 
 SylTheme (theme picker) and SylSettings (full-screen settings) are next.
 
@@ -48,7 +49,7 @@ SylTheme (theme picker) and SylSettings (full-screen settings) are next.
 
 ### Without Nix
 
-1. Install `quickshell` (0.3.1 or newer), `wlr-randr`, `wlsunset`, NetworkManager (`nmcli`), `pactl`, `wl-clipboard`, and the fonts **Inter** and **JetBrainsMono Nerd Font**.
+1. Install `quickshell` (0.3.1 or newer), `wlr-randr`, `wlsunset`, NetworkManager (`nmcli`), `pactl`, `pipewire`, `python3`, `socat`, `wl-clipboard`, and the fonts **Inter** and **JetBrainsMono Nerd Font**.
 2. Copy `shell/` to `~/.config/quickshell/sylvaris`.
 3. Put `bin/sylvaris` on your `PATH`.
 
@@ -98,6 +99,9 @@ sylvaris clock               # toggle SylClock (also: open, close)
 sylvaris notify              # toggle the notification center (also: clear, dismiss <id>, invoke <id> [action])
 sylvaris pad                 # toggle SylPad, the app launcher (also: open, close)
 sylvaris wm workspace 3      # the same compositor commands everywhere (see SylCompositor)
+sylvaris media open [tab]    # SylMedia on playing, sound or devices (media toggle/next/previous/seek control playback)
+sylvaris eq preset rock      # equalizer (also: on, off, toggle, band <1-10> <dB>, spatial on|off)
+sylvaris headphones noise anc   # AirPods listening mode: off, transparency, adaptive, anc (also: awareness on|off)
 sylvaris theme               # toggle SylTheme (also: open, close, next, prev, apply)
 sylvaris theme set noir      # apply a theme without the picker (also: cycle, list)
 sylvaris audio up 5          # volume (also: down, set 40, mute)
@@ -192,6 +196,16 @@ Turn the deck on with `sylvaris set deck.enabled true` (or `"deck": { "enabled":
 | `magnify` | `true` | icons grow under the pointer |
 | `autohide` | `false` | slide away until the pointer touches the bottom edge |
 | `size` | `56` | icon size, 36–96 |
+
+## SylMedia
+
+Right-click the media item in SylBar, click the media card in SylCenter, or run `sylvaris media open`.
+
+**Playing** shows the artwork, a seek bar, previous/play/next, shuffle and repeat when the player supports them, the player's own volume and a switch between players. Everything comes from MPRIS, so it works with Spotify, browsers, mpv and the rest.
+
+**Sound** is a 10-band equalizer (31 Hz to 16 kHz, ±12 dB) with presets, for everything you hear. Sylvaris runs it as a small PipeWire filter, makes it the default output and sends it on to the device you picked; choosing another output in SylCenter moves the equalizer with it, and turning it off brings your normal output back. Changes apply a moment after you let go of a slider. **Spatial audio** is headphone crossfeed: a little of each channel, low-passed and delayed by a fraction of a millisecond, reaches the other ear so music sounds like speakers in front of you rather than inside your head. (Apple's own Spatial Audio with head tracking is rendered by Apple devices, not by the AirPods, so no Linux shell can switch it on; this is the local equivalent.)
+
+**Devices** controls AirPods and Beats while they are connected: battery for each bud and the case, listening mode (off, transparency, adaptive, noise cancellation) and conversation awareness. Sylvaris talks to them directly over Apple's accessory protocol, as documented by the LibrePods project, and finds them by name; set `media.airpods` in `settings.json` to an address to pick a device yourself. Below that is the battery of every device that reports one (mice, keyboards, controllers, headsets, the laptop battery).
 
 ## Resin Glass
 

@@ -16,6 +16,7 @@ Singleton {
     readonly property real volume: root.demo ? root.demoVolume : (root.sink !== null && root.sink.audio ? root.sink.audio.volume : 0)
     readonly property bool muted: root.demo ? root.demoMuted : (root.sink !== null && root.sink.audio ? root.sink.audio.muted : false)
     readonly property var sinks: root.demo ? root.demoSinks() : root.realSinks()
+    readonly property bool eqActive: !root.demo && root.sink !== null && root.sink.name === "sylvaris_eq"
     readonly property string outputName: {
         for (const s of root.sinks) {
             if (s.current)
@@ -39,11 +40,11 @@ Singleton {
     function realSinks(): var {
         const out = [];
         for (const n of Pipewire.nodes.values) {
-            if (n.isSink && !n.isStream && n.audio)
+            if (n.isSink && !n.isStream && n.audio && n.name.indexOf("sylvaris_eq") !== 0)
                 out.push({
                     key: String(n.id),
                     name: root.nodeName(n),
-                    current: root.sink !== null && n.id === root.sink.id
+                    current: root.eqActive ? n.name === Equalizer.target : root.sink !== null && n.id === root.sink.id
                 });
         }
         return out;
@@ -70,7 +71,11 @@ Singleton {
             return;
         }
         for (const n of Pipewire.nodes.values) {
-            if (String(n.id) === key)
+            if (String(n.id) !== key)
+                continue;
+            if (Equalizer.enabled)
+                Equalizer.retarget(n.name);
+            else
                 Pipewire.preferredDefaultAudioSink = n;
         }
     }

@@ -49,7 +49,17 @@ export const GLYPHS = {
     music: g(0xF075A),
     pin: g(0xF0403),
     pinOff: g(0xF0404),
-    newWindow: g(0xF0415)
+    newWindow: g(0xF0415),
+    shuffle: g(0xF049D),
+    repeat: g(0xF0456),
+    repeatOnce: g(0xF0458),
+    repeatOff: g(0xF0457),
+    equalizer: g(0xF0EA2),
+    sliders: g(0xF066A),
+    headphones: g(0xF02CB),
+    bolt: g(0xF140B),
+    voice: g(0xF05CB),
+    open: g(0xF03CC)
 }
 
 const BLUETOOTH = {

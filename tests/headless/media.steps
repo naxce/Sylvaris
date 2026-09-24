@@ -1,0 +1,22 @@
+sleep 1.5
+syl media open
+sleep 0.8
+shot media-playing
+syl media open sound
+syl eq preset rock
+syl eq spatial on
+sleep 0.6
+shot media-sound
+syl state eq
+syl eq band 11 3
+syl eq preset nope
+syl media open devices
+syl headphones noise transparency
+syl headphones awareness on
+sleep 0.6
+shot media-devices
+syl state headphones
+syl headphones noise loud
+syl center
+sleep 0.3
+syl state media

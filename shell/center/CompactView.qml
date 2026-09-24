@@ -234,6 +234,7 @@ Item {
         MediaCard {
             width: parent.width
             visible: Media.available
+            onOpened: root.openView("media")
         }
 
         Row {

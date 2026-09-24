@@ -8,6 +8,8 @@ import "../lib/icons.mjs" as Icons
 Rectangle {
     id: root
 
+    signal opened
+
     implicitHeight: Tokens.artSize + Tokens.cardPadding * 2
     radius: Tokens.radiusCard
     color: "transparent"
@@ -82,6 +84,12 @@ Rectangle {
                 bottomLeftRadius: root.radius
             }
         }
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        cursorShape: Qt.PointingHandCursor
+        onClicked: root.opened()
     }
 
     Column {

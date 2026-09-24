@@ -10,7 +10,9 @@ import qs.notify
 import qs.pad
 import qs.bar
 import qs.deck
+import qs.media
 import "lib/ipc.mjs" as I
+import "lib/eq.mjs" as E
 
 ShellRoot {
     id: root
@@ -20,9 +22,10 @@ ShellRoot {
             theme: themePart,
             clock: clockPart,
             notify: notifyPart,
-            pad: padPart
+            pad: padPart,
+            media: mediaPart
         })
-    readonly property var boot: [Tokens, Ipc, Config, Settings, Sky, Notifications, Apps, Theme, Resin, ThemePreview, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
+    readonly property var boot: [Tokens, Ipc, Config, Settings, Sky, Notifications, Apps, Equalizer, Headphones, Theme, Resin, ThemePreview, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
 
     function solo(keep: var): void {
         for (const name of Object.keys(root.parts)) {
@@ -60,11 +63,12 @@ ShellRoot {
                 output: Audio.outputName,
                 sinks: Audio.sinks
             },
-            media: {
-                available: Media.available,
-                title: Media.title,
-                playing: Media.playing
-            },
+            media: Media.state(),
+            eq: Object.assign({
+                running: Equalizer.running,
+                target: Equalizer.target
+            }, Equalizer.cfg),
+            headphones: Headphones.state(),
             nightLight: {
                 available: NightLight.available,
                 enabled: NightLight.enabled,
@@ -186,6 +190,11 @@ ShellRoot {
         onOpened: root.solo(padPart)
     }
 
+    SylMedia {
+        id: mediaPart
+        onOpened: root.solo(mediaPart)
+    }
+
     Toasts {}
 
     SylBar {
@@ -290,7 +299,49 @@ ShellRoot {
             media: {
                 toggle: () => Media.toggle(),
                 next: () => Media.next(),
-                previous: () => Media.previous()
+                previous: () => Media.previous(),
+                seek: s => Media.seekTo(Number(s)),
+                open: tab => {
+                    if (tab !== undefined)
+                        mediaPart.openTab(tab);
+                    mediaPart.open();
+                },
+                close: () => mediaPart.close(),
+                panel: () => mediaPart.toggle()
+            },
+            eq: {
+                toggle: () => Equalizer.set({
+                        enabled: !Equalizer.cfg.enabled
+                    }),
+                on: () => Equalizer.set({
+                        enabled: true
+                    }),
+                off: () => Equalizer.set({
+                        enabled: false
+                    }),
+                preset: name => {
+                    if (E.PRESETS[name] === undefined)
+                        throw new Error("presets: " + Object.keys(E.PRESETS).join(", "));
+                    Equalizer.set({
+                        preset: name,
+                        enabled: true
+                    });
+                },
+                band: (i, db) => {
+                    const n = Number(i);
+                    if (!(n >= 1 && n <= E.BANDS.length) || isNaN(Number(db)))
+                        throw new Error("usage: eq band <1-" + E.BANDS.length + "> <dB>");
+                    Equalizer.setBand(n - 1, Math.max(-E.LIMIT, Math.min(E.LIMIT, Number(db))));
+                },
+                spatial: v => Equalizer.set({
+                        spatial: v === undefined ? !Equalizer.cfg.spatial : v === "on"
+                    })
+            },
+            headphones: {
+                default: "state",
+                state: () => Headphones.state(),
+                noise: mode => Headphones.setNoise(mode),
+                awareness: v => Headphones.setAwareness(v === undefined ? !Headphones.awareness : v === "on")
             },
             nightlight: {
                 toggle: () => NightLight.setEnabled(!NightLight.enabled),

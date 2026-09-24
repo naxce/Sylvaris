@@ -95,4 +95,8 @@ Singleton {
     readonly property int deckMargin: 10
     readonly property int deckRadius: 24
     readonly property int deckMenuWidth: 240
+    readonly property int mediaWidth: 500
+    readonly property int mediaHeight: 740
+    readonly property int mediaArt: 140
+    readonly property int eqHeight: 150
 }

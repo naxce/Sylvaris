@@ -31,11 +31,13 @@
                 pkgs.nodejs
                 pkgs.qt6.qtdeclarative
                 pkgs.findutils
+                pkgs.python3
               ];
             }
             ''
               cd ${./.}
               node --test tests/*.test.mjs
+              python3 -m unittest discover -s tests -p '*_test.py'
               find shell -name '*.qml' -print0 | xargs -0 qmllint -I ${pkgs.qt6.qtdeclarative}/lib/qt-6/qml -I ${pkgs.quickshell}/lib/qt-6/qml
               touch $out
             '';

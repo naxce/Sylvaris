@@ -272,7 +272,7 @@ Scope {
                 opacity: root.expanded ? 0 : 1
                 visible: opacity > 0
                 enabled: !root.expanded
-                onOpenView: name => name === "theme" ? root.handOff(name) : root.applyView(name)
+                onOpenView: name => name === "theme" || name === "media" ? root.handOff(name) : root.applyView(name)
 
                 Behavior on opacity {
                     NumberAnimation {

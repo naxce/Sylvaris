@@ -1,4 +1,5 @@
 import { DEFAULT_BAR, DEFAULT_DECK, validateBar, validateDeck } from "./bar.mjs"
+import { DEFAULT_EQ, validateEq } from "./eq.mjs"
 
 export const CORNERS = ["top-left", "top-center", "top-right"]
 
@@ -26,7 +27,8 @@ export const DEFAULT_SETTINGS = {
     notifications: { dnd: false, timeout: 5000, corner: "top-right" },
     pad: { columns: 7, rows: 5 },
     bar: DEFAULT_BAR,
-    deck: DEFAULT_DECK
+    deck: DEFAULT_DECK,
+    media: { eq: DEFAULT_EQ, airpods: "" }
 }
 
 export const DEFAULT_GLASS = { enabled: true, opacity: 0.55, layerOpacity: 0.35, tint: 0.14, sheen: 0.35, flow: 1, rim: 0.5, grain: 0.035 }
@@ -182,6 +184,12 @@ export function validateSettings(raw) {
 
     v.bar = validateBar(v.bar)
     v.deck = validateDeck(v.deck)
+
+    const media = isObject(v.media) ? v.media : {}
+    v.media = Object.assign({}, media, {
+        eq: validateEq(media.eq),
+        airpods: typeof media.airpods === "string" && /^([0-9A-F]{2}:){5}[0-9A-F]{2}$/i.test(media.airpods) ? media.airpods.toUpperCase() : ""
+    })
     return v
 }
 
