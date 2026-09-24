@@ -7,6 +7,8 @@ import qs.components
 import "../lib/calendar.mjs" as C
 import "../lib/sky.mjs" as K
 import "../lib/icons.mjs" as Icons
+import "../lib/weather.mjs" as Wx
+import "../lib/motion.mjs" as M
 
 Popup {
     id: root
@@ -26,13 +28,15 @@ Popup {
     namespace: "sylclock"
     corner: Settings.values.clock.corner
     panelWidth: Tokens.clockWidth
-    panelHeight: Tokens.clockHeight
+    panelHeight: Tokens.clockHeight + (Weather.enabled ? Tokens.clockWeatherHeight + Tokens.gap : 0)
 
     onOpened: {
         root.now = new Date();
         root.year = root.now.getFullYear();
         root.month = root.now.getMonth();
         Sky.tick();
+        if (Weather.fetched === 0 || Date.now() - Weather.fetched > 600000)
+            Weather.refresh();
     }
 
     function hhmm(t: real): string {
@@ -101,9 +105,10 @@ Popup {
     Item {
         id: leftColumn
         x: Tokens.panelPaddingX
-        y: 22
+        y: 22 + 14 * (1 - M.stagger(root.phase, 0, 3))
         width: Tokens.clockSkyWidth
-        height: parent.height - 44
+        height: Tokens.clockHeight - 44
+        opacity: M.stagger(root.phase, 0, 3)
 
         Row {
             id: timeRow
@@ -450,9 +455,10 @@ Popup {
     Item {
         id: rightColumn
         x: leftColumn.x + leftColumn.width + Tokens.clockColumnGap
-        y: 22
+        y: 22 + 14 * (1 - M.stagger(root.phase, 1, 3))
         width: parent.width - x - Tokens.panelPaddingX
-        height: parent.height - 44
+        height: Tokens.clockHeight - 44
+        opacity: M.stagger(root.phase, 1, 3)
 
         Item {
             id: moonCard
@@ -621,6 +627,270 @@ Popup {
                             font.pixelSize: Tokens.smallSize
                             font.weight: parent.isToday ? Font.DemiBold : Font.Normal
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    Item {
+        id: weatherCard
+        readonly property var d: Weather.data
+        readonly property var hours: weatherCard.d === null ? [] : weatherCard.d.hours.slice(0, 10)
+        readonly property real lo: Math.min(...weatherCard.hours.map(h => h.temp), 99)
+        readonly property real hi: Math.max(...weatherCard.hours.map(h => h.temp), -99)
+        visible: Weather.enabled
+        x: Tokens.panelPaddingX
+        y: Tokens.clockHeight - 22 + Tokens.gap + 14 * (1 - M.stagger(root.phase, 2, 3))
+        width: parent.width - Tokens.panelPaddingX * 2
+        height: Tokens.clockWeatherHeight
+        opacity: M.stagger(root.phase, 2, 3)
+
+        function tempY(t: real): real {
+            const span = Math.max(1, weatherCard.hi - weatherCard.lo);
+            return 40 - (t - weatherCard.lo) / span * 26;
+        }
+
+        Glass {
+            anchors.fill: parent
+            radius: Tokens.radiusCard
+            inner: true
+            offBorder: Theme.cardLine
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            radius: Tokens.radiusCard
+            visible: weatherCard.d !== null
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop {
+                    position: 0
+                    color: Qt.alpha(weatherCard.d !== null && weatherCard.d.day ? Theme.accent : Theme.accentDeep, 0.16)
+                }
+                GradientStop {
+                    position: 0.45
+                    color: "transparent"
+                }
+            }
+        }
+
+        Text {
+            anchors.centerIn: parent
+            visible: weatherCard.d === null
+            text: Weather.error !== "" ? Weather.error : !Sky.available ? "Set a location to see the weather" : "Fetching the forecast…"
+            color: Theme.textDim
+            font.family: Tokens.fontUi
+            font.pixelSize: Tokens.bodySize
+        }
+
+        Item {
+            id: nowBlock
+            visible: weatherCard.d !== null
+            x: 20
+            y: 16
+            width: 200
+            height: 96
+
+            Glyph {
+                id: nowGlyph
+                text: Weather.now === null ? "" : Icons.GLYPHS[Weather.now.glyph]
+                size: 44
+                color: Theme.accent
+
+                SequentialAnimation on anchors.topMargin {
+                    running: root.shown && !Tokens.lite
+                    loops: Animation.Infinite
+                    NumberAnimation {
+                        to: -3
+                        duration: 1800
+                        easing.type: Easing.InOutSine
+                    }
+                    NumberAnimation {
+                        to: 3
+                        duration: 1800
+                        easing.type: Easing.InOutSine
+                    }
+                }
+                anchors.top: parent.top
+            }
+
+            Text {
+                anchors.left: nowGlyph.right
+                anchors.leftMargin: 12
+                anchors.verticalCenter: nowGlyph.verticalCenter
+                text: weatherCard.d === null ? "" : weatherCard.d.temp + "°"
+                color: Theme.text
+                font.family: Tokens.fontUi
+                font.pixelSize: 44
+                font.weight: Font.DemiBold
+                font.letterSpacing: -1
+            }
+
+            Column {
+                anchors.bottom: parent.bottom
+                spacing: 2
+
+                Text {
+                    text: Weather.now === null ? "" : Weather.now.label + (root.place() !== "" ? " · " + root.place() : "")
+                    color: Theme.text
+                    font.family: Tokens.fontUi
+                    font.pixelSize: Tokens.smallSize
+                    font.weight: Font.DemiBold
+                }
+
+                Text {
+                    text: weatherCard.d === null ? "" : "Feels " + weatherCard.d.feels + "° · " + weatherCard.d.humidity + "% · " + weatherCard.d.wind + " " + weatherCard.d.windUnit
+                    color: Theme.textDim
+                    font.family: Tokens.fontUi
+                    font.pixelSize: Tokens.tinySize
+                }
+            }
+        }
+
+        Item {
+            id: hourly
+            visible: weatherCard.d !== null
+            x: nowBlock.x + nowBlock.width + 20
+            y: 14
+            width: parent.width - x - 16
+            height: 104
+            readonly property real col: hourly.width / Math.max(1, weatherCard.hours.length)
+
+            Shape {
+                anchors.fill: parent
+                preferredRendererType: Shape.CurveRenderer
+                visible: weatherCard.hours.length > 1
+
+                ShapePath {
+                    strokeColor: Qt.alpha(Theme.accent, 0.7)
+                    strokeWidth: 2
+                    fillColor: "transparent"
+                    capStyle: ShapePath.RoundCap
+                    joinStyle: ShapePath.RoundJoin
+
+                    PathPolyline {
+                        path: weatherCard.hours.map((h, i) => Qt.point(hourly.col * (i + 0.5), 34 + weatherCard.tempY(h.temp)))
+                    }
+                }
+            }
+
+            Repeater {
+                model: weatherCard.hours
+
+                delegate: Item {
+                    required property var modelData
+                    required property int index
+                    x: hourly.col * index
+                    width: hourly.col
+                    height: hourly.height
+                    opacity: Math.max(0, Math.min(1, root.phase * 3 - 1.2 - index * 0.08))
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        y: 0
+                        text: modelData.time
+                        color: Theme.textDim
+                        font.family: Tokens.fontMono
+                        font.pixelSize: 11
+                    }
+
+                    Glyph {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        y: 16
+                        text: Icons.GLYPHS[Wx.describe(modelData.code, modelData.day).glyph]
+                        size: 16
+                        color: Theme.textSoft
+                    }
+
+                    Rectangle {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        y: 34 + weatherCard.tempY(modelData.temp) - 3
+                        width: 6
+                        height: 6
+                        radius: 3
+                        color: Theme.accent
+                    }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: 14
+                        text: modelData.temp + "°"
+                        color: Theme.text
+                        font.family: Tokens.fontUi
+                        font.pixelSize: Tokens.smallSize
+                        font.weight: Font.DemiBold
+                    }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.bottom: parent.bottom
+                        visible: modelData.rain >= 20
+                        text: modelData.rain + "%"
+                        color: Qt.lighter(Theme.accent, 1.2)
+                        font.family: Tokens.fontUi
+                        font.pixelSize: 10
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            visible: weatherCard.d !== null
+            x: 20
+            y: 126
+            width: parent.width - 40
+            height: 1
+            color: Qt.alpha(Theme.text, 0.08)
+        }
+
+        Row {
+            visible: weatherCard.d !== null
+            x: 20
+            y: 134
+            width: parent.width - 40
+            height: parent.height - y - 8
+
+            Repeater {
+                model: weatherCard.d === null ? [] : weatherCard.d.days.slice(0, 6)
+
+                delegate: Item {
+                    required property var modelData
+                    required property int index
+                    width: parent.width / 6
+                    height: parent.height
+
+                    Text {
+                        id: dayName
+                        x: 6
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: Qt.formatDate(new Date(modelData.date + "T12:00:00"), "ddd")
+                        color: index === 0 ? Theme.text : Theme.textSoft
+                        font.family: Tokens.fontUi
+                        font.pixelSize: Tokens.smallSize
+                        font.weight: index === 0 ? Font.DemiBold : Font.Normal
+                    }
+
+                    Glyph {
+                        id: dayGlyph
+                        anchors.left: dayName.right
+                        anchors.leftMargin: 8
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: Icons.GLYPHS[Wx.describe(modelData.code, true).glyph]
+                        size: 16
+                        color: Theme.accent
+                    }
+
+                    Text {
+                        anchors.left: dayGlyph.right
+                        anchors.leftMargin: 8
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: modelData.max + "° <font color=\"" + Theme.textDim + "\">" + modelData.min + "°</font>"
+                        textFormat: Text.StyledText
+                        color: Theme.text
+                        font.family: Tokens.fontUi
+                        font.pixelSize: Tokens.smallSize
                     }
                 }
             }

@@ -123,7 +123,9 @@ Singleton {
     Process {
         id: fetcher
         onExited: code => {
-            if (code !== 0)
+            if (code === 0)
+                root.fetched = Date.now();
+            else
                 root.error = root.data === null ? "No forecast yet, check the connection" : "Showing the last forecast";
         }
     }

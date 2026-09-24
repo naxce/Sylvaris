@@ -82,6 +82,7 @@ Singleton {
     readonly property int clockColumnGap: 20
     readonly property int clockChipHeight: 72
     readonly property int clockMoonHeight: 172
+    readonly property int clockWeatherHeight: 196
     readonly property int clockDayHeight: 24
     readonly property int notifyIcon: 36
     readonly property int notifyThumb: 56
