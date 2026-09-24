@@ -1,0 +1,6 @@
+sleep 1.5
+syl diver add stretch in 1 min
+syl state diver
+sleep 85
+syl state diver
+shot diver-timed

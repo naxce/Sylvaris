@@ -1880,7 +1880,7 @@ Scope {
 
             Card {
                 title: "SylDiver"
-                note: Diver.paired ? "Connected. Plans show up in SylClock and SylCenter, reminders pop up as notifications and alarms ring here." + (Diver.error !== "" ? " Last problem: " + Diver.error : "") : "Open diver → settings → connected devices → connect sylvaris, then paste the whole line here. Your password never leaves the browser; Sylvaris only gets a key for your list and a token you can revoke."
+                note: Diver.paired ? "Connected. Plans show up in SylClock and SylCenter, timed plans pop up here when they start, earlier reminders arrive as notifications and alarms ring." + (Diver.error !== "" ? " Last problem: " + Diver.error : "") : "Open diver → settings → connected devices → connect sylvaris, then paste the whole line here. Your password never leaves the browser; Sylvaris only gets a key for your list and a token you can revoke."
 
                 SettingRow {
                     visible: !Diver.paired
@@ -1963,7 +1963,7 @@ Scope {
                         {
                             key: "alarms",
                             title: "Alarms",
-                            sub: "Tasks marked as alarms take over the screen until you snooze or finish them"
+                            sub: "Timed plans take over the screen when they start; ones marked as alarms also ring until you snooze or finish them"
                         },
                         {
                             key: "sound",

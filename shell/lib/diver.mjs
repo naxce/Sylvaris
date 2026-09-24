@@ -161,7 +161,7 @@ const api = (function () {
     const out = [];
     for (const { task, path } of tasks(data)) {
       if (!task.time || task.done) continue;
-      const offsets = task.remind && task.remind.length ? task.remind : task.alarm ? [0] : [];
+      const offsets = Array.isArray(task.remind) && (task.remind.length > 0 || !task.alarm) ? task.remind : [0];
       const lead = Math.max(0, ...offsets) * 60000;
       for (const occ of occurrences(task, from, to + lead)) {
         for (const m of offsets) {

@@ -210,7 +210,7 @@ Singleton {
             if (next[r.rid])
                 continue;
             next[r.rid] = true;
-            if (r.alarm && root.cfg.alarms) {
+            if (root.cfg.alarms && (r.alarm || r.before === 0)) {
                 root.alarm = r;
             } else if (root.cfg.notify) {
                 const when = r.before > 0 ? "in " + r.before + " min · " : "";
@@ -302,7 +302,7 @@ Singleton {
     }
 
     onAlarmChanged: {
-        if (root.alarm !== null && root.cfg.sound && !Demo.enabled) {
+        if (root.alarm !== null && root.alarm.alarm && root.cfg.sound && !Demo.enabled) {
             sound.running = false;
             sound.running = true;
         } else {
