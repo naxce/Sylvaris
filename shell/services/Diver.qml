@@ -102,9 +102,14 @@ Singleton {
             createdAt: Date.now(),
             updatedAt: Date.now()
         };
-        const due = day !== "" ? day : q.due;
+        const due = day !== "" && !q.rule ? day : q.due;
         if (due)
             task.due = due;
+        if (q.rule) {
+            task.rule = q.rule;
+            if (D.legacy(q.rule) !== "none")
+                task.repeat = D.legacy(q.rule);
+        }
         if (q.time) {
             task.time = q.time;
             task.remind = [0];

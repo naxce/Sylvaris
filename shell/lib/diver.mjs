@@ -2,6 +2,13 @@ const api = (function () {
   const DAY = 86400000;
   const REPEATS = ["none", "daily", "weekdays", "weekly", "monthly"];
   const ENERGY = ["low", "med", "high"];
+  const UNITS = ["day", "week", "month", "year"];
+  const LEGACY = {
+    daily: { every: 1, unit: "day" },
+    weekdays: { every: 1, unit: "week", days: [1, 2, 3, 4, 5] },
+    weekly: { every: 1, unit: "week" },
+    monthly: { every: 1, unit: "month" },
+  };
 
   function uid() {
     if (typeof crypto !== "undefined" && crypto.randomUUID)
@@ -60,6 +67,14 @@ const api = (function () {
     if (task.time !== undefined && !isTime(task.time)) delete task.time;
     if (task.end !== undefined && !isTime(task.end)) delete task.end;
     if (task.repeat !== undefined && REPEATS.indexOf(task.repeat) < 0) delete task.repeat;
+    if (task.rule !== undefined) {
+      const rule = validRule(task.rule);
+      if (rule) {
+        task.rule = rule;
+        if (legacy(rule) === "none") delete task.repeat;
+        else task.repeat = legacy(rule);
+      } else delete task.rule;
+    }
     if (task.energy !== undefined && ENERGY.indexOf(task.energy) < 0) delete task.energy;
     if (task.remind !== undefined)
       task.remind = Array.isArray(task.remind)
@@ -122,37 +137,78 @@ const api = (function () {
     return tasks(data).find((x) => x.task.id === id) || null;
   }
 
-  function step(key, repeat) {
+  function validRule(rule) {
+    if (!rule || typeof rule !== "object" || UNITS.indexOf(rule.unit) < 0) return null;
+    const out = { every: Number.isInteger(rule.every) && rule.every >= 1 && rule.every <= 999 ? rule.every : 1, unit: rule.unit };
+    if (rule.unit === "week" && Array.isArray(rule.days)) {
+      const days = rule.days.filter((d, i, a) => Number.isInteger(d) && d >= 0 && d <= 6 && a.indexOf(d) === i).sort((a, b) => a - b);
+      if (days.length > 0) out.days = days;
+    }
+    if (parseDay(rule.until)) out.until = rule.until;
+    return out;
+  }
+
+  function ruleOf(task) {
+    if (!task) return null;
+    return validRule(task.rule) || (LEGACY[task.repeat] ? Object.assign({}, LEGACY[task.repeat]) : null);
+  }
+
+  function legacy(rule) {
+    if (!rule || rule.every !== 1) return "none";
+    if (rule.unit === "day") return "daily";
+    if (rule.unit === "month") return "monthly";
+    if (rule.unit !== "week") return "none";
+    if (!rule.days) return "weekly";
+    return rule.days.join() === "1,2,3,4,5" ? "weekdays" : "none";
+  }
+
+  function monday(d) {
+    return (d.getDay() + 6) % 7;
+  }
+
+  function addMonths(d, n) {
+    const day = d.getDate();
+    d.setDate(1);
+    d.setMonth(d.getMonth() + n);
+    d.setDate(Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()));
+  }
+
+  function step(key, rule) {
     const d = parseDay(key);
-    if (repeat === "daily") d.setDate(d.getDate() + 1);
-    else if (repeat === "weekdays") {
-      do d.setDate(d.getDate() + 1);
-      while (d.getDay() === 0 || d.getDay() === 6);
-    } else if (repeat === "weekly") d.setDate(d.getDate() + 7);
-    else if (repeat === "monthly") {
-      const day = d.getDate();
-      d.setDate(1);
-      d.setMonth(d.getMonth() + 1);
-      d.setDate(Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()));
-    } else return null;
+    if (!d || !rule) return null;
+    if (rule.unit === "day") d.setDate(d.getDate() + rule.every);
+    else if (rule.unit === "week" && rule.days) {
+      const order = rule.days.map((x) => (x + 6) % 7).sort((a, b) => a - b);
+      const later = order.find((x) => x > monday(d));
+      if (later !== undefined) d.setDate(d.getDate() + later - monday(d));
+      else d.setDate(d.getDate() - monday(d) + 7 * rule.every + order[0]);
+    } else if (rule.unit === "week") d.setDate(d.getDate() + 7 * rule.every);
+    else if (rule.unit === "month") addMonths(d, rule.every);
+    else if (rule.unit === "year") addMonths(d, 12 * rule.every);
+    else return null;
+    const next = dayKey(d);
+    return rule.until && next > rule.until ? null : next;
+  }
+
+  function first(key, rule) {
+    if (!rule || !rule.days) return key;
+    const d = parseDay(key);
+    while (rule.days.indexOf(d.getDay()) < 0) d.setDate(d.getDate() + 1);
     return dayKey(d);
   }
 
   function occurrences(task, from, to) {
     if (!task || !task.due || task.done) return [];
-    const repeat = task.repeat || "none";
+    const rule = ruleOf(task);
     const out = [];
-    let key = task.due;
-    if (repeat === "weekdays") {
-      const d = parseDay(key);
-      if (d.getDay() === 0 || d.getDay() === 6) key = step(key, "weekdays");
-    }
+    let key = first(task.due, rule);
+    if (rule && rule.until && key > rule.until) return [];
     for (let guard = 0; key && guard < 1000; guard++) {
       const t = at(key, task.time);
       if (t > to) break;
       if (t >= from) out.push(t);
-      if (repeat === "none") break;
-      key = step(key, repeat);
+      if (!rule) break;
+      key = step(key, rule);
     }
     return out;
   }
@@ -210,7 +266,7 @@ const api = (function () {
   function overdue(data, now) {
     const today = dayKey(now);
     return tasks(data).filter(
-      (x) => !x.task.done && x.task.due && x.task.due < today && (x.task.repeat || "none") === "none",
+      (x) => !x.task.done && x.task.due && x.task.due < today && ruleOf(x.task) === null,
     );
   }
 
@@ -229,10 +285,16 @@ const api = (function () {
   function complete(task, done, now) {
     const t = Object.assign({}, task, { updatedAt: now });
     delete t.snoozedUntil;
-    if (done && t.due && t.repeat && t.repeat !== "none") {
-      let next = step(t.due, t.repeat);
+    const rule = ruleOf(t);
+    if (done && t.due && rule) {
+      let next = step(t.due, rule);
       const today = dayKey(now);
-      while (next && next <= today) next = step(next, t.repeat);
+      while (next && next <= today) next = step(next, rule);
+      if (!next) {
+        t.done = true;
+        t.doneAt = now;
+        return t;
+      }
       t.due = next;
       t.done = false;
       t.streak = (t.streak || 0) + 1;
@@ -264,6 +326,39 @@ const api = (function () {
     friday: 5, fri: 5, piatek: 5, piątek: 5, pt: 5,
     saturday: 6, sat: 6, sobota: 6, sob: 6,
   };
+  const PLURAL = {
+    sundays: 0, niedziele: 0,
+    mondays: 1, poniedzialki: 1, poniedziałki: 1,
+    tuesdays: 2, wtorki: 2,
+    wednesdays: 3, srody: 3, środy: 3,
+    thursdays: 4, czwartki: 4,
+    fridays: 5, piatki: 5, piątki: 5,
+    saturdays: 6, soboty: 6,
+  };
+  const EVERY = [
+    [/^(?:every\s+day|daily|codziennie|co\s+dzie[nń])$/, { every: 1, unit: "day" }],
+    [/^(?:every\s+weekday|weekdays|w\s+dni\s+(?:robocze|powszednie))$/, { every: 1, unit: "week", days: [1, 2, 3, 4, 5] }],
+    [/^(?:every\s+week|weekly|co\s+tydzie[nń]|cotygodniowo)$/, { every: 1, unit: "week" }],
+    [/^(?:every\s+month|monthly|co\s+miesi[aą]c|comiesi[eę]cznie)$/, { every: 1, unit: "month" }],
+    [/^(?:every\s+year|yearly|annually|co\s+rok|co\s+roku|corocznie)$/, { every: 1, unit: "year" }],
+  ];
+  const UNIT_WORDS = [
+    [/^(?:days?|dni|dzie[nń])$/, "day"],
+    [/^(?:weeks?|tygodnie|tygodni|tydzie[nń])$/, "week"],
+    [/^(?:months?|miesi[aą]ce|miesi[eę]cy|miesi[aą]c)$/, "month"],
+    [/^(?:years?|lata|lat|rok)$/, "year"],
+  ];
+
+  function dateWord(word, base) {
+    if (parseDay(word)) return word;
+    const m = word.match(/^(\d{1,2})[./](\d{1,2})(?:[./](\d{4}))?$/);
+    if (!m) return null;
+    const year = m[3] ? Number(m[3]) : base.getFullYear();
+    const d = new Date(year, Number(m[2]) - 1, Number(m[1]));
+    if (d.getMonth() !== Number(m[2]) - 1) return null;
+    if (!m[3] && dayKey(d) < dayKey(base)) d.setFullYear(year + 1);
+    return dayKey(d);
+  }
 
   function quick(input, now) {
     const base = new Date(now === undefined ? Date.now() : now);
@@ -271,12 +366,37 @@ const api = (function () {
     let due = null;
     let time = null;
     let exact = null;
+    let rule = null;
     const take = (re, fn) => {
       const m = text.match(re);
       if (!m) return;
-      fn(m);
+      if (fn(m) === false) return;
       text = (text.slice(0, m.index) + " " + text.slice(m.index + m[0].length)).replace(/\s+/g, " ").trim();
     };
+    const units = "days?|dni|dzie[nń]|weeks?|tygodnie|tygodni|tydzie[nń]|months?|miesi[aą]ce|miesi[eę]cy|miesi[aą]c|years?|lata|lat|rok";
+    take(new RegExp("(?:^|\\s)(?:every|co)\\s+(\\d{1,3})\\s+(" + units + ")(?=\\s|$)", "i"), (m) => {
+      rule = { every: Number(m[1]), unit: UNIT_WORDS.find((u) => u[0].test(m[2].toLowerCase()))[1] };
+    });
+    const phrases = "every\\s+day|daily|codziennie|co\\s+dzie[nń]|every\\s+weekday|weekdays|w\\s+dni\\s+(?:robocze|powszednie)|every\\s+week|weekly|co\\s+tydzie[nń]|cotygodniowo|every\\s+month|monthly|co\\s+miesi[aą]c|comiesi[eę]cznie|every\\s+year|yearly|annually|co\\s+roku|co\\s+rok|corocznie";
+    if (!rule)
+      take(new RegExp("(?:^|\\s)(" + phrases + ")(?=\\s|$)", "i"), (m) => {
+        const hit = EVERY.find((e) => e[0].test(m[1].toLowerCase().replace(/\s+/g, " ")));
+        rule = Object.assign({}, hit[1]);
+      });
+    const dayNames = Object.keys(PLURAL).concat(Object.keys(WEEKDAYS)).sort((a, b) => b.length - a.length).join("|");
+    take(new RegExp("(?:^|\\s)(every|co|on|w|we)?\\s*((?:" + dayNames + ")(?:\\s*(?:,|and|i|&)\\s*(?:" + dayNames + "))*)(?=\\s|$)", "i"), (m) => {
+      const words = m[2].toLowerCase().split(/\s*(?:,|\band\b|\bi\b|&)\s*/).filter(Boolean);
+      const recurring = /^(every|co)$/i.test(m[1] || "") || words.some((w) => PLURAL[w] !== undefined) || (rule !== null && rule.unit === "week" && !rule.days);
+      if (!recurring) return false;
+      const days = words.map((w) => (PLURAL[w] !== undefined ? PLURAL[w] : WEEKDAYS[w]));
+      rule = rule && rule.unit === "week" ? Object.assign({}, rule, { days: days }) : { every: 1, unit: "week", days: days };
+    });
+    if (rule)
+      take(/(?:^|\s)(?:until|till|do)\s+(\d{4}-\d{2}-\d{2}|\d{1,2}[./]\d{1,2}(?:[./]\d{4})?)(?=\s|$)/i, (m) => {
+        const until = dateWord(m[1], base);
+        if (!until) return false;
+        rule.until = until;
+      });
     take(/(?:^|\s)(?:in|za)\s+(\d{1,3})\s*(min|mins|minutes|minut|m|h|hours|hour|godz|godzin|godziny)(?=\s|$)/i, (m) => {
       const n = Number(m[1]);
       exact = base.getTime() + (/^(h|hour|hours|godz|godzin|godziny)$/i.test(m[2]) ? n * 60 : n) * 60000;
@@ -306,15 +426,17 @@ const api = (function () {
     });
     if (exact !== null) {
       const d = new Date(exact);
-      return { text: text, due: dayKey(d), time: String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0") };
+      return { text: text, due: dayKey(d), time: String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"), rule: validRule(rule) };
     }
+    if (rule && !due) due = dayKey(base);
+    if (rule && validRule(rule)) due = first(due, validRule(rule));
     if (time && !due) {
       const t = at(dayKey(base), time);
       const d = new Date(base);
       if (t <= base.getTime()) d.setDate(d.getDate() + 1);
       due = dayKey(d);
     }
-    return { text: text, due: due, time: time };
+    return { text: text, due: due, time: time, rule: validRule(rule) };
   }
 
   function same(a, b) {
@@ -379,7 +501,7 @@ const api = (function () {
     return mergeList(base || [], local || [], remote || [], "groups", ["subs", "dives", null]);
   }
 
-  return { DAY, REPEATS, ENERGY, uid, dayKey, parseDay, isTime, at, migrate, tasks, find, step, occurrences, reminders, agenda, overdue, busyDays, complete, plain, merge3, quick };
+  return { DAY, REPEATS, ENERGY, UNITS, ruleOf, legacy, uid, dayKey, parseDay, isTime, at, migrate, tasks, find, step, occurrences, reminders, agenda, overdue, busyDays, complete, plain, merge3, quick };
 })();
 
-export const { DAY, REPEATS, ENERGY, uid, dayKey, parseDay, isTime, at, migrate, tasks, find, step, occurrences, reminders, agenda, overdue, busyDays, complete, plain, merge3, quick } = api;
+export const { DAY, REPEATS, ENERGY, UNITS, ruleOf, legacy, uid, dayKey, parseDay, isTime, at, migrate, tasks, find, step, occurrences, reminders, agenda, overdue, busyDays, complete, plain, merge3, quick } = api;

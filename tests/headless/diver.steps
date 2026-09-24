@@ -6,3 +6,5 @@ syl state diver
 syl diver dismiss
 sleep 0.8
 syl state diver
+syl diver add stretch every 2 weeks on mon and thu at 7:30
+syl diver add czynsz co miesiąc do 30.12
