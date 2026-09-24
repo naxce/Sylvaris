@@ -41,6 +41,7 @@ Singleton {
     }
 
     property bool planner: false
+    property string remindersSent: ""
 
     signal pairFinished(bool ok, string message)
     signal openRequested(string mode, string id, string day)
@@ -291,6 +292,20 @@ Singleton {
         pushProc.running = true;
     }
 
+    function uploadReminders(): void {
+        if (Demo.enabled || !root.paired || remindersProc.running)
+            return;
+        const items = P.reminderItems(root.data, Date.now());
+        const key = JSON.stringify(items);
+        if (key === root.remindersSent)
+            return;
+        remindersProc.key = key;
+        remindersProc.body = JSON.stringify({
+            items: items
+        });
+        remindersProc.running = true;
+    }
+
     function ingest(text: string): void {
         let j;
         try {
@@ -313,6 +328,8 @@ Singleton {
         root.lastSync = Date.now();
         if (root.dirty)
             root.push();
+        else
+            root.uploadReminders();
     }
 
     function check(): void {
@@ -486,6 +503,29 @@ Singleton {
     }
 
     Process {
+        id: remindersProc
+        property string body: ""
+        property string key: ""
+        command: ["python3", root.helper, "reminders"]
+        stdinEnabled: true
+        onStarted: {
+            write(remindersProc.body);
+            stdinEnabled = false;
+        }
+        onExited: stdinEnabled = true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let j = null;
+                try {
+                    j = JSON.parse(text);
+                } catch (e) {}
+                if (j !== null && j.ok)
+                    root.remindersSent = remindersProc.key;
+            }
+        }
+    }
+
+    Process {
         id: pushProc
         property string body: ""
         command: ["python3", root.helper, "push"]
@@ -508,6 +548,7 @@ Singleton {
                     root.retries = 0;
                     root.error = "";
                     root.lastSync = Date.now();
+                    root.uploadReminders();
                 } else if (j !== null && j.conflict && root.retries < 3) {
                     root.retries++;
                     root.sync();

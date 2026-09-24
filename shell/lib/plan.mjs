@@ -315,3 +315,7 @@ export function applyField(draft, field, raw, now) {
     }
     return draft
 }
+
+export function reminderItems(data, now) {
+    return D.reminders(data, now, now + 14 * D.DAY).map(r => ({ rid: r.rid, at: r.at, title: r.title, alarm: r.alarm }))
+}

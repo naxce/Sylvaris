@@ -111,6 +111,33 @@ def push(s, body):
     return {"ok": True, "version": j["version"]}
 
 
+GENERIC = "you have something planned"
+
+
+def answered(status):
+    if status == 401:
+        raise PermissionError("this device was removed in diver, pair again")
+    if status != 200:
+        raise ConnectionError("diver answered " + str(status))
+
+
+def reminders(s, body):
+    status, prefs = request(s, "GET", "/api/prefs")
+    answered(status)
+    if not isinstance(prefs, dict) or not prefs.get("pushDevices"):
+        return {"ok": True, "sent": False, "count": 0}
+    detailed = prefs.get("pushDetails") is True
+    items = []
+    for it in (body or {}).get("items") or []:
+        at = it.get("at") if isinstance(it, dict) else None
+        if not isinstance(it, dict) or not isinstance(it.get("rid"), str) or isinstance(at, bool) or not isinstance(at, (int, float)) or not isinstance(it.get("title"), str):
+            continue
+        items.append({"rid": it["rid"][:120], "at": at, "title": it["title"][:140] if detailed else GENERIC, "alarm": it.get("alarm") is True})
+    status, j = request(s, "PUT", "/api/reminders", {"items": items[:500]})
+    answered(status)
+    return {"ok": True, "sent": True, "count": j.get("count", len(items)) if isinstance(j, dict) else len(items)}
+
+
 def tone(path):
     rate = 44100
     frames = []
@@ -132,7 +159,7 @@ def tone(path):
 
 def main():
     if len(sys.argv) < 2:
-        sys.stderr.write("usage: diver.py pair <code> | unpair | status | pull | push | tone <path>\n")
+        sys.stderr.write("usage: diver.py pair <code> | unpair | status | pull | push | reminders | tone <path>\n")
         return 2
     cmd = sys.argv[1]
     try:
@@ -160,6 +187,8 @@ def main():
                 out(pull(s))
             elif cmd == "push":
                 out(push(s, json.loads(sys.stdin.read())))
+            elif cmd == "reminders":
+                out(reminders(s, json.loads(sys.stdin.read())))
             else:
                 raise ValueError("unknown command " + cmd)
     except InvalidTag:
