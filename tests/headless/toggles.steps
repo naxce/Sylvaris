@@ -1,14 +1,14 @@
 sleep 1.5
-ipc toggle center
-ipc toggle center
-ipc toggle center
-ipc toggle center
-ipc toggle center
-ipc toggle center
-ipc toggle center
+syl center toggle
+syl center toggle
+syl center toggle
+syl center toggle
+syl center toggle
+syl center toggle
+syl center toggle
 sleep 0.5
-ipc state
-ipc toggle center
+syl state
+syl center toggle
 sleep 0.5
-ipc state
+syl state
 shot closed

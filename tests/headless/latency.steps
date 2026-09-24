@@ -1,9 +1,9 @@
 sleep 1.5
 mark before-open
-ipc open center
+syl center open
 sleep 0.5
-ipc close center
+syl center close
 sleep 0.3
 mark before-open-2
-ipc open center
+syl center open
 sleep 0.5

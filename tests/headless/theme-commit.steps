@@ -1,10 +1,10 @@
 sleep 1.5
-ipc open center
+syl center open
 sleep 0.5
-ipc view theme
+syl center view theme
 sleep 0.6
-ipc state
-ipc theme prev
-ipc theme apply
+syl state
+syl theme prev
+syl theme apply
 sleep 1
-ipc state
+syl state

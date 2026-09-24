@@ -80,16 +80,29 @@ layerrule = noanim, syltheme
 
 niri needs no rule: Sylvaris asks for blur itself through `ext-background-effect`, shaped exactly like each panel. A `background-effect { blur true }` layer rule would blur the whole layer surface instead, so leave it out.
 
-## Commands
+## Commands (SylIPC)
+
+Everything Sylvaris does is one command away. Every part registers its actions with SylIPC, and the same actions work from the CLI, from compositor keybinds, and over a socket.
 
 ```sh
-sylvaris                 # start the shell
-sylvaris center          # toggle SylCenter (also: open, close)
-sylvaris view orbit-wifi # open SylCenter on a view
-sylvaris theme           # toggle SylTheme, the theme picker (also: open, close)
-sylvaris theme next      # move the picker's carousel (also: prev, apply)
-sylvaris state           # print the shell state as JSON
+sylvaris                     # start SylCore, the shell
+sylvaris center              # toggle SylCenter (also: open, close)
+sylvaris view orbit-wifi     # open SylCenter on a view
+sylvaris theme               # toggle SylTheme (also: open, close, next, prev, apply)
+sylvaris theme set noir      # apply a theme without the picker (also: cycle, list)
+sylvaris audio up 5          # volume (also: down, set 40, mute)
+sylvaris media toggle        # play/pause (also: next, previous)
+sylvaris dnd on              # nightlight, dnd, wifi, bluetooth: toggle, on, off
+sylvaris get center.corner   # read a setting
+sylvaris set center.corner top-left   # change a setting, refused if invalid
+sylvaris state [topic]       # the whole state, or one topic such as audio, as JSON
+sylvaris list                # every part and its actions
+sylvaris watch [topic...]    # stream state changes as JSON lines
 ```
+
+A part with no action runs its default (usually `toggle`). Errors print `error: ...` and exit with 1, so scripts can rely on the exit code.
+
+`sylvaris watch` connects to `$XDG_RUNTIME_DIR/sylvaris/ipc.sock`. It prints every requested topic once, then a line each time one changes: `{"topic":"audio","data":{...}}`. Tools can talk to the socket directly: send one request per line, either plain words (`center toggle`) or a JSON array (`["center","view","orbit-wifi:My Network"]`), and read one JSON reply per line (`{"ok":true,"result":...}`). Sending `["watch","audio"]` turns the connection into a stream.
 
 SylTheme opens on the focused monitor with the current theme in front. Arrow keys, the mouse wheel, dragging or clicking a side card move the carousel; once it rests for half a second the whole desktop previews that theme through your `themeHook`. It slides up over everything, including your bar, and hides the cursor until you move the mouse. Enter or **Apply theme** keeps it, Esc or a click on the backdrop brings back the theme you started with. SylCenter's Theme button and `sylvaris view theme` open it too.
 
@@ -161,6 +174,7 @@ Missing or invalid colors fall back to the built-in theme, one value at a time.
 nix develop
 node --test tests/*.test.mjs
 nix flake check
+tests/headless/all.sh
 tests/headless/run.sh tests/headless/out/compact tests/headless/compact.steps tests/fixtures/seed/warm
 ```
 

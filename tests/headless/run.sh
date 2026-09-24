@@ -67,7 +67,7 @@ fi
 qs_pid=$!
 
 ipc() {
-    "${hl_env[@]}" "$qs_bin" -p "$shell_dir" ipc call sylvaris "$@"
+    "${hl_env[@]}" "$qs_bin" -p "$shell_dir" ipc call sylvaris run "$*"
 }
 
 for _ in $(seq 100); do
@@ -83,6 +83,15 @@ while read -r cmd rest; do
         read -r -a args <<<"$rest"
         ipc "${args[@]}" >>"$out/ipc.log" 2>&1 || true
         printf '\n' >>"$out/ipc.log"
+        ;;
+    syl)
+        printf '$ sylvaris %s\n' "$rest" >>"$out/ipc.log"
+        read -r -a args <<<"$rest"
+        "${hl_env[@]}" SYLVARIS_DIR="$shell_dir" "$repo/bin/sylvaris" "${args[@]}" >>"$out/ipc.log" 2>&1 || printf 'exit %s\n' "$?" >>"$out/ipc.log"
+        printf '\n' >>"$out/ipc.log"
+        ;;
+    bg)
+        "${hl_env[@]}" SYLVARIS_DIR="$shell_dir" PATH="$repo/bin:$PATH" sh -c "$rest" &
         ;;
     shot)
         env -i XDG_RUNTIME_DIR="$rt" WAYLAND_DISPLAY="$display" PATH="$PATH" grim "$out/$rest.png"

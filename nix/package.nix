@@ -10,6 +10,7 @@
   wl-clipboard,
   coreutils,
   procps,
+  socat,
 }:
 
 stdenvNoCC.mkDerivation {
@@ -43,6 +44,7 @@ stdenvNoCC.mkDerivation {
           wl-clipboard
           coreutils
           procps
+          socat
         ]
       }
     runHook postInstall

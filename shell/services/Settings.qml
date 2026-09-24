@@ -26,6 +26,14 @@ Singleton {
         return S.getPath(root.values, key);
     }
 
+    function trySet(key: string, value: var): bool {
+        const next = S.validateSettings(S.setPath(root.values, key, value));
+        if (JSON.stringify(S.getPath(next, key)) !== JSON.stringify(value))
+            return false;
+        root.set(key, value);
+        return true;
+    }
+
     function set(key: string, value: var): void {
         root.values = S.validateSettings(S.setPath(root.values, key, value));
         writeTimer.restart();

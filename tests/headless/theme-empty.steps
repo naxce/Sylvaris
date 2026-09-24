@@ -1,9 +1,9 @@
 sleep 1.5
-ipc open theme
+syl theme open
 sleep 0.5
-ipc state
-ipc theme next
-ipc theme apply
-ipc close theme
+syl state
+syl theme next
+syl theme apply
+syl theme close
 sleep 0.8
-ipc state
+syl state

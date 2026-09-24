@@ -2,69 +2,67 @@
 set -euo pipefail
 
 dir="${SYLVARIS_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/sylvaris}"
+sock="${XDG_RUNTIME_DIR:-/tmp}/sylvaris/ipc.sock"
 
 usage() {
     cat <<'EOF'
 Usage: sylvaris [command]
 
-  (no command)             start the shell
-  center [toggle|open|close]  control SylCenter (default: toggle)
-  view <name>                 open SylCenter on a view (theme opens SylTheme)
-  theme [toggle|open|close|next|prev|apply]  control SylTheme (default: toggle)
-  state                    print the shell state as JSON
+  (no command)                 start the shell
+  <part> [action] [args...]    run an action; `sylvaris list` shows them all
+  center [toggle|open|close]   control SylCenter
+  center view <name>           open SylCenter on a view
+  theme [toggle|open|close|next|prev|apply|cycle|set <id>|list]
+  state [topic]                print the shell state as JSON
+  get <key>                    print a setting
+  set <key> <value>            change a setting (JSON or plain text)
+  list                         print every part and its actions
+  watch [topic...]             stream state changes as JSON lines
 EOF
 }
 
-call() {
-    exec qs -p "$dir" ipc call sylvaris "$@"
+json() {
+    local out="" w
+    for w in "$@"; do
+        w="${w//\\/\\\\}"
+        w="${w//\"/\\\"}"
+        out+="${out:+,}\"$w\""
+    done
+    printf '[%s]' "$out"
+}
+
+run() {
+    local reply sep=$'\x1f'
+    reply="$(qs -p "$dir" ipc call sylvaris run "$(printf "%s$sep" "$@")")"
+    printf '%s\n' "$reply"
+    case "$reply" in
+    error:*) exit 1 ;;
+    esac
 }
 
 case "${1:-}" in
 "")
     exec qs -p "$dir" -n
     ;;
-center)
-    action="${2:-toggle}"
-    case "$action" in
-    toggle | open | close) ;;
-    *)
-        echo "sylvaris: unknown action '$action'" >&2
-        exit 2
-        ;;
-    esac
-    call "$action" center
-    ;;
-theme)
-    action="${2:-toggle}"
-    case "$action" in
-    toggle | open | close)
-        call "$action" theme
-        ;;
-    next | prev | apply)
-        call theme "$action"
-        ;;
-    *)
-        echo "sylvaris: unknown action '$action'" >&2
-        exit 2
-        ;;
-    esac
-    ;;
-view)
-    if [ -z "${2:-}" ]; then
-        usage >&2
-        exit 2
-    fi
-    call view "$2"
-    ;;
-state)
-    call state
-    ;;
--h | --help)
+-h | --help | help)
     usage
     ;;
+view)
+    run center view "${@:2}"
+    ;;
+state)
+    if [ -n "${2:-}" ]; then run state get "$2"; else run state; fi
+    ;;
+get)
+    run settings get "${@:2}"
+    ;;
+set)
+    run settings set "${@:2}"
+    ;;
+watch)
+    { json watch "${@:2}"; echo; } | socat -,ignoreeof "UNIX-CONNECT:$sock"
+    ;;
 *)
-    echo "sylvaris: unknown command '$1'" >&2
-    usage >&2
-    exit 2
+    run "$@"
     ;;
 esac

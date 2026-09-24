@@ -1,13 +1,13 @@
 sleep 1.5
-ipc open theme
+syl theme open
 sleep 0.6
-ipc state
+syl state
 shot theme-open
-ipc theme next
-ipc theme next
+syl theme next
+syl theme next
 sleep 1.2
-ipc state
+syl state
 shot theme-coal
-ipc close theme
+syl theme close
 sleep 1
-ipc state
+syl state

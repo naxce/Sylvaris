@@ -5,6 +5,7 @@ import qs
 import qs.services
 import qs.center
 import qs.theme
+import "lib/ipc.mjs" as I
 
 ShellRoot {
     id: root
@@ -13,7 +14,7 @@ ShellRoot {
             center: centerPart,
             theme: themePart
         })
-    readonly property var boot: [Tokens, Config, Settings, Theme, Resin, ThemePreview, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
+    readonly property var boot: [Tokens, Ipc, Config, Settings, Theme, Resin, ThemePreview, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
 
     function part(name: string): var {
         return root.parts[name] === undefined ? null : root.parts[name];
@@ -131,59 +132,115 @@ ShellRoot {
         onOpened: centerPart.close()
     }
 
+    function setting(key: string, value: string): string {
+        if (key === "")
+            throw new Error("usage: set <key> <value>");
+        if (!Settings.trySet(key, I.parseValue(value)))
+            throw new Error("invalid value for " + key + ", it stays " + JSON.stringify(Settings.get(key)));
+        return JSON.stringify(Settings.get(key));
+    }
+
+    readonly property var commands: ({
+            center: {
+                toggle: () => centerPart.toggle(),
+                open: () => centerPart.open(),
+                close: () => centerPart.close(),
+                view: name => {
+                    if (name === undefined)
+                        throw new Error("usage: center view <name>");
+                    if (name === "theme")
+                        themePart.open();
+                    else
+                        centerPart.setView(name);
+                }
+            },
+            theme: {
+                toggle: () => themePart.toggle(),
+                open: () => themePart.open(),
+                close: () => themePart.close(),
+                next: () => themePart.step(1),
+                prev: () => themePart.step(-1),
+                apply: () => themePart.commit(),
+                cycle: () => Theme.cycle(),
+                set: id => {
+                    if (Theme.ids.indexOf(id) < 0)
+                        throw new Error("unknown theme: " + id);
+                    Theme.apply(id);
+                },
+                list: () => Theme.ids
+            },
+            audio: {
+                default: "mute",
+                up: step => Audio.setVolume(Audio.volume + Number(step || 5) / 100),
+                down: step => Audio.setVolume(Audio.volume - Number(step || 5) / 100),
+                set: v => Audio.setVolume(Number(v) / 100),
+                mute: () => Audio.toggleMute()
+            },
+            media: {
+                toggle: () => Media.toggle(),
+                next: () => Media.next(),
+                previous: () => Media.previous()
+            },
+            nightlight: {
+                toggle: () => NightLight.setEnabled(!NightLight.enabled),
+                on: () => NightLight.setEnabled(true),
+                off: () => NightLight.setEnabled(false)
+            },
+            dnd: {
+                toggle: () => Dnd.setEnabled(!Dnd.enabled),
+                on: () => Dnd.setEnabled(true),
+                off: () => Dnd.setEnabled(false)
+            },
+            wifi: {
+                toggle: () => NetworkService.setEnabled(!NetworkService.enabled),
+                on: () => NetworkService.setEnabled(true),
+                off: () => NetworkService.setEnabled(false)
+            },
+            bluetooth: {
+                toggle: () => BluetoothService.setEnabled(!BluetoothService.enabled),
+                on: () => BluetoothService.setEnabled(true),
+                off: () => BluetoothService.setEnabled(false)
+            },
+            state: {
+                default: "all",
+                all: () => root.stateObject(),
+                get: key => {
+                    const v = root.stateObject()[key];
+                    if (v === undefined)
+                        throw new Error("unknown state topic: " + key);
+                    return v;
+                }
+            },
+            settings: {
+                default: "all",
+                all: () => Settings.values,
+                get: key => Settings.get(key) === undefined ? null : Settings.get(key),
+                set: (key, ...rest) => root.setting(key || "", rest.join(" "))
+            },
+            list: {
+                default: "all",
+                all: () => Ipc.list()
+            }
+        })
+
+    Binding {
+        target: Ipc
+        property: "commands"
+        value: root.commands
+    }
+
+    Binding {
+        target: Ipc
+        property: "snapshot"
+        value: root.stateObject()
+    }
+
     IpcHandler {
         target: "sylvaris"
 
-        function toggle(name: string): string {
-            const p = root.part(name);
-            if (p === null)
-                return "unknown part: " + name;
-            p.toggle();
-            return "ok";
-        }
-
-        function open(name: string): string {
-            const p = root.part(name);
-            if (p === null)
-                return "unknown part: " + name;
-            p.open();
-            return "ok";
-        }
-
-        function close(name: string): string {
-            const p = root.part(name);
-            if (p === null)
-                return "unknown part: " + name;
-            p.close();
-            return "ok";
-        }
-
-        function view(name: string): string {
-            if (name === "theme") {
-                themePart.open();
-                return "ok";
-            }
-            const p = root.part("center");
-            if (p === null)
-                return "unknown part: center";
-            p.setView(name);
-            return "ok";
-        }
-
-        function theme(action: string): string {
-            if (action === "next")
-                themePart.step(1);
-            else if (action === "prev")
-                themePart.step(-1);
-            else if (action === "apply")
-                themePart.commit();
-            else
-                return "unknown theme action: " + action;
-            return "ok";
-        }
-
-        function state(): string {
-            return JSON.stringify(root.stateObject());
+        function run(request: string): string {
+            const r = I.parseRequest(request);
+            return r.ok ? Ipc.run(r.words) : "error: " + r.error;
         }
     }
 }

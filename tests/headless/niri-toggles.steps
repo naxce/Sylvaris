@@ -1,9 +1,9 @@
 sleep 1.5
-ipc toggle center
-ipc toggle center
+syl center toggle
+syl center toggle
 sleep 1
-ipc state
-ipc open center
-ipc close center
+syl state
+syl center open
+syl center close
 sleep 1
-ipc state
+syl state

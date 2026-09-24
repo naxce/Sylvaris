@@ -52,6 +52,7 @@
             pkgs.wlr-randr
             pkgs.wlsunset
             pkgs.jq
+            pkgs.socat
           ];
         };
       });

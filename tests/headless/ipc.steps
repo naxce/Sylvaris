@@ -1,0 +1,20 @@
+sleep 1.5
+bg sylvaris watch audio dnd > "$HOME/watch.log"
+sleep 0.5
+syl list
+syl audio down 12
+syl state audio
+syl set center.corner top-left
+syl get center.corner
+syl set center.corner sideways
+syl get center.corner
+syl theme set nope
+syl center fly
+syl nothing
+syl center view orbit-wifi:Home_5G
+syl state center
+syl view compact
+syl dnd on
+syl state dnd
+syl audio up 10
+sleep 0.5
