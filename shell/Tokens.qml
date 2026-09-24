@@ -62,4 +62,12 @@ Singleton {
     readonly property int segmentedHeight: 50
     readonly property int powerSize: 46
     readonly property int moonSize: 38
+    readonly property int clockWidth: 780
+    readonly property int clockHeight: 440
+    readonly property int clockSkyWidth: 410
+    readonly property int clockSkyHeight: 208
+    readonly property int clockColumnGap: 20
+    readonly property int clockChipHeight: 72
+    readonly property int clockMoonHeight: 172
+    readonly property int clockDayHeight: 24
 }

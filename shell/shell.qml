@@ -5,6 +5,7 @@ import qs
 import qs.services
 import qs.center
 import qs.theme
+import qs.clock
 import "lib/ipc.mjs" as I
 
 ShellRoot {
@@ -12,9 +13,10 @@ ShellRoot {
 
     property var parts: ({
             center: centerPart,
-            theme: themePart
+            theme: themePart,
+            clock: clockPart
         })
-    readonly property var boot: [Tokens, Ipc, Config, Settings, Theme, Resin, ThemePreview, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
+    readonly property var boot: [Tokens, Ipc, Config, Settings, Sky, Theme, Resin, ThemePreview, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
 
     function part(name: string): var {
         return root.parts[name] === undefined ? null : root.parts[name];
@@ -89,6 +91,10 @@ ShellRoot {
                 focus: centerPart.focusKey,
                 screen: centerPart.screenInfo ? centerPart.screenInfo.name : ""
             },
+            clock: {
+                open: clockPart.shown
+            },
+            sky: Sky.state(),
             config: Config.values,
             configNotice: Config.notice,
             settings: Settings.values,
@@ -122,14 +128,27 @@ ShellRoot {
                 p.open();
         }
         onShownChanged: {
-            if (centerPart.shown)
+            if (centerPart.shown) {
                 themePart.cancel();
+                clockPart.close();
+            }
         }
     }
 
     SylTheme {
         id: themePart
-        onOpened: centerPart.close()
+        onOpened: {
+            centerPart.close();
+            clockPart.close();
+        }
+    }
+
+    SylClock {
+        id: clockPart
+        onOpened: {
+            centerPart.close();
+            themePart.cancel();
+        }
     }
 
     function setting(key: string, value: string): string {
@@ -168,6 +187,11 @@ ShellRoot {
                     Theme.apply(id);
                 },
                 list: () => Theme.ids
+            },
+            clock: {
+                toggle: () => clockPart.toggle(),
+                open: () => clockPart.open(),
+                close: () => clockPart.close()
             },
             audio: {
                 default: "mute",

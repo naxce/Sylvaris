@@ -1,0 +1,9 @@
+sleep 1.5
+syl clock
+sleep 1.5
+shot clock
+syl state clock
+syl state sky
+syl center open
+sleep 0.3
+syl state clock

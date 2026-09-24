@@ -3,6 +3,7 @@
 A modular desktop shell built on [Quickshell](https://quickshell.org), made for **Hyprland** and **niri** and also working on **sway**. Sylvaris runs as one resident process, SylCore, that hosts parts:
 
 - **SylCenter**: a control center that morphs from a compact panel into living orbits for Wi-Fi and Bluetooth
+- **SylClock**: the time, a live sky with the real paths of the sun and moon, the moon's phase, sunrise and sunset, and a month calendar
 
 SylTheme (theme picker) and SylSettings (full-screen settings) are next.
 
@@ -108,6 +109,16 @@ SylTheme opens on the focused monitor with the current theme in front. Arrow key
 
 Views: `compact`, `orbit-bluetooth`, `orbit-wifi`, `calendar`, `outputs`, `displays`, `hotspot`. Add `:<key>` to focus a device or network, for example `sylvaris view orbit-bluetooth:AA:BB:CC:DD:EE:FF`.
 
+## SylClock
+
+`sylvaris clock` opens SylClock. The sky card plots today from midnight to midnight: the sun and the moon sit at their real altitude for your location right now, their paths so far are solid and the rest of the day is dashed, and anything below the line is under the horizon. The sky colour follows the sun through night, twilight, golden hour and day, and stars come out as it gets dark. The moon is drawn in its current phase, mirrored in the southern hemisphere.
+
+Your location comes from the `location` key in `config.json`. Without it, Sylvaris uses the coordinates of your system time zone from `zone1970.tab`, which is close enough for sunrise and sunset to be right to within minutes. Nothing is looked up online.
+
+```nix
+programs.sylvaris.settings.location = { latitude = 52.23; longitude = 21.01; };
+```
+
 ## Resin Glass
 
 Every Sylvaris surface is drawn in Resin Glass: a translucent body the compositor blurs, the theme's accent suspended in it, a soft light that drifts like liquid and leans toward the pointer, a lit rim and a fine grain. Tune it with a `glass` block in `config.json` (or from Nix) and in `settings.json`; `settings.json` wins, and changes apply live.
@@ -145,6 +156,7 @@ Invalid values keep the previous layer's value and show a notice in SylCenter. B
 | `avatar` | `~/.face` | Image shown in the control center header |
 | `lockCommand` | `loginctl lock-session` | Used by future parts |
 | `terminal` | `kitty` | Used by future parts |
+| `location` | time zone | `{ latitude, longitude }` for SylClock's sky |
 | `toggles` | `[]` | Custom tiles: `{ id, label, icon?, on, off, status? }`. `status` is a command whose exit code 0 means "on". |
 
 `~/.config/sylvaris/settings.json` belongs to Sylvaris. It stores what you change in the UI (panel corner, night light, saved display layouts, hotspot name) and is re-applied at every start. If it becomes invalid, Sylvaris keeps a copy as `settings.json.bak` and starts on defaults.

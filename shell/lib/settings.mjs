@@ -15,6 +15,7 @@ export const DEFAULT_CONFIG = {
 export const DEFAULT_SETTINGS = {
     version: 1,
     center: { corner: "top-right" },
+    clock: { corner: "top-center" },
     nightLight: { enabled: false, temperature: 4000 },
     displays: { layouts: {} },
     toggleState: {},
@@ -121,6 +122,9 @@ export function validateSettings(raw) {
     const center = isObject(v.center) ? v.center : isObject(v.cc) ? v.cc : {}
     delete v.cc
     v.center = Object.assign({}, center, { corner: CORNERS.includes(center.corner) ? center.corner : d.center.corner })
+
+    const clock = isObject(v.clock) ? v.clock : {}
+    v.clock = Object.assign({}, clock, { corner: CORNERS.includes(clock.corner) ? clock.corner : d.clock.corner })
 
     const nl = isObject(v.nightLight) ? v.nightLight : {}
     const t = nl.temperature

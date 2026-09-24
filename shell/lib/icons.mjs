@@ -35,7 +35,12 @@ export const GLYPHS = {
     chevronLeft: g(0xF0141),
     chevronRight: g(0xF0142),
     close: g(0xF0156),
-    search: g(0xF0349)
+    search: g(0xF0349),
+    sunrise: g(0xF059C),
+    sunset: g(0xF059B),
+    sunny: g(0xF0599),
+    night: g(0xF0594),
+    daylight: g(0xF051F)
 }
 
 const BLUETOOTH = {
