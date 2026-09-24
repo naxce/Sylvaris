@@ -12,6 +12,7 @@ import qs.bar
 import qs.deck
 import qs.media
 import qs.settings
+import qs.power
 import "lib/ipc.mjs" as I
 import "lib/eq.mjs" as E
 
@@ -25,7 +26,8 @@ ShellRoot {
             notify: notifyPart,
             pad: padPart,
             media: mediaPart,
-            settings: settingsPart
+            settings: settingsPart,
+            power: powerPart
         })
     readonly property var boot: [Tokens, Ipc, Config, Settings, Sky, Notifications, Apps, Equalizer, Headphones, Theme, Resin, ThemePreview, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
 
@@ -216,6 +218,11 @@ ShellRoot {
         }
     }
 
+    SylPower {
+        id: powerPart
+        onOpened: root.solo(powerPart)
+    }
+
     Toasts {}
 
     SylBar {
@@ -223,7 +230,8 @@ ShellRoot {
                 center: root.screenOf(centerPart),
                 clock: root.screenOf(clockPart),
                 notify: root.screenOf(notifyPart),
-                pad: root.screenOf(padPart)
+                pad: root.screenOf(padPart),
+                power: root.screenOf(powerPart)
             })
         onRequest: (name, arg, screen) => root.openOn(name, arg, screen)
     }
@@ -263,6 +271,10 @@ ShellRoot {
                 prev: () => themePart.step(-1),
                 apply: () => themePart.commit(),
                 cycle: () => Theme.cycle(),
+                search: (...q) => {
+                    themePart.query = q.join(" ");
+                    return themePart.ids;
+                },
                 set: id => {
                     if (Theme.ids.indexOf(id) < 0)
                         throw new Error("unknown theme: " + id);
@@ -298,6 +310,13 @@ ShellRoot {
                 all: () => Settings.values,
                 get: key => Settings.get(key) === undefined ? null : Settings.get(key),
                 set: (key, ...rest) => root.setting(key || "", rest.join(" "))
+            },
+            power: {
+                toggle: () => powerPart.toggle(),
+                open: () => powerPart.open(),
+                close: () => powerPart.close(),
+                list: () => powerPart.ids,
+                run: id => powerPart.run(id || "")
             },
             pad: {
                 toggle: () => padPart.toggle(),

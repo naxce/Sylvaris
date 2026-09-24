@@ -1,5 +1,6 @@
 import { DEFAULT_BAR, DEFAULT_DECK, validateBar, validateDeck } from "./bar.mjs"
 import { DEFAULT_EQ, validateEq } from "./eq.mjs"
+import { DEFAULT_POWER, validatePower } from "./power.mjs"
 
 export const CORNERS = ["top-left", "top-center", "top-right"]
 
@@ -30,6 +31,7 @@ export const DEFAULT_SETTINGS = {
     deck: DEFAULT_DECK,
     media: { eq: DEFAULT_EQ, airpods: "" },
     motion: { scale: 1, reduced: false },
+    power: DEFAULT_POWER,
     performance: false
 }
 
@@ -194,6 +196,7 @@ export function validateSettings(raw) {
         reduced: motion.reduced === true
     })
     v.performance = v.performance === true
+    v.power = validatePower(v.power)
 
     const media = isObject(v.media) ? v.media : {}
     v.media = Object.assign({}, media, {

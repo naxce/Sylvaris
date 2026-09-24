@@ -6,6 +6,7 @@ import qs
 import qs.services
 import qs.components
 import "../lib/preview.mjs" as P
+import "../lib/icons.mjs" as Icons
 
 Scope {
     id: root
@@ -20,12 +21,35 @@ Scope {
     property point pointer: Qt.point(-1, -1)
     property string shownName: ""
     property string shownDescription: ""
-    readonly property var ids: Theme.ids
+    property string query: ""
+    property string previous: ""
+    readonly property var ids: Theme.ids.filter(id => root.matches(id))
     readonly property string front: carousel.count > 0 && carousel.currentIndex >= 0 && carousel.currentIndex < root.ids.length ? root.ids[carousel.currentIndex] : ""
     readonly property var frontEntry: root.front !== "" && Theme.catalog[root.front] !== undefined ? Theme.catalog[root.front] : null
     readonly property string frontName: root.frontEntry === null ? "" : root.frontEntry.name
 
     signal opened
+
+    function matches(id: string): bool {
+        const q = root.query.trim().toLowerCase();
+        if (q === "")
+            return true;
+        const e = Theme.catalog[id];
+        const name = e === undefined ? id : e.name;
+        return id.toLowerCase().indexOf(q) >= 0 || String(name).toLowerCase().indexOf(q) >= 0 || (e !== undefined && String(e.description || "").toLowerCase().indexOf(q) >= 0);
+    }
+
+    function type(event: var): bool {
+        if (event.key === Qt.Key_Backspace) {
+            root.query = root.query.slice(0, -1);
+            return true;
+        }
+        if (event.text !== "" && event.text.charCodeAt(0) >= 32 && !(event.modifiers & Qt.ControlModifier)) {
+            root.query += event.text;
+            return true;
+        }
+        return false;
+    }
 
     function phase(a: real, b: real): real {
         const t = Math.max(0, Math.min(1, (root.reveal - a) / (b - a)));
@@ -40,6 +64,7 @@ Scope {
             if (!root.wanted)
                 return;
             root.screenInfo = Compositor.screenFor(Compositor.focusedName());
+            root.query = "";
             const i = root.ids.indexOf(Theme.currentId);
             carousel.positionViewAtIndex(Math.max(0, i), PathView.Beginning);
             carousel.currentIndex = Math.max(0, i);
@@ -99,6 +124,16 @@ Scope {
             carousel.decrementCurrentIndex();
     }
 
+    onQueryChanged: {
+        if (carousel.count > 0)
+            carousel.currentIndex = 0;
+    }
+
+    onFrontChanged: {
+        if (root.front !== "")
+            root.previous = root.front;
+    }
+
     onFrontNameChanged: {
         if (root.shown)
             nameSwap.restart();
@@ -150,7 +185,7 @@ Scope {
         }
 
         FrameAnimation {
-            running: win.visible
+            running: win.visible && !Tokens.lite
             onTriggered: root.time += frameTime
         }
 
@@ -239,6 +274,7 @@ Scope {
                         anchors.fill: parent
                         opacity: modelData === root.front ? 1 : 0
                         visible: opacity > 0
+                        readonly property bool heavy: visible || modelData === root.previous
 
                         Behavior on opacity {
                             NumberAnimation {
@@ -272,13 +308,14 @@ Scope {
 
                             Image {
                                 id: wall
+                                cache: true
                                 anchors.fill: parent
                                 anchors.margins: -64
                                 visible: false
                                 fillMode: Image.PreserveAspectCrop
                                 asynchronous: true
                                 sourceSize.width: 1280
-                                source: !backdrop.gpu || layerItem.e === null || layerItem.e.wallpaper === "" ? "" : "file://" + layerItem.e.wallpaper
+                                source: !backdrop.gpu || !layerItem.heavy || Tokens.lite || layerItem.e === null || layerItem.e.wallpaper === "" ? "" : "file://" + layerItem.e.wallpaper
                             }
 
                             MultiEffect {
@@ -362,7 +399,16 @@ Scope {
             Keys.onRightPressed: root.step(1)
             Keys.onReturnPressed: root.commit()
             Keys.onEnterPressed: root.commit()
-            Keys.onEscapePressed: root.cancel()
+            Keys.onEscapePressed: {
+                if (root.query !== "")
+                    root.query = "";
+                else
+                    root.cancel();
+            }
+            Keys.onPressed: event => {
+                if (root.type(event))
+                    event.accepted = true;
+            }
 
             PathView {
                 id: carousel
@@ -472,11 +518,91 @@ Scope {
                 }
             }
 
+            Item {
+                id: searchPill
+                x: 140
+                y: 110 - 60 * (1 - root.phase(0.35, 0.8))
+                width: 620 + (root.query !== "" ? 60 : 0)
+                height: 76
+                opacity: root.phase(0.35, 0.8)
+
+                Behavior on width {
+                    NumberAnimation {
+                        duration: Tokens.moveDuration
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Tokens.springCurve
+                    }
+                }
+
+                Glass {
+                    anchors.fill: parent
+                    radius: height / 2
+                    lit: root.query !== ""
+                    litColor: Qt.alpha(Theme.accent, 0.18)
+                }
+
+                Glyph {
+                    id: searchIcon
+                    x: 30
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: Icons.GLYPHS.search
+                    size: 30
+                    color: root.query !== "" ? Theme.accent : Theme.textDim
+                }
+
+                Text {
+                    anchors.left: searchIcon.right
+                    anchors.leftMargin: 18
+                    anchors.right: countText.left
+                    anchors.rightMargin: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.query !== "" ? root.query : "Type to search themes"
+                    elide: Text.ElideLeft
+                    color: root.query !== "" ? Theme.text : Theme.textDim
+                    font.family: Tokens.fontUi
+                    font.pixelSize: 28
+
+                    Rectangle {
+                        visible: root.query !== ""
+                        x: Math.min(parent.width, parent.implicitWidth) + 3
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 3
+                        height: 32
+                        radius: 1.5
+                        color: Theme.accent
+
+                        SequentialAnimation on opacity {
+                            running: root.query !== "" && root.shown
+                            loops: Animation.Infinite
+                            NumberAnimation {
+                                to: 0
+                                duration: 500
+                            }
+                            NumberAnimation {
+                                to: 1
+                                duration: 500
+                            }
+                        }
+                    }
+                }
+
+                Text {
+                    id: countText
+                    anchors.right: parent.right
+                    anchors.rightMargin: 30
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.ids.length + " / " + Theme.ids.length
+                    color: Theme.textDim
+                    font.family: Tokens.fontUi
+                    font.pixelSize: 22
+                }
+            }
+
             Text {
                 visible: carousel.count === 0
                 anchors.centerIn: parent
                 opacity: root.phase(0.28, 0.66)
-                text: "No themes found"
+                text: root.query !== "" ? "No theme matches “" + root.query + "”" : "No themes found"
                 color: Theme.textDim
                 font.family: Tokens.fontUi
                 font.pixelSize: 48
@@ -592,7 +718,7 @@ Scope {
                 Text {
                     id: hint
                     anchors.centerIn: parent
-                    text: Theme.hookError !== "" ? Theme.hookError : "◀ ▶ switch · Enter apply · Esc cancel"
+                    text: Theme.hookError !== "" ? Theme.hookError : "◀ ▶ switch · type to search · Enter apply · Esc cancel"
                     color: Theme.hookError !== "" ? Theme.danger : Theme.textSoft
                     font.family: Tokens.fontUi
                     font.pixelSize: 20

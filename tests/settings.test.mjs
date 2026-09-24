@@ -179,7 +179,9 @@ test("notification settings and config are validated field by field", () => {
 })
 
 test("launcher grid size stays within bounds", () => {
-    assert.deepEqual(validateSettings({ pad: { columns: 40, rows: 3 } }).pad, { columns: 7, rows: 3 })
+    assert.deepEqual(validateSettings({ pad: { columns: 40, rows: 3 } }).pad, { columns: 7, rows: 3, mode: "launchpad" })
+    assert.equal(validateSettings({ pad: { mode: "list" } }).pad.mode, "list")
+    assert.equal(validateSettings({ pad: { mode: "rofi" } }).pad.mode, "launchpad")
 })
 
 test("config.json can hold settings defaults that settings.json overrides", () => {
