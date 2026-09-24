@@ -78,14 +78,7 @@ hl.layer_rule({ name = "syltheme", match = { namespace = "syltheme" }, no_anim =
 layerrule = noanim, syltheme
 ```
 
-```kdl
-layer-rule {
-    match namespace="^sylcenter$"
-    background-effect {
-        blur true
-    }
-}
-```
+niri needs no rule: Sylvaris asks for blur itself through `ext-background-effect`, shaped exactly like each panel. A `background-effect { blur true }` layer rule would blur the whole layer surface instead, so leave it out.
 
 ## Commands
 

@@ -185,6 +185,13 @@ Scope {
         mask: Region {
             item: panel
         }
+        BackgroundEffect.blurRegion: Resin.enabled ? blur : null
+
+        Region {
+            id: blur
+            item: panel
+            radius: Tokens.radiusPanel
+        }
 
         onVisibleChanged: {
             if (!visible)
