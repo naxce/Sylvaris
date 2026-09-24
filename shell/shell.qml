@@ -13,6 +13,7 @@ import qs.deck
 import qs.media
 import qs.settings
 import qs.power
+import qs.paper
 import "lib/ipc.mjs" as I
 import "lib/eq.mjs" as E
 
@@ -27,7 +28,8 @@ ShellRoot {
             pad: padPart,
             media: mediaPart,
             settings: settingsPart,
-            power: powerPart
+            power: powerPart,
+            paper: paperPart
         })
     readonly property var boot: [Tokens, Ipc, Config, Settings, Sky, Notifications, Apps, Equalizer, Headphones, Theme, Resin, ThemePreview, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
 
@@ -223,6 +225,11 @@ ShellRoot {
         onOpened: root.solo(powerPart)
     }
 
+    SylPaper {
+        id: paperPart
+        onOpened: root.solo(paperPart)
+    }
+
     Toasts {}
 
     SylBar {
@@ -310,6 +317,16 @@ ShellRoot {
                 all: () => Settings.values,
                 get: key => Settings.get(key) === undefined ? null : Settings.get(key),
                 set: (key, ...rest) => root.setting(key || "", rest.join(" "))
+            },
+            paper: {
+                toggle: () => paperPart.toggle(),
+                open: () => paperPart.open(),
+                close: () => paperPart.close(),
+                set: (...p) => paperPart.set(p.join(" ")),
+                next: () => paperPart.step(1),
+                prev: () => paperPart.step(-1),
+                reset: () => paperPart.reset(),
+                current: () => paperPart.current
             },
             power: {
                 toggle: () => powerPart.toggle(),
