@@ -1,0 +1,7 @@
+write sylvaris/config.json {"version":1,"deck":{"enabled":true,"size":64},"bar":{"floating":false}}
+sleep 2
+syl get deck
+syl set deck.size 48
+sleep 0.6
+syl get deck.size
+syl get bar.floating

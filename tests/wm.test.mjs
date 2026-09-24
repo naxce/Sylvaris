@@ -1,6 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { translate, niriReduce, niriWorkspaces } from "../shell/lib/wm.mjs"
+import { translate, niriReduce, niriWorkspaces, bindSnippet } from "../shell/lib/wm.mjs"
 
 test("Hyprland with a Lua config gets Lua dispatchers", () => {
     assert.deepEqual(translate("hyprland", true, "workspace", ["3"]), { via: "hyprland", command: "hl.dsp.focus({ workspace = 3 })" })
@@ -65,4 +65,15 @@ test("the niri reducer follows workspace and window events", () => {
     assert.equal(niriWorkspaces(s)[0].windows, 0)
     assert.equal(niriWorkspaces(s)[2].urgent, true)
     assert.equal(niriReduce(s, { OverviewOpenedOrClosed: { is_open: true } }), s)
+})
+
+test("bindSnippet writes a keybind in each compositor's own syntax", () => {
+    assert.equal(bindSnippet("hyprland", true, "A", "sylvaris center"), "hl.bind(mainMod .. \" + A\", hl.dsp.exec_cmd(\"sylvaris center\"))")
+    assert.equal(bindSnippet("hyprland", false, "A", "sylvaris center"), "bind = SUPER, A, exec, sylvaris center")
+    assert.equal(bindSnippet("niri", false, "A", "sylvaris media open"), "Mod+A { spawn \"sylvaris\" \"media\" \"open\"; }")
+    assert.equal(bindSnippet("sway", false, "A", "sylvaris pad"), "bindsym $mod+a exec sylvaris pad")
+    assert.equal(bindSnippet("hyprland", true, "XF86AudioPlay", "sylvaris media toggle"), "hl.bind(\"XF86AudioPlay\", hl.dsp.exec_cmd(\"sylvaris media toggle\"))")
+    assert.equal(bindSnippet("hyprland", false, "XF86AudioPlay", "sylvaris media toggle"), "bind = , XF86AudioPlay, exec, sylvaris media toggle")
+    assert.equal(bindSnippet("niri", false, "XF86AudioPlay", "sylvaris media toggle"), "XF86AudioPlay { spawn \"sylvaris\" \"media\" \"toggle\"; }")
+    assert.equal(bindSnippet("sway", false, "XF86AudioPlay", "sylvaris media toggle"), "bindsym XF86AudioPlay exec sylvaris media toggle")
 })

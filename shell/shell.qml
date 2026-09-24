@@ -11,6 +11,7 @@ import qs.pad
 import qs.bar
 import qs.deck
 import qs.media
+import qs.settings
 import "lib/ipc.mjs" as I
 import "lib/eq.mjs" as E
 
@@ -23,7 +24,8 @@ ShellRoot {
             clock: clockPart,
             notify: notifyPart,
             pad: padPart,
-            media: mediaPart
+            media: mediaPart,
+            settings: settingsPart
         })
     readonly property var boot: [Tokens, Ipc, Config, Settings, Sky, Notifications, Apps, Equalizer, Headphones, Theme, Resin, ThemePreview, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
 
@@ -121,6 +123,10 @@ ShellRoot {
             clock: {
                 open: clockPart.shown
             },
+            settingsPanel: {
+                open: settingsPart.shown,
+                section: settingsPart.section
+            },
             sky: Sky.state(),
             notifications: Notifications.state(),
             pad: {
@@ -193,6 +199,21 @@ ShellRoot {
     SylMedia {
         id: mediaPart
         onOpened: root.solo(mediaPart)
+    }
+
+    SylSettings {
+        id: settingsPart
+        onOpened: root.solo(settingsPart)
+        onPartRequested: (name, arg) => {
+            if (name === "center")
+                centerPart.setView(arg);
+            else if (name === "media") {
+                mediaPart.openTab(arg);
+                mediaPart.open();
+            } else {
+                root.part(name).open();
+            }
+        }
     }
 
     Toasts {}
@@ -269,6 +290,14 @@ ShellRoot {
                         throw new Error("no notification with id " + id);
                     Notifications.invoke(Number(id), action || "default");
                 }
+            },
+            settings: {
+                toggle: () => settingsPart.toggle(),
+                open: section => settingsPart.showSection(section || ""),
+                close: () => settingsPart.close(),
+                all: () => Settings.values,
+                get: key => Settings.get(key) === undefined ? null : Settings.get(key),
+                set: (key, ...rest) => root.setting(key || "", rest.join(" "))
             },
             pad: {
                 toggle: () => padPart.toggle(),
@@ -373,15 +402,20 @@ ShellRoot {
                     return v;
                 }
             },
-            settings: {
-                default: "all",
-                all: () => Settings.values,
-                get: key => Settings.get(key) === undefined ? null : Settings.get(key),
-                set: (key, ...rest) => root.setting(key || "", rest.join(" "))
-            },
             list: {
                 default: "all",
                 all: () => Ipc.list()
+            },
+            shell: {
+                default: "config",
+                reload: () => Quickshell.reload(false),
+                config: () => ({
+                        folder: Config.dir,
+                        config: Config.path,
+                        settings: Settings.path,
+                        themes: Theme.themesDir,
+                        state: Theme.stateFile
+                    })
             }
         })
 

@@ -16,6 +16,9 @@ Usage: sylvaris [command]
   state [topic]                print the shell state as JSON
   get <key>                    print a setting
   set <key> <value>            change a setting (JSON or plain text)
+  settings [open <section>]    open SylSettings
+  config                       print where the configuration lives
+  reload                       reload the shell
   list                         print every part and its actions
   watch [topic...]             stream state changes as JSON lines
 EOF
@@ -49,6 +52,12 @@ case "${1:-}" in
     ;;
 view)
     run center view "${@:2}"
+    ;;
+reload)
+    run shell reload
+    ;;
+config)
+    run shell config
     ;;
 state)
     if [ -n "${2:-}" ]; then run state get "$2"; else run state; fi

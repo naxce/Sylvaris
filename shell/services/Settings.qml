@@ -11,8 +11,8 @@ Singleton {
     readonly property string home: Quickshell.env("HOME")
     readonly property string dir: (Quickshell.env("XDG_CONFIG_HOME") || (root.home + "/.config")) + "/sylvaris"
     readonly property string path: root.dir + "/settings.json"
-    property var values: S.validateSettings({})
-    readonly property var merged: S.merge(Config.values, root.values)
+    property var raw: ({})
+    readonly property var values: S.effectiveSettings(Config.values, root.raw)
     property string notice: ""
     property string lastWritten: ""
     property bool loadedOnce: false
@@ -27,7 +27,7 @@ Singleton {
     }
 
     function trySet(key: string, value: var): bool {
-        const next = S.validateSettings(S.setPath(root.values, key, value));
+        const next = S.effectiveSettings(Config.values, S.setPath(root.raw, key, value));
         if (JSON.stringify(S.getPath(next, key)) !== JSON.stringify(value))
             return false;
         root.set(key, value);
@@ -35,7 +35,7 @@ Singleton {
     }
 
     function set(key: string, value: var): void {
-        root.values = S.validateSettings(S.setPath(root.values, key, value));
+        root.raw = S.setPath(root.raw, key, value);
         writeTimer.restart();
     }
 
@@ -50,12 +50,12 @@ Singleton {
                 return;
             }
             root.notice = "settings.json is not valid JSON; a copy was saved as settings.json.bak and defaults are in use";
-            root.values = S.validateSettings({});
+            root.raw = {};
             return;
         }
         root.notice = "";
         root.loadedOnce = true;
-        root.values = S.validateSettings(r.value);
+        root.raw = r.value;
     }
 
     Component.onCompleted: Quickshell.execDetached(["mkdir", "-p", root.dir])
@@ -64,7 +64,7 @@ Singleton {
         id: writeTimer
         interval: 300
         onTriggered: {
-            const text = S.serialize(root.values);
+            const text = S.serialize(root.raw);
             root.lastWritten = text;
             file.setText(text);
         }

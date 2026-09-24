@@ -10,8 +10,8 @@ A modular desktop shell built on [Quickshell](https://quickshell.org), made for 
 - **SylBar**: a floating glass bar with workspaces, the focused window, the clock, media, tray and status
 - **SylDeck**: an optional dock for pinned and running apps along the bottom of the screen
 - **SylMedia**: what's playing, a system-wide equalizer with spatial audio for headphones, AirPods controls and every device's battery
+- **SylSettings**: one screen for everything above
 
-SylTheme (theme picker) and SylSettings (full-screen settings) are next.
 
 ## Install
 
@@ -99,6 +99,9 @@ sylvaris clock               # toggle SylClock (also: open, close)
 sylvaris notify              # toggle the notification center (also: clear, dismiss <id>, invoke <id> [action])
 sylvaris pad                 # toggle SylPad, the app launcher (also: open, close)
 sylvaris wm workspace 3      # the same compositor commands everywhere (see SylCompositor)
+sylvaris settings            # open SylSettings (also: open <section>)
+sylvaris config              # where the configuration lives
+sylvaris reload              # reload the shell
 sylvaris media open [tab]    # SylMedia on playing, sound or devices (media toggle/next/previous/seek control playback)
 sylvaris eq preset rock      # equalizer (also: on, off, toggle, band <1-10> <dB>, spatial on|off)
 sylvaris headphones noise anc   # AirPods listening mode: off, transparency, adaptive, anc (also: awareness on|off)
@@ -207,6 +210,10 @@ Right-click the media item in SylBar, click the media card in SylCenter, or run 
 
 **Devices** controls AirPods and Beats while they are connected: battery for each bud and the case, listening mode (off, transparency, adaptive, noise cancellation) and conversation awareness. Sylvaris talks to them directly over Apple's accessory protocol, as documented by the LibrePods project, and finds them by name; set `media.airpods` in `settings.json` to an address to pick a device yourself. Below that is the battery of every device that reports one (mice, keyboards, controllers, headsets, the laptop battery).
 
+## SylSettings
+
+The gear in SylCenter, `sylvaris settings` or `sylvaris settings open <section>` opens a settings screen with General, Appearance (themes and Resin Glass), Bar (modules and their order), Deck (pinned apps included), Launcher, Notifications, Sound, Displays, Clock, Commands (copyable keybinds for your compositor) and About. Every switch on it is also a `sylvaris set` away, and values that come from `config.json` are shown with where to change them.
+
 ## Resin Glass
 
 Every Sylvaris surface is drawn in Resin Glass: a translucent body the compositor blurs, the theme's accent suspended in it, a soft light that drifts like liquid and leans toward the pointer, a lit rim and a fine grain. Tune it with a `glass` block in `config.json` (or from Nix) and in `settings.json`; `settings.json` wins, and changes apply live.
@@ -234,20 +241,36 @@ Invalid values keep the previous layer's value and show a notice in SylCenter. B
 
 ## Configuration
 
-`~/.config/sylvaris/config.json` is yours (or Nix's). Sylvaris never writes to it.
+Everything lives in one folder, `~/.config/sylvaris/` (`sylvaris config` prints it):
 
-| Key | Default | Meaning |
+- `config.json` is yours, or Nix's through `programs.sylvaris.settings`. Sylvaris never writes to it.
+- `settings.json` belongs to Sylvaris: it holds only what you change in SylSettings, SylCenter or with `sylvaris set`.
+- `themes/` holds theme bundles.
+
+Every key of `settings.json` can also be written in `config.json`, where it becomes the default: declare your bar, deck, equalizer or panel positions in Nix, and anything you change in the UI is saved as an override in `settings.json` and wins. Remove a key from `settings.json` to fall back to your declared value. Both files are watched, so changes apply live.
+
+```nix
+programs.sylvaris.settings = {
+  bar.right = [ "tray" "audio" "network" "notifications" "center" ];
+  deck = { enabled = true; pinned = [ "firefox" "kitty" ]; };
+  notifications.corner = "top-right";
+  media.eq = { enabled = true; preset = "bass"; };
+};
+```
+
+| Key (`config.json` only) | Default | Meaning |
 |---|---|---|
 | `themesDir` | `~/.config/sylvaris/themes` | Folder of theme bundles |
 | `themeHook` | `""` | Command run with the theme id when a theme is applied. Empty means Sylvaris writes the id to `themeStateFile` itself. |
 | `themeStateFile` | `~/.local/state/sylvaris/theme` | File holding the active theme id; Sylvaris watches it |
 | `avatar` | `~/.face` | Image shown in the control center header |
 | `lockCommand` | `loginctl lock-session` | Used by future parts |
-| `terminal` | `kitty` | Used by future parts |
+| `terminal` | `kitty` | Terminal for terminal apps launched from SylPad and SylDeck |
 | `location` | time zone | `{ latitude, longitude }` for SylClock's sky |
+| `notifications` | `{ server = true; history = 100; }` | Whether Sylvaris is the notification daemon, and how many notifications the center keeps |
 | `toggles` | `[]` | Custom tiles: `{ id, label, icon?, on, off, status? }`. `status` is a command whose exit code 0 means "on". |
 
-`~/.config/sylvaris/settings.json` belongs to Sylvaris. It stores what you change in the UI (panel corner, night light, saved display layouts, hotspot name) and is re-applied at every start. If it becomes invalid, Sylvaris keeps a copy as `settings.json.bak` and starts on defaults.
+The settings keys are `center`, `clock`, `notifications`, `nightLight`, `displays`, `hotspot`, `glass`, `pad`, `bar`, `deck` and `media`; each part's section above lists its own. If `settings.json` becomes invalid, Sylvaris keeps a copy as `settings.json.bak` and starts on your declared defaults.
 
 ### Theme bundles
 

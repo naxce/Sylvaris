@@ -13,6 +13,7 @@ Scope {
     property int panelHeight: Tokens.centerHeight
     property real radius: Tokens.radiusPanel
     property bool keyboard: true
+    property real dim: 0
     property bool shown: false
     property bool wanted: false
     property var screenInfo: null
@@ -70,7 +71,7 @@ Scope {
             left: true
             right: true
         }
-        color: "transparent"
+        color: Qt.alpha("#000000", root.dim)
         exclusionMode: ExclusionMode.Normal
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.namespace: "sylcatcher"

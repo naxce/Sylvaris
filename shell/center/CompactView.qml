@@ -262,8 +262,8 @@ Item {
 
             RowButton {
                 id: gear
-                visible: false
                 icon: Icons.GLYPHS.settings
+                onClicked: root.openView("settings")
             }
         }
     }

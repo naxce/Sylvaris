@@ -59,7 +59,13 @@ export const GLYPHS = {
     headphones: g(0xF02CB),
     bolt: g(0xF140B),
     voice: g(0xF05CB),
-    open: g(0xF03CC)
+    open: g(0xF03CC),
+    keyboard: g(0xF030C),
+    info: g(0xF02FD),
+    grid: g(0xF0570),
+    up: g(0xF005D),
+    down: g(0xF0045),
+    plus: g(0xF0415)
 }
 
 const BLUETOOTH = {

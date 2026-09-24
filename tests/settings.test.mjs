@@ -2,7 +2,7 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 import {
     CORNERS, DEFAULT_CONFIG, DEFAULT_SETTINGS, parseJson, expandHome, deepMerge, migrate,
-    validateConfig, validateSettings, merge, getPath, setPath, serialize, DEFAULT_GLASS, resolveGlass
+    validateConfig, validateSettings, merge, getPath, setPath, serialize, DEFAULT_GLASS, resolveGlass, settingsLayer, effectiveSettings
 } from "../shell/lib/settings.mjs"
 
 test("parseJson treats empty text as an empty object", () => {
@@ -180,4 +180,16 @@ test("notification settings and config are validated field by field", () => {
 
 test("launcher grid size stays within bounds", () => {
     assert.deepEqual(validateSettings({ pad: { columns: 40, rows: 3 } }).pad, { columns: 7, rows: 3 })
+})
+
+test("config.json can hold settings defaults that settings.json overrides", () => {
+    const config = { themeHook: "h", bar: { floating: false }, deck: { enabled: true, size: 64 }, center: { corner: "top-left" } }
+    assert.deepEqual(Object.keys(settingsLayer(config)).sort(), ["bar", "center", "deck"])
+    const e = effectiveSettings(config, { deck: { size: 48 } })
+    assert.equal(e.bar.floating, false)
+    assert.equal(e.deck.enabled, true)
+    assert.equal(e.deck.size, 48)
+    assert.equal(e.center.corner, "top-left")
+    assert.equal(effectiveSettings(config, { center: { corner: "bogus" } }).center.corner, "top-right")
+    assert.deepEqual(effectiveSettings({}, {}), validateSettings({}))
 })

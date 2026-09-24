@@ -207,3 +207,18 @@ export function niriWorkspaces(state) {
 export function order(a, b) {
     return a.output < b.output ? -1 : a.output > b.output ? 1 : a.index - b.index
 }
+
+export function bindSnippet(name, usingLua, key, command) {
+    const words = command.split(" ")
+    const bare = key.indexOf("XF86") === 0
+    if (name === "hyprland") {
+        if (usingLua)
+            return "hl.bind(" + (bare ? "\"" + key + "\"" : "mainMod .. \" + " + key + "\"") + ", hl.dsp.exec_cmd(\"" + command + "\"))"
+        return "bind = " + (bare ? "" : "SUPER") + ", " + key + ", exec, " + command
+    }
+    if (name === "niri")
+        return (bare ? "" : "Mod+") + key + " { spawn " + words.map(w => "\"" + w + "\"").join(" ") + "; }"
+    if (name === "sway")
+        return "bindsym " + (bare ? key : "$mod+" + key.toLowerCase()) + " exec " + command
+    return command
+}

@@ -1,6 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { validateBar, validateDeck, deckItems, nextWindow, togglePin, magnify, DEFAULT_BAR } from "../shell/lib/bar.mjs"
+import { unused, shift, validateBar, validateDeck, deckItems, nextWindow, togglePin, magnify, DEFAULT_BAR } from "../shell/lib/bar.mjs"
 
 test("validateBar keeps known modules once and falls back per side", () => {
     const b = validateBar({ left: ["clock", "nope", "clock", "pad"], floating: false })
@@ -48,4 +48,11 @@ test("magnify peaks under the pointer and fades to 1", () => {
     assert.equal(magnify(0, 150), 1.45)
     assert.equal(magnify(150, 150), 1)
     assert.ok(magnify(75, 150) > 1 && magnify(75, 150) < 1.45)
+})
+
+test("unused lists modules on no side, shift moves within bounds", () => {
+    assert.deepEqual(unused({ left: ["pad", "clock"], center: [], right: ["workspaces", "window", "media", "tray", "audio", "network", "bluetooth", "battery"] }), ["notifications", "center"])
+    assert.deepEqual(shift(["a", "b", "c"], 0, 1), ["b", "a", "c"])
+    assert.deepEqual(shift(["a", "b", "c"], 2, 1), ["a", "b", "c"])
+    assert.deepEqual(shift(["a", "b", "c"], 2, -2), ["c", "a", "b"])
 })

@@ -193,6 +193,21 @@ export function validateSettings(raw) {
     return v
 }
 
+export function settingsLayer(config) {
+    const out = {}
+    if (!isObject(config))
+        return out
+    for (const key of Object.keys(DEFAULT_SETTINGS)) {
+        if (key !== "version" && config[key] !== undefined)
+            out[key] = clone(config[key])
+    }
+    return out
+}
+
+export function effectiveSettings(config, raw) {
+    return validateSettings(deepMerge(settingsLayer(config), isObject(raw) ? raw : {}))
+}
+
 export function merge(config, settings) {
     return deepMerge(validateConfig(config), validateSettings(settings))
 }

@@ -1,0 +1,26 @@
+sleep 1.5
+syl settings open general
+sleep 0.7
+shot settings-general
+syl settings open appearance
+sleep 0.7
+shot settings-appearance
+syl settings open bar
+sleep 0.7
+shot settings-bar
+syl settings open deck
+sleep 0.7
+shot settings-deck
+syl settings open notifications
+sleep 0.7
+shot settings-notifications
+syl settings open sound
+sleep 0.7
+shot settings-sound
+syl settings open commands
+sleep 0.7
+shot settings-commands
+syl state settingsPanel
+syl center
+sleep 0.6
+shot center-gear

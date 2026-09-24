@@ -18,3 +18,4 @@ syl dnd on
 syl state dnd
 syl audio up 10
 sleep 0.5
+syl config

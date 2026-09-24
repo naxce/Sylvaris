@@ -74,6 +74,19 @@ export function nextWindow(indices, windows) {
     return at < 0 ? indices[0] : indices[(at + 1) % indices.length]
 }
 
+export function unused(bar) {
+    return MODULES.filter(m => bar.left.indexOf(m) < 0 && bar.center.indexOf(m) < 0 && bar.right.indexOf(m) < 0)
+}
+
+export function shift(list, index, delta) {
+    const to = index + delta
+    if (index < 0 || index >= list.length || to < 0 || to >= list.length)
+        return list.slice()
+    const out = list.slice()
+    out.splice(to, 0, out.splice(index, 1)[0])
+    return out
+}
+
 export function togglePin(pinned, id) {
     return pinned.indexOf(id) >= 0 ? pinned.filter(p => p !== id) : pinned.concat([id])
 }

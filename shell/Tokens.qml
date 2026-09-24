@@ -99,4 +99,8 @@ Singleton {
     readonly property int mediaHeight: 740
     readonly property int mediaArt: 140
     readonly property int eqHeight: 150
+    readonly property int settingsWidth: 1080
+    readonly property int settingsHeight: 760
+    readonly property int settingsSidebar: 250
+    readonly property int settingsRow: 58
 }
