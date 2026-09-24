@@ -2,6 +2,7 @@ import { DEFAULT_BAR, DEFAULT_DECK, validateBar, validateDeck } from "./bar.mjs"
 import { DEFAULT_EQ, validateEq } from "./eq.mjs"
 import { DEFAULT_POWER, validatePower } from "./power.mjs"
 import { DEFAULT_PAPER, validatePaper } from "./paper.mjs"
+import { DEFAULT_WEATHER, validateWeather } from "./weather.mjs"
 
 export const CORNERS = ["top-left", "top-center", "top-right"]
 
@@ -34,6 +35,8 @@ export const DEFAULT_SETTINGS = {
     motion: { scale: 1, reduced: false },
     power: DEFAULT_POWER,
     paper: DEFAULT_PAPER,
+    weather: DEFAULT_WEATHER,
+    constellation: { speed: 1, links: true, ring: true, labels: true, stars: true },
     performance: false
 }
 
@@ -200,6 +203,15 @@ export function validateSettings(raw) {
     v.performance = v.performance === true
     v.power = validatePower(v.power)
     v.paper = validatePaper(v.paper)
+    v.weather = validateWeather(v.weather)
+    const cons = isObject(v.constellation) ? v.constellation : {}
+    v.constellation = Object.assign({}, cons, {
+        speed: typeof cons.speed === "number" && cons.speed >= 0 && cons.speed <= 3 ? cons.speed : d.constellation.speed,
+        links: cons.links !== false,
+        ring: cons.ring !== false,
+        labels: cons.labels !== false,
+        stars: cons.stars !== false
+    })
 
     const media = isObject(v.media) ? v.media : {}
     v.media = Object.assign({}, media, {

@@ -38,8 +38,8 @@ Item {
     }
 
     FrameAnimation {
-        running: root.visible && !hover.hovered
-        onTriggered: root.t += frameTime
+        running: root.visible && !hover.hovered && !Tokens.lite && Settings.values.constellation.speed > 0
+        onTriggered: root.t += frameTime * Settings.values.constellation.speed
     }
 
     NumberAnimation {
@@ -53,6 +53,7 @@ Item {
     }
 
     Shape {
+        visible: Settings.values.constellation.ring
         preferredRendererType: Shape.CurveRenderer
         anchors.fill: parent
 
@@ -80,7 +81,7 @@ Item {
             required property var modelData
             required property int index
             anchors.fill: parent
-            visible: modelData.linked === true
+            visible: modelData.linked === true && Settings.values.constellation.links
             opacity: root.enter
             geometry: {
                 const p = root.pos(index);

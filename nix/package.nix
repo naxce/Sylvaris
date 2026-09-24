@@ -13,6 +13,7 @@
   socat,
   pipewire,
   python3,
+  curl,
 }:
 
 stdenvNoCC.mkDerivation {
@@ -49,6 +50,7 @@ stdenvNoCC.mkDerivation {
           socat
           pipewire
           python3
+          curl
         ]
       }
     runHook postInstall

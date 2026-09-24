@@ -31,7 +31,7 @@ ShellRoot {
             power: powerPart,
             paper: paperPart
         })
-    readonly property var boot: [Tokens, Ipc, Config, Settings, Sky, Notifications, Apps, Equalizer, Headphones, Theme, Resin, ThemePreview, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
+    readonly property var boot: [Tokens, Ipc, Config, Settings, Sky, Weather, Notifications, Apps, Equalizer, Headphones, Theme, Resin, ThemePreview, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
 
     function solo(keep: var): void {
         for (const name of Object.keys(root.parts)) {
@@ -132,6 +132,7 @@ ShellRoot {
                 section: settingsPart.section
             },
             sky: Sky.state(),
+            weather: Weather.state(),
             notifications: Notifications.state(),
             pad: {
                 open: padPart.wanted,
@@ -317,6 +318,11 @@ ShellRoot {
                 all: () => Settings.values,
                 get: key => Settings.get(key) === undefined ? null : Settings.get(key),
                 set: (key, ...rest) => root.setting(key || "", rest.join(" "))
+            },
+            weather: {
+                default: "state",
+                state: () => Weather.state(),
+                refresh: () => Weather.refresh()
             },
             paper: {
                 toggle: () => paperPart.toggle(),
