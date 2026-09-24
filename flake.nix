@@ -81,6 +81,7 @@
             pkgs.socat
             pkgs.libnotify
             pkgs.wtype
+            pkgs.wlrctl
             pkgs.dbus
           ];
         };

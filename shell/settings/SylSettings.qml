@@ -162,7 +162,7 @@ Scope {
     ]
     readonly property var binds: [
         {
-            label: "Control center",
+            label: "Control Center",
             key: "A",
             command: "sylvaris center"
         },
@@ -862,7 +862,7 @@ Scope {
                 title: "Panels"
 
                 SettingRow {
-                    title: "Control center"
+                    title: "Control Center"
                     subtitle: "Where SylCenter and SylMedia open"
 
                     Segmented {

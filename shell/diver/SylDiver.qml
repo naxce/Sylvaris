@@ -39,6 +39,22 @@ Scope {
         onOpened: root.opened()
     }
 
+    Component.onCompleted: Diver.planner = true
+    Component.onDestruction: Diver.planner = false
+
+    Connections {
+        target: Diver
+        function onOpenRequested(mode, id, day) {
+            panel.open();
+            if (mode === "edit")
+                panel.edit(id, "");
+            else if (mode === "new")
+                panel.create(id, "", day);
+            else
+                panel.showDay(day);
+        }
+    }
+
     onRingingChanged: {
         if (root.ringing) {
             root.shownAlarm = Diver.alarm;

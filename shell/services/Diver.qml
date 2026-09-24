@@ -40,7 +40,14 @@ Singleton {
         return null;
     }
 
+    property bool planner: false
+
     signal pairFinished(bool ok, string message)
+    signal openRequested(string mode, string id, string day)
+
+    function request(mode: string, id: string, day: string): void {
+        root.openRequested(mode, id, day);
+    }
 
     function agenda(day: string): var {
         return root.active ? D.agenda(root.data, day) : [];

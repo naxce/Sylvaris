@@ -440,7 +440,15 @@ ShellRoot {
             clock: {
                 toggle: () => root.need("clock").toggle(),
                 open: () => root.need("clock").open(),
-                close: () => root.need("clock").close()
+                close: () => root.need("clock").close(),
+                day: key => {
+                    const c = root.need("clock");
+                    const d = key === undefined || key === "today" ? Qt.formatDate(new Date(), "yyyy-MM-dd") : key;
+                    if (!/^\d{4}-\d{2}-\d{2}$/.test(d))
+                        throw new Error("usage: clock day <yyyy-mm-dd|today>");
+                    c.open();
+                    c.picked = d;
+                }
             },
             notify: {
                 toggle: () => root.need("notify").toggle(),
@@ -479,14 +487,21 @@ ShellRoot {
                     d.open();
                 },
                 new: (...words) => {
-                    const d = root.need("diver");
-                    d.open();
-                    d.panel.create(words.join(" "), "", "");
+                    root.need("diver");
+                    Diver.request("new", words.join(" "), "");
                 },
                 edit: id => {
-                    const d = root.need("diver");
-                    d.open();
-                    d.panel.edit(id || "", "");
+                    root.need("diver");
+                    if (Diver.find(id || "") === null)
+                        throw new Error("no task with id " + id);
+                    Diver.request("edit", id, "");
+                },
+                day: key => {
+                    root.need("diver");
+                    const d = key === undefined || key === "today" ? Qt.formatDate(new Date(), "yyyy-MM-dd") : key;
+                    if (!/^\d{4}-\d{2}-\d{2}$/.test(d))
+                        throw new Error("usage: diver day <yyyy-mm-dd|today>");
+                    Diver.request("day", "", d);
                 },
                 delete: id => Diver.remove(id || ""),
                 set: (id, field, ...value) => Diver.setField(id || "", field || "", value.join(" ")),

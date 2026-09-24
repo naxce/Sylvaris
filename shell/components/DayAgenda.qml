@@ -32,13 +32,34 @@ Item {
 
         Text {
             anchors.verticalCenter: parent.verticalCenter
-            width: parent.width - 60
+            width: parent.width - (Diver.planner ? 60 + openLabel.width + 8 : 60)
             text: root.title + (root.items.length > 0 ? " · " + root.items.length : "")
             elide: Text.ElideRight
             color: Theme.text
             font.family: Tokens.fontUi
             font.pixelSize: Tokens.bodySize
             font.weight: Font.DemiBold
+        }
+
+        Text {
+            id: openLabel
+            visible: Diver.planner
+            anchors.verticalCenter: parent.verticalCenter
+            text: "Diver ›"
+            color: openArea.containsMouse ? Theme.accentHi : Theme.accent
+            font.family: Tokens.fontUi
+            font.pixelSize: Tokens.tinySize
+            font.weight: Font.DemiBold
+            scale: openArea.pressed ? 0.94 : 1
+
+            MouseArea {
+                id: openArea
+                anchors.fill: parent
+                anchors.margins: -8
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: Diver.request("day", "", root.day)
+            }
         }
 
         Glyph {
@@ -96,6 +117,32 @@ Item {
                 }
 
                 Rectangle {
+                    x: 16
+                    width: parent.width - 16
+                    height: parent.height
+                    radius: 8
+                    color: Qt.alpha(Theme.text, 0.07)
+                    opacity: rowArea.containsMouse ? 1 : 0
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: Tokens.stateDuration
+                        }
+                    }
+                }
+
+                MouseArea {
+                    id: rowArea
+                    x: 18
+                    width: parent.width - 18
+                    height: parent.height
+                    enabled: Diver.planner
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: Diver.request("edit", entry.modelData.task.id, "")
+                }
+
+                Rectangle {
                     id: tick
                     anchors.verticalCenter: parent.verticalCenter
                     width: 14
@@ -129,7 +176,7 @@ Item {
                     x: 70
                     anchors.verticalCenter: parent.verticalCenter
                     width: parent.width - x
-                    text: Diver.plain(entry.modelData.task.text)
+                    text: Diver.plain(entry.modelData.task.text) + (entry.modelData.task.alarm ? "  " + Icons.GLYPHS.alarm : "") + (entry.modelData.task.rule || entry.modelData.task.repeat ? "  " + Icons.GLYPHS.repeat : "")
                     elide: Text.ElideRight
                     color: Theme.text
                     font.family: Tokens.fontUi
@@ -171,10 +218,32 @@ Item {
             font.pixelSize: Tokens.tinySize
         }
 
+        Glyph {
+            visible: Diver.planner
+            anchors.right: parent.right
+            anchors.rightMargin: 10
+            anchors.verticalCenter: parent.verticalCenter
+            text: Icons.GLYPHS.pencil
+            size: 13
+            color: moreArea.containsMouse ? Theme.accent : Theme.textDim
+
+            MouseArea {
+                id: moreArea
+                anchors.fill: parent
+                anchors.margins: -8
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    Diver.request("new", input.text, root.day);
+                    input.text = "";
+                }
+            }
+        }
+
         TextInput {
             id: input
             x: 12
-            width: parent.width - 24
+            width: parent.width - (Diver.planner ? 44 : 24)
             anchors.verticalCenter: parent.verticalCenter
             color: Theme.text
             clip: true

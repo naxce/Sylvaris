@@ -32,6 +32,16 @@ Popup {
         sheet.show(hit.task, where || hit.ci + "-" + hit.gi + "-" + hit.si, "", "");
     }
 
+    function showDay(day: string): void {
+        root.view = "calendar";
+        if (day === "")
+            return;
+        const d = new Date(day + "T12:00:00");
+        calendar.year = d.getFullYear();
+        calendar.month = d.getMonth();
+        calendar.day = day;
+    }
+
     function create(text: string, where: string, day: string): void {
         sheet.show(null, where || "inbox", text || "", day || "");
     }
@@ -290,6 +300,7 @@ Popup {
             }
 
             DiverCalendar {
+                id: calendar
                 anchors.fill: parent
                 visible: root.view === "calendar"
                 onEdit: (id, where) => root.edit(id, where)
