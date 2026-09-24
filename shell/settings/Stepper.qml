@@ -10,6 +10,7 @@ Row {
     property int from: 0
     property int to: 10
     property string suffix: ""
+    property int step: 1
 
     signal stepped(int value)
 
@@ -20,7 +21,7 @@ Row {
 
         delegate: Item {
             required property int modelData
-            width: modelData === 0 ? 64 : 34
+            width: modelData === 0 ? 80 : 34
             height: 34
 
             Glass {
@@ -48,7 +49,7 @@ Row {
                 enabled: modelData !== 0
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.stepped(Math.max(root.from, Math.min(root.to, root.value + modelData)))
+                onClicked: root.stepped(Math.max(root.from, Math.min(root.to, root.value + modelData * root.step)))
             }
         }
     }

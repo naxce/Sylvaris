@@ -128,7 +128,7 @@ ShellRoot {
                 open: clockPart.shown
             },
             settingsPanel: {
-                open: settingsPart.shown,
+                open: settingsPart.wanted,
                 section: settingsPart.section
             },
             sky: Sky.state(),
@@ -215,7 +215,7 @@ ShellRoot {
             else if (name === "media") {
                 mediaPart.openTab(arg);
                 mediaPart.open();
-            } else {
+            } else if (root.part(name) !== null) {
                 root.part(name).open();
             }
         }
