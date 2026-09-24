@@ -42,7 +42,14 @@ export const GLYPHS = {
     night: g(0xF0594),
     daylight: g(0xF051F),
     bell: g(0xF009A),
-    clearAll: g(0xF0C51)
+    clearAll: g(0xF0C51),
+    apps: g(0xF003B),
+    tune: g(0xF062E),
+    ethernet: g(0xF0200),
+    music: g(0xF075A),
+    pin: g(0xF0403),
+    pinOff: g(0xF0404),
+    newWindow: g(0xF0415)
 }
 
 const BLUETOOTH = {

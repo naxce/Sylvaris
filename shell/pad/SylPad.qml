@@ -8,6 +8,7 @@ import qs.components
 import "../lib/pad.mjs" as P
 import "../lib/preview.mjs" as W
 import "../lib/icons.mjs" as Icons
+import "../lib/bar.mjs" as B
 
 Scope {
     id: root
@@ -52,6 +53,22 @@ Scope {
             return;
         showAnim.stop();
         hideAnim.restart();
+    }
+
+    function toggleOn(screen: var): void {
+        if (root.wanted) {
+            root.close();
+            return;
+        }
+        root.wanted = true;
+        root.screenInfo = screen;
+        root.query = "";
+        root.selected = -1;
+        root.shown = true;
+        pagesView.currentIndex = 0;
+        hideAnim.stop();
+        showAnim.restart();
+        root.opened();
     }
 
     function toggle(): void {
@@ -396,12 +413,28 @@ Scope {
                                         font.weight: Font.Medium
                                     }
 
+                                    Glyph {
+                                        visible: Settings.values.deck.pinned.indexOf(cell.modelData.id) >= 0
+                                        anchors.right: iconBox.right
+                                        anchors.top: iconBox.top
+                                        anchors.margins: -4
+                                        text: Icons.GLYPHS.pin
+                                        size: 16
+                                        color: Theme.accent
+                                    }
+
                                     MouseArea {
                                         id: area
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: root.launch(cell.modelData)
+                                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                        onClicked: mouse => {
+                                            if (mouse.button === Qt.RightButton)
+                                                Settings.set("deck.pinned", B.togglePin(Settings.values.deck.pinned, cell.modelData.id));
+                                            else
+                                                root.launch(cell.modelData);
+                                        }
                                     }
                                 }
                             }

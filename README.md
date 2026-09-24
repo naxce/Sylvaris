@@ -7,6 +7,8 @@ A modular desktop shell built on [Quickshell](https://quickshell.org), made for 
 - **SylNotify**: the notification daemon, with glass toasts and a notification center
 - **SylPad**: a full-screen app launcher in the spirit of Launchpad and the GNOME app grid
 - **SylCompositor**: one set of commands and one state model for Hyprland, niri and sway
+- **SylBar**: a floating glass bar with workspaces, the focused window, the clock, media, tray and status
+- **SylDeck**: an optional dock for pinned and running apps along the bottom of the screen
 
 SylTheme (theme picker) and SylSettings (full-screen settings) are next.
 
@@ -61,15 +63,15 @@ SylTheme (theme picker) and SylSettings (full-screen settings) are next.
 
 Waybar button: `"on-click": "sylvaris center"`.
 
-The panel is translucent, so turn on blur behind the `sylcenter` layer:
+Sylvaris surfaces are translucent, so on Hyprland turn on blur behind their layers (`sylbar`, `syldeck`, `sylcenter`, `sylclock`, `sylnotify`):
 
 ```lua
-hl.layer_rule({ name = "sylcenter", match = { namespace = "sylcenter" }, blur = true, ignore_alpha = 0.3 })
+hl.layer_rule({ name = "sylvaris", match = { namespace = "^syl(bar|deck|center|clock|notify)$" }, blur = true, ignore_alpha = 0.3 })
 ```
 
 ```ini
-layerrule = blur, sylcenter
-layerrule = ignorealpha 0.3, sylcenter
+layerrule = blur, ^syl(bar|deck|center|clock|notify)$
+layerrule = ignorealpha 0.3, ^syl(bar|deck|center|clock|notify)$
 ```
 
 SylTheme animates itself, so turn off Hyprland's own layer animation for it:
@@ -160,6 +162,36 @@ In `config.json`, `notifications.server = false` hands notifications back to ano
 | `wm` or `sylvaris state compositor` | workspaces, windows and the focused window as JSON |
 
 The state is the same shape everywhere: each workspace has `index`, `name`, `output`, `active`, `focused`, `urgent` and a window count, read live from Hyprland's and sway's IPC and from niri's event stream. Windows come from the Wayland foreign-toplevel protocol, which all three support.
+
+## SylBar
+
+The bar runs on every screen and reserves its space, so windows and popups sit below it. Everything opens where you clicked: the clock opens SylClock, the options button (󰘮) opens SylCenter, the bell opens SylNotify (middle-click toggles Do Not Disturb), the apps button opens SylPad, and the Wi-Fi, Bluetooth and volume items open their SylCenter views. Scroll over the workspaces to switch, over the volume to change it, over the media title to skip tracks. Right-click tray icons for their menus.
+
+Choose the modules and their order in `settings.json`; each module appears once:
+
+```json
+"bar": {
+  "floating": true,
+  "left": ["pad", "workspaces", "window"],
+  "center": ["clock"],
+  "right": ["media", "tray", "audio", "network", "bluetooth", "battery", "notifications", "center"]
+}
+```
+
+Modules: `pad`, `workspaces`, `window`, `clock`, `media`, `tray`, `audio`, `network`, `bluetooth`, `battery`, `notifications`, `center`. `floating: false` makes the bar span the edge; `enabled: false` turns it off.
+
+## SylDeck
+
+Turn the deck on with `sylvaris set deck.enabled true` (or `"deck": { "enabled": true }` in `settings.json`). Pinned apps come first, then running apps after a divider, with a dot per open window. Click an app to open it or cycle its windows, middle-click for a new window, right-click for its windows, Keep in Deck and Close. Right-click an app in SylPad to pin it too.
+
+| Key (`deck.`) | Default | Meaning |
+|---|---|---|
+| `enabled` | `false` | show the deck |
+| `pinned` | `[]` | desktop file ids, e.g. `["firefox", "kitty"]` |
+| `pad` | `start` | where the SylPad button goes: `start`, `end` or `none` |
+| `magnify` | `true` | icons grow under the pointer |
+| `autohide` | `false` | slide away until the pointer touches the bottom edge |
+| `size` | `56` | icon size, 36–96 |
 
 ## Resin Glass
 

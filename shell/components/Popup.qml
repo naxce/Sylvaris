@@ -43,6 +43,17 @@ Scope {
             root.closed();
     }
 
+    function toggleOn(screen: var): void {
+        if (root.wanted) {
+            root.close();
+            return;
+        }
+        root.wanted = true;
+        root.screenInfo = screen;
+        root.shown = true;
+        root.opened();
+    }
+
     function toggle(): void {
         if (root.wanted)
             root.close();
@@ -60,7 +71,7 @@ Scope {
             right: true
         }
         color: "transparent"
-        exclusionMode: ExclusionMode.Ignore
+        exclusionMode: ExclusionMode.Normal
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.namespace: "sylcatcher"
 

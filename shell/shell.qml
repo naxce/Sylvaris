@@ -8,6 +8,8 @@ import qs.theme
 import qs.clock
 import qs.notify
 import qs.pad
+import qs.bar
+import qs.deck
 import "lib/ipc.mjs" as I
 
 ShellRoot {
@@ -27,6 +29,20 @@ ShellRoot {
             if (root.parts[name] !== keep)
                 root.parts[name].close();
         }
+    }
+
+    function openOn(name: string, arg: string, screen: var): void {
+        const p = root.part(name);
+        if (p === null)
+            return;
+        if (name === "center")
+            p.toggleOn(screen, arg);
+        else
+            p.toggleOn(screen);
+    }
+
+    function screenOf(p: var): var {
+        return p.wanted && p.screenInfo ? p.screenInfo.name : null;
     }
 
     function part(name: string): var {
@@ -171,6 +187,21 @@ ShellRoot {
     }
 
     Toasts {}
+
+    SylBar {
+        open: ({
+                center: root.screenOf(centerPart),
+                clock: root.screenOf(clockPart),
+                notify: root.screenOf(notifyPart),
+                pad: root.screenOf(padPart)
+            })
+        onRequest: (name, arg, screen) => root.openOn(name, arg, screen)
+    }
+
+    SylDeck {
+        padOpen: padPart.wanted
+        onRequest: (name, arg, screen) => root.openOn(name, arg, screen)
+    }
 
     function setting(key: string, value: string): string {
         if (key === "")

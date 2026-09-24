@@ -26,20 +26,32 @@ Scope {
         root.focusKey = i < 0 ? "" : name.slice(i + 1);
     }
 
+    function showOn(screen: var, initial: string): void {
+        root.screenInfo = screen;
+        root.applyView(initial);
+        root.shown = true;
+        Dnd.refresh();
+        Toggles.refresh();
+        Hotspot.refresh();
+        BluetoothService.refreshProfiles();
+        Displays.refresh();
+    }
+
     function show(initial: string): void {
         root.wanted = true;
         Compositor.refresh(() => {
-            if (!root.wanted)
-                return;
-            root.screenInfo = Compositor.screenFor(Compositor.focusedName());
-            root.applyView(initial);
-            root.shown = true;
-            Dnd.refresh();
-            Toggles.refresh();
-            Hotspot.refresh();
-            BluetoothService.refreshProfiles();
-            Displays.refresh();
+            if (root.wanted)
+                root.showOn(Compositor.screenFor(Compositor.focusedName()), initial);
         });
+    }
+
+    function toggleOn(screen: var, initial: string): void {
+        if (root.wanted && (initial === "" || root.view === initial.split(":")[0])) {
+            root.close();
+            return;
+        }
+        root.wanted = true;
+        root.showOn(screen, initial === "" ? "compact" : initial);
     }
 
     function open(): void {
@@ -150,7 +162,7 @@ Scope {
             right: true
         }
         color: "transparent"
-        exclusionMode: ExclusionMode.Ignore
+        exclusionMode: ExclusionMode.Normal
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.namespace: "sylcatcher"
 

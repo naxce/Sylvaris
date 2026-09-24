@@ -1,0 +1,9 @@
+sleep 2
+shot bar
+syl clock
+sleep 0.8
+shot bar-clock
+syl center
+sleep 0.8
+shot bar-center
+syl state clock

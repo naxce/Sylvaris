@@ -1,0 +1,7 @@
+write sylvaris/settings.json {"version":1,"deck":{"enabled":true,"pinned":["firefox","files","calculator"]}}
+sleep 2
+shot deck
+syl get deck.pinned
+syl set deck.pad end
+sleep 0.5
+shot deck-end

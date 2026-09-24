@@ -81,4 +81,18 @@ Singleton {
     readonly property int padCellHeight: 176
     readonly property int padSearchWidth: 440
     readonly property int padSearchHeight: 50
+    readonly property int barHeight: 46
+    readonly property int barMargin: 10
+    readonly property int barRadius: 18
+    readonly property int barPadding: 6
+    readonly property int barGap: 4
+    readonly property int barItemHeight: 34
+    readonly property int barGlyph: 17
+    readonly property int barText: 14
+    readonly property int barTitleMax: 360
+    readonly property int barMediaMax: 240
+    readonly property int deckPadding: 9
+    readonly property int deckMargin: 10
+    readonly property int deckRadius: 24
+    readonly property int deckMenuWidth: 240
 }

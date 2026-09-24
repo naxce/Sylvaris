@@ -1,3 +1,5 @@
+import { DEFAULT_BAR, DEFAULT_DECK, validateBar, validateDeck } from "./bar.mjs"
+
 export const CORNERS = ["top-left", "top-center", "top-right"]
 
 export const DEFAULT_CONFIG = {
@@ -22,7 +24,9 @@ export const DEFAULT_SETTINGS = {
     toggleState: {},
     hotspot: { ssid: "Sylvaris", band: "bg" },
     notifications: { dnd: false, timeout: 5000, corner: "top-right" },
-    pad: { columns: 7, rows: 5 }
+    pad: { columns: 7, rows: 5 },
+    bar: DEFAULT_BAR,
+    deck: DEFAULT_DECK
 }
 
 export const DEFAULT_GLASS = { enabled: true, opacity: 0.55, layerOpacity: 0.35, tint: 0.14, sheen: 0.35, flow: 1, rim: 0.5, grain: 0.035 }
@@ -175,6 +179,9 @@ export function validateSettings(raw) {
         columns: intIn(pad.columns, 3, 10, d.pad.columns),
         rows: intIn(pad.rows, 2, 8, d.pad.rows)
     })
+
+    v.bar = validateBar(v.bar)
+    v.deck = validateDeck(v.deck)
     return v
 }
 
