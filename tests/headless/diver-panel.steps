@@ -1,0 +1,39 @@
+sleep 1.5
+syl diver open
+sleep 1
+shot diver-today
+syl diver view calendar
+sleep 0.8
+shot diver-calendar
+syl diver view lists
+sleep 0.8
+shot diver-lists
+syl diver list add - study
+syl diver list add 1 maths
+syl diver list add 1-0 homework
+syl diver list rename 1-0-0 exams
+syl diver lists
+syl diver add essay due friday 18:00
+syl diver new stretch every 2 weeks on mon and thu at 7:30
+sleep 1
+shot diver-sheet
+syl state diver
+bg wtype -M ctrl -k Return -m ctrl
+sleep 1
+shot diver-after-save
+syl diver lists
+syl diver set t3 time 16:00
+syl diver set t3 repeat every 2 weeks on mon
+syl diver set t3 priority high
+syl diver set t3 colour red
+syl diver move t3 1-0-0
+syl diver focus t3 15
+syl diver view today
+sleep 1.2
+shot diver-focus
+syl state diver
+syl diver unfocus
+syl diver delete t3
+syl diver list remove 2
+syl diver lists
+syl diver close

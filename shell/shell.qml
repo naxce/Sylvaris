@@ -34,7 +34,8 @@ ShellRoot {
             media: mediaLoader,
             settings: settingsLoader,
             power: powerLoader,
-            paper: paperLoader
+            paper: paperLoader,
+            diver: diverLoader
         })
     readonly property var parts: {
         const out = {};
@@ -336,9 +337,13 @@ ShellRoot {
     }
 
     LazyLoader {
+        id: diverLoader
         active: root.on("diver")
 
-        SylDiver {}
+        SylDiver {
+            id: diverPart
+            onOpened: root.solo(diverPart)
+        }
     }
 
     LazyLoader {
@@ -465,6 +470,31 @@ ShellRoot {
                 default: "state",
                 state: () => Diver.state(),
                 sync: () => Diver.sync(),
+                toggle: () => root.need("diver").toggle(),
+                open: () => root.need("diver").open(),
+                close: () => root.need("diver").close(),
+                view: v => {
+                    const d = root.need("diver");
+                    d.panel.setView(v || "");
+                    d.open();
+                },
+                new: (...words) => {
+                    const d = root.need("diver");
+                    d.open();
+                    d.panel.create(words.join(" "), "", "");
+                },
+                edit: id => {
+                    const d = root.need("diver");
+                    d.open();
+                    d.panel.edit(id || "", "");
+                },
+                delete: id => Diver.remove(id || ""),
+                set: (id, field, ...value) => Diver.setField(id || "", field || "", value.join(" ")),
+                move: (id, where) => Diver.move(id || "", where || ""),
+                list: (verb, path, ...name) => Diver.listOp(verb || "", path === undefined ? "" : path, name.join(" ")),
+                lists: () => Diver.lists(),
+                focus: (id, minutes) => Diver.startFocus(id || "", Number(minutes || 25)),
+                unfocus: () => Diver.stopFocus(),
                 pair: code => Diver.pair(code || ""),
                 unpair: () => Diver.unpair(),
                 add: (...words) => {

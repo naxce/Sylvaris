@@ -1883,6 +1883,18 @@ Scope {
                 note: Diver.paired ? "Connected. Plans show up in SylClock and SylCenter, timed plans pop up here when they start, earlier reminders arrive as notifications and alarms ring." + (Diver.error !== "" ? " Last problem: " + Diver.error : "") : "Open diver → settings → connected devices → connect sylvaris, then paste the whole line here. Your password never leaves the browser; Sylvaris only gets a key for your list and a token you can revoke."
 
                 SettingRow {
+                    visible: Diver.paired || Demo.enabled
+                    title: "Your plans"
+                    subtitle: "Today, calendar, lists and every task field, right here"
+
+                    Chip {
+                        text: "Open SylDiver"
+                        glyph: Icons.GLYPHS.planner
+                        onClicked: root.hand("diver", "")
+                    }
+                }
+
+                SettingRow {
                     visible: !Diver.paired
                     title: "Pairing code"
                     subtitle: diverColumn.message

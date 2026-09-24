@@ -11,10 +11,36 @@ Scope {
 
     property real phase: 0
     property var shownAlarm: null
-    readonly property bool wanted: Diver.alarm !== null
+    readonly property bool ringing: Diver.alarm !== null
+    readonly property bool wanted: panel.wanted
+    readonly property var screenInfo: panel.screenInfo
+    readonly property alias panel: panel
 
-    onWantedChanged: {
-        if (root.wanted) {
+    signal opened
+
+    function open(): void {
+        panel.open();
+    }
+
+    function close(): void {
+        panel.close();
+    }
+
+    function toggle(): void {
+        panel.toggle();
+    }
+
+    function toggleOn(screen: var): void {
+        panel.toggleOn(screen);
+    }
+
+    DiverPanel {
+        id: panel
+        onOpened: root.opened()
+    }
+
+    onRingingChanged: {
+        if (root.ringing) {
             root.shownAlarm = Diver.alarm;
             outAnim.stop();
             inAnim.restart();
@@ -58,7 +84,7 @@ Scope {
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "syldiver"
-        WlrLayershell.keyboardFocus: root.wanted ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+        WlrLayershell.keyboardFocus: root.ringing ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
         onVisibleChanged: {
             if (visible)
@@ -89,7 +115,7 @@ Scope {
                 border.color: Theme.danger
 
                 SequentialAnimation on scale {
-                    running: root.wanted
+                    running: root.ringing
                     loops: Animation.Infinite
                     NumberAnimation {
                         from: 0.92
@@ -105,7 +131,7 @@ Scope {
                 }
 
                 SequentialAnimation on opacity {
-                    running: root.wanted
+                    running: root.ringing
                     loops: Animation.Infinite
                     NumberAnimation {
                         from: 1

@@ -93,6 +93,13 @@ export const GLYPHS = {
     alarm: g(0xF0020),
     checkCircle: g(0xF05E0),
     timer: g(0xF13AB),
+    calendar: g(0xF00ED),
+    listBulleted: g(0xF0279),
+    boxEmpty: g(0xF0131),
+    boxChecked: g(0xF0132),
+    target: g(0xF04FE),
+    trash: g(0xF01B4),
+    pencil: g(0xF03EB),
     shuffleVariant: g(0xF049D)
 }
 

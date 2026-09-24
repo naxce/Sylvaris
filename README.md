@@ -13,7 +13,7 @@ A modular desktop shell built on [Quickshell](https://quickshell.org), made for 
 - **SylTheme**: a full-screen theme picker with live previews and search
 - **SylPower**: a power menu laid out as a constellation around you
 - **SylPaper**: the wallpaper, drawn by Sylvaris, following the theme with smooth transitions
-- **SylDiver**: your [Diver](https://diver.fatum.cc) plans on the desktop: calendar, reminders and alarms
+- **SylDiver**: your [Diver](https://diver.fatum.cc) plans on the desktop: today, calendar and lists, every task field, repeats, reminders, alarms and focus sessions
 - **SylSettings**: one screen for everything above, built around a constellation
 
 
@@ -252,6 +252,10 @@ Sylvaris draws the wallpaper itself on every screen and changes it with the them
 SylDiver brings [Diver](https://diver.fatum.cc) to the desktop. In Diver open settings → connected devices → connect sylvaris, enter your password and run the line it gives you (`sylvaris diver pair <code>`) or paste it into SylSettings → Diver. Your list stays end-to-end encrypted: Sylvaris gets a key for the list and a token you can revoke, never your password.
 
 Then days with plans get dots in SylClock's and SylCenter's calendars, clicking a day shows its plan with a field to add to it ("call Ana 18:00" works), reminders become notifications, and tasks marked as alarms take over the screen with a sound until you snooze (5, 10 or 30 minutes), finish or dismiss them. The `diver` bar module counts down to what's next.
+
+`sylvaris diver` opens the planner: Today (overdue, today, the next 7 days), Calendar (month with busy days and a day agenda) and Lists (categories › sections › lists, each addable, renamable and removable). Clicking a task opens its sheet with everything Diver stores: title, notes, date, start and end, repeats (presets or every N days, weeks, months or years on chosen weekdays, ending never, on a date or after N times), reminders, alarm, list, priority, energy, estimate and steps. Unsaved changes are never dropped: Esc or Cancel asks first. Ctrl+Enter saves, Ctrl+1/2/3 switch views, Ctrl+N starts a new task. The target button on a task starts a focus session with a countdown and a notification at the end.
+
+From scripts: `diver view <today|calendar|lists>`, `diver new [text]`, `diver edit <id>`, `diver set <id> <field> <value>` (fields: title, notes, due, time, end, repeat, until, remind, alarm, priority, energy, estimate, done), `diver move <id> <list>`, `diver delete <id>`, `diver lists`, `diver list add|rename|remove <path> [name]` (paths are positions such as `0`, `0-1`, `0-1-2`, so check `diver lists` first; `-` adds a category), `diver focus <id> [minutes]` and `diver unfocus`.
 
 `sylvaris diver add <text>` captures a task into the inbox (dates like "tomorrow 9:00" or "in 20 min" are understood), `diver done <id>`, `diver snooze <id> <minutes>`, `diver today`, `diver next`, `diver sync` and `diver test` (rings a test alarm). `diver.notify`, `diver.alarms`, `diver.sound`, `diver.calendar` and `diver.refresh` (minutes between syncs) are in SylSettings.
 

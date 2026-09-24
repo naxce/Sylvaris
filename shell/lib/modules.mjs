@@ -9,7 +9,8 @@ export const MODULES = {
     media: { label: "Media", section: "sound", glyph: "music" },
     settings: { label: "Settings", section: "general", glyph: "tune" },
     power: { label: "Power", section: "power", glyph: "power" },
-    paper: { label: "Wallpaper", section: "wallpaper", glyph: "image" }
+    paper: { label: "Wallpaper", section: "wallpaper", glyph: "image" },
+    diver: { label: "Diver", section: "diver", glyph: "planner" }
 }
 
 export function tiles() {

@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "../lib/diver.mjs" as D
+import "../lib/plan.mjs" as P
 
 Singleton {
     id: root
@@ -24,6 +25,10 @@ Singleton {
     property real now: Date.now()
     property var fired: ({})
     property var alarm: null
+    property string focusId: ""
+    property string focusTitle: ""
+    property real focusEnd: 0
+    property int focusMinutes: 0
     readonly property bool active: root.cfg.enabled && (root.paired || Demo.enabled)
     readonly property string today: D.dayKey(root.now)
     readonly property var agendaToday: root.agenda(root.today)
@@ -43,6 +48,10 @@ Singleton {
 
     function busy(year: int, month: int): var {
         return root.active && root.cfg.calendar ? D.busyDays(root.data, year, month) : ({});
+    }
+
+    function find(id: string): var {
+        return D.find(root.data, id);
     }
 
     function plain(text: string): string {
@@ -166,6 +175,101 @@ Singleton {
         root.alarm = null;
     }
 
+    function saveDraft(draft: var): var {
+        let task = null;
+        root.mutate(d => {
+            task = P.saveTask(d, draft, Date.now()).task;
+        });
+        return task;
+    }
+
+    function remove(id: string): void {
+        root.mutate(d => P.deleteTask(d, id));
+        if (root.focusId === id)
+            root.stopFocus();
+    }
+
+    function setDone(id: string, done: bool): void {
+        root.mutate(d => P.setDone(d, id, done, Date.now()));
+        if (done && root.alarm !== null && root.alarm.id === id)
+            root.alarm = null;
+    }
+
+    function addNode(path: string, name: string): void {
+        root.mutate(d => P.addNode(d, path, name));
+    }
+
+    function renameNode(path: string, name: string): void {
+        root.mutate(d => P.renameNode(d, path, name));
+    }
+
+    function removeNode(path: string): void {
+        root.mutate(d => P.removeNode(d, path));
+    }
+
+    function draftFor(id: string): var {
+        const hit = D.find(root.data, id);
+        if (hit === null)
+            throw new Error("no task with id " + id);
+        return P.draftOf(hit.task, hit.ci + "-" + hit.gi + "-" + hit.si);
+    }
+
+    function setField(id: string, field: string, value: string): var {
+        if (field === "done") {
+            root.setDone(id, ["on", "true", "yes", "1"].indexOf(value) >= 0);
+            return D.find(root.data, id).task;
+        }
+        return root.saveDraft(P.applyField(root.draftFor(id), field, value, Date.now()));
+    }
+
+    function move(id: string, where: string): var {
+        if (where !== "inbox" && !P.places(root.data).some(p => p.key === where))
+            throw new Error("no list " + where + "; see sylvaris diver lists");
+        return root.saveDraft(Object.assign(root.draftFor(id), {
+            where: where
+        }));
+    }
+
+    function lists(): var {
+        return P.places(root.data);
+    }
+
+    function listOp(verb: string, where: string, name: string): void {
+        const path = ["-", "root", "\"\""].indexOf(where) >= 0 ? "" : where;
+        if (verb === "add")
+            root.addNode(path, name);
+        else if (verb === "rename")
+            root.renameNode(path, name);
+        else if (verb === "remove")
+            root.removeNode(path);
+        else
+            throw new Error("usage: diver list add|rename|remove <path> [name]; paths look like 0, 0-1 or 0-1-2, and add with path - makes a category");
+    }
+
+    function startFocus(id: string, minutes: int): void {
+        const hit = D.find(root.data, id);
+        if (hit === null)
+            throw new Error("no task with id " + id);
+        root.focusMinutes = Math.max(1, Math.min(240, minutes || 25));
+        root.focusId = id;
+        root.focusTitle = D.plain(hit.task.text);
+        root.focusEnd = Date.now() + root.focusMinutes * 60000;
+    }
+
+    function stopFocus(): void {
+        root.focusId = "";
+        root.focusTitle = "";
+        root.focusEnd = 0;
+    }
+
+    function finishFocus(): void {
+        const title = root.focusTitle;
+        const minutes = root.focusMinutes;
+        root.stopFocus();
+        if (!Demo.enabled && root.cfg.notify)
+            Quickshell.execDetached(["notify-send", "-a", "Diver", "Focus finished", minutes + " min on " + title]);
+    }
+
     function push(): void {
         if (Demo.enabled || !root.paired)
             return;
@@ -243,7 +347,12 @@ Singleton {
                 text: D.plain(root.next.task.text),
                 start: Qt.formatTime(new Date(root.next.start), "HH:mm")
             },
-            alarm: root.alarm
+            alarm: root.alarm,
+            focus: root.focusEnd > 0 ? {
+                id: root.focusId,
+                title: root.focusTitle,
+                left: Math.max(0, Math.round((root.focusEnd - Date.now()) / 1000))
+            } : null
         };
     }
 
@@ -322,6 +431,12 @@ Singleton {
         }
         statusProc.running = true;
         toneProc.running = true;
+    }
+
+    Timer {
+        interval: Math.max(0, root.focusEnd - Date.now())
+        running: root.focusEnd > 0
+        onTriggered: root.finishFocus()
     }
 
     Timer {
