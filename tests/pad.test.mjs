@@ -1,6 +1,8 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
 import { score, search, visible, pages, move } from "../shell/lib/pad.mjs"
+import { MODULES, tiles } from "../shell/lib/modules.mjs"
 
 const apps = [
     { id: "firefox", name: "Firefox", genericName: "Web Browser", keywords: ["internet"], comment: "Browse the web" },
@@ -47,4 +49,22 @@ test("move walks the grid without leaving it", () => {
     assert.equal(move(17, "pageDown", 20, 4, 8), 19)
     assert.equal(move(9, "pageUp", 20, 4, 8), 0)
     assert.equal(move(0, "right", 0, 4, 8), -1)
+})
+
+test("every part in shell.qml is in the module registry and opens an existing settings section", () => {
+    const shell = readFileSync(new URL("../shell/shell.qml", import.meta.url), "utf8")
+    const loaders = shell.match(/loaders: \(\{([^}]*)\}\)/)[1].match(/(\w+): \w+Loader/g).map(m => m.split(":")[0])
+    assert.deepEqual(Object.keys(MODULES).sort(), loaders.sort())
+    const settings = readFileSync(new URL("../shell/settings/SylSettings.qml", import.meta.url), "utf8")
+    const sections = settings.match(/(\w+): \w+Page/g).map(m => m.split(":")[0])
+    for (const name of Object.keys(MODULES))
+        assert.ok(sections.includes(MODULES[name].section), name + " -> " + MODULES[name].section)
+})
+
+test("tiles give one searchable pad entry per module", () => {
+    const list = tiles()
+    assert.equal(list.length, Object.keys(MODULES).length)
+    assert.ok(list.every(t => t.section && t.glyph && t.name))
+    assert.deepEqual(search(list, "sound").map(t => t.section), ["sound"])
+    assert.equal(search(list, "sylvaris").length, list.length)
 })

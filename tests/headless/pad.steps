@@ -16,3 +16,13 @@ shot pad-search
 bg wtype -k Shift_L -k Right -k Return
 sleep 0.8
 syl state pad
+syl pad
+sleep 0.8
+shot pad-tiles
+bg wtype -k Shift_L wallpaper
+sleep 0.8
+syl state pad
+bg wtype -k Shift_L -k Return
+sleep 1
+syl state settingsPanel
+shot pad-tile-settings

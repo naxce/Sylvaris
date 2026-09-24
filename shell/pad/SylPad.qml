@@ -19,10 +19,11 @@ Scope {
     property string query: ""
     property int selected: -1
     property real wheelAcc: 0
+    property var tiles: []
     readonly property int columns: Settings.values.pad.columns
     readonly property int rows: Settings.values.pad.rows
     readonly property int perPage: root.columns * root.rows
-    readonly property var results: P.search(Apps.list, root.query)
+    readonly property var results: P.search(Apps.list.concat(root.tiles), root.query)
     readonly property var pageList: P.pages(root.results, root.perPage)
     readonly property int page: pagesView.currentIndex
     readonly property bool listMode: Settings.values.pad.mode === "list"
@@ -64,6 +65,7 @@ Scope {
     }
 
     signal opened
+    signal settingsRequested(string section)
 
     function open(): void {
         if (root.wanted)
@@ -115,8 +117,11 @@ Scope {
     }
 
     function launch(app: var): void {
-        Apps.launch(app);
         root.close();
+        if (app.section !== undefined)
+            root.settingsRequested(app.section);
+        else
+            Apps.launch(app);
     }
 
     function select(index: int): void {
@@ -402,9 +407,9 @@ Scope {
 
                                             Text {
                                                 anchors.centerIn: parent
-                                                text: cell.modelData.name.charAt(0).toUpperCase()
+                                                text: cell.modelData.glyph || cell.modelData.name.charAt(0).toUpperCase()
                                                 color: Theme.onAccent
-                                                font.family: Tokens.fontUi
+                                                font.family: cell.modelData.glyph ? Tokens.fontMono : Tokens.fontUi
                                                 font.pixelSize: Tokens.padIcon * 0.42
                                                 font.weight: Font.DemiBold
                                             }
@@ -458,10 +463,10 @@ Scope {
                                         cursorShape: Qt.PointingHandCursor
                                         acceptedButtons: Qt.LeftButton | Qt.RightButton
                                         onClicked: mouse => {
-                                            if (mouse.button === Qt.RightButton)
-                                                Settings.set("deck.pinned", B.togglePin(Settings.values.deck.pinned, cell.modelData.id));
-                                            else
+                                            if (mouse.button === Qt.LeftButton)
                                                 root.launch(cell.modelData);
+                                            else if (cell.modelData.section === undefined)
+                                                Settings.set("deck.pinned", B.togglePin(Settings.values.deck.pinned, cell.modelData.id));
                                         }
                                     }
                                 }
@@ -710,9 +715,9 @@ Scope {
 
                         Text {
                             anchors.centerIn: parent
-                            text: rowItem.modelData.name.charAt(0).toUpperCase()
+                            text: rowItem.modelData.glyph || rowItem.modelData.name.charAt(0).toUpperCase()
                             color: Theme.onAccent
-                            font.family: Tokens.fontUi
+                            font.family: rowItem.modelData.glyph ? Tokens.fontMono : Tokens.fontUi
                             font.pixelSize: 14
                             font.weight: Font.DemiBold
                         }

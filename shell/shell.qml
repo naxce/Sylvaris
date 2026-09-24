@@ -18,6 +18,7 @@ import qs.diver
 import "lib/ipc.mjs" as I
 import "lib/eq.mjs" as E
 import "lib/settings.mjs" as S
+import "lib/modules.mjs" as M
 
 ShellRoot {
     id: root
@@ -275,7 +276,9 @@ ShellRoot {
 
         SylPad {
             id: padPart
+            tiles: root.on("settings") ? M.tiles() : []
             onOpened: root.solo(padPart)
+            onSettingsRequested: section => root.need("settings").showSection(section)
         }
     }
 

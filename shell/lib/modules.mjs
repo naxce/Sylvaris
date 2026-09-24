@@ -1,0 +1,24 @@
+import { GLYPHS } from "./icons.mjs"
+
+export const MODULES = {
+    center: { label: "Control center", section: "general", glyph: "tune" },
+    theme: { label: "Theme", section: "appearance", glyph: "theme" },
+    clock: { label: "Clock", section: "clock", glyph: "night" },
+    notify: { label: "Notifications", section: "notifications", glyph: "bell" },
+    pad: { label: "Launcher", section: "launcher", glyph: "apps" },
+    media: { label: "Media", section: "sound", glyph: "music" },
+    settings: { label: "Settings", section: "general", glyph: "tune" },
+    power: { label: "Power", section: "power", glyph: "power" },
+    paper: { label: "Wallpaper", section: "wallpaper", glyph: "image" }
+}
+
+export function tiles() {
+    return Object.keys(MODULES).map(name => ({
+        id: "sylvaris." + name,
+        name: MODULES[name].label,
+        genericName: "Sylvaris settings",
+        keywords: ["sylvaris", "settings", name, MODULES[name].section],
+        section: MODULES[name].section,
+        glyph: GLYPHS[MODULES[name].glyph]
+    }))
+}
