@@ -1,0 +1,20 @@
+sleep 1.5
+bg notify-send -a Mail -i mail-message-new "New message from Ada" "Lunch at <b>noon</b>? Bring the plans for the garden."
+sleep 0.3
+bg notify-send -a Builds -u critical -A reply=Retry -A later=Later "Build failed" "main: 3 tests failed in tests/headless"
+sleep 0.3
+bg notify-send -a Mail "Weekly digest" "Five new posts"
+sleep 1
+shot toasts
+syl state notifications
+syl notify open
+sleep 0.8
+shot center
+syl dnd on
+syl notify close
+bg notify-send -a Chat "Quiet" "should not pop"
+sleep 0.6
+syl state notifications
+shot dnd
+syl notify clear
+syl state notifications

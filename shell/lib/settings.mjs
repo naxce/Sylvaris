@@ -9,7 +9,8 @@ export const DEFAULT_CONFIG = {
     lockCommand: "loginctl lock-session",
     terminal: "kitty",
     toggles: [],
-    commands: []
+    commands: [],
+    notifications: { server: true, history: 100 }
 }
 
 export const DEFAULT_SETTINGS = {
@@ -19,7 +20,8 @@ export const DEFAULT_SETTINGS = {
     nightLight: { enabled: false, temperature: 4000 },
     displays: { layouts: {} },
     toggleState: {},
-    hotspot: { ssid: "Sylvaris", band: "bg" }
+    hotspot: { ssid: "Sylvaris", band: "bg" },
+    notifications: { dnd: false, timeout: 5000, corner: "top-right" }
 }
 
 export const DEFAULT_GLASS = { enabled: true, opacity: 0.55, layerOpacity: 0.35, tint: 0.14, sheen: 0.35, flow: 1, rim: 0.5, grain: 0.035 }
@@ -36,6 +38,10 @@ function isObject(v) {
 
 function clone(v) {
     return v === undefined ? undefined : JSON.parse(JSON.stringify(v))
+}
+
+function intIn(v, lo, hi, fallback) {
+    return Number.isInteger(v) && v >= lo && v <= hi ? v : fallback
 }
 
 function str(v, fallback) {
@@ -112,6 +118,11 @@ export function validateConfig(raw) {
     }
     v.toggles = toggles
     v.commands = Array.isArray(v.commands) ? v.commands : []
+    const nt = isObject(v.notifications) ? v.notifications : {}
+    v.notifications = Object.assign({}, nt, {
+        server: nt.server !== false,
+        history: intIn(nt.history, 1, 1000, DEFAULT_CONFIG.notifications.history)
+    })
     return v
 }
 
@@ -149,6 +160,13 @@ export function validateSettings(raw) {
     v.hotspot = Object.assign({}, hs, {
         ssid: typeof ssid === "string" && ssid.length >= 1 && ssid.length <= 32 ? ssid : d.hotspot.ssid,
         band: hs.band === "a" ? "a" : "bg"
+    })
+
+    const ns = isObject(v.notifications) ? v.notifications : {}
+    v.notifications = Object.assign({}, ns, {
+        dnd: ns.dnd === true,
+        timeout: intIn(ns.timeout, 1000, 60000, d.notifications.timeout),
+        corner: CORNERS.includes(ns.corner) ? ns.corner : d.notifications.corner
     })
     return v
 }

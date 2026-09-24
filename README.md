@@ -4,6 +4,7 @@ A modular desktop shell built on [Quickshell](https://quickshell.org), made for 
 
 - **SylCenter**: a control center that morphs from a compact panel into living orbits for Wi-Fi and Bluetooth
 - **SylClock**: the time, a live sky with the real paths of the sun and moon, the moon's phase, sunrise and sunset, and a month calendar
+- **SylNotify**: the notification daemon, with glass toasts and a notification center
 
 SylTheme (theme picker) and SylSettings (full-screen settings) are next.
 
@@ -90,6 +91,7 @@ sylvaris                     # start SylCore, the shell
 sylvaris center              # toggle SylCenter (also: open, close)
 sylvaris view orbit-wifi     # open SylCenter on a view
 sylvaris clock               # toggle SylClock (also: open, close)
+sylvaris notify              # toggle the notification center (also: clear, dismiss <id>, invoke <id> [action])
 sylvaris theme               # toggle SylTheme (also: open, close, next, prev, apply)
 sylvaris theme set noir      # apply a theme without the picker (also: cycle, list)
 sylvaris audio up 5          # volume (also: down, set 40, mute)
@@ -119,6 +121,20 @@ Your location comes from the `location` key in `config.json`. Without it, Sylvar
 ```nix
 programs.sylvaris.settings.location = { latitude = 52.23; longitude = 21.01; };
 ```
+
+## SylNotify
+
+Sylvaris is your notification daemon, so stop swaync, mako or dunst before starting it (only one program can own notifications). Toasts pop up in the corner set by `notifications.corner` (top-right by default), newest on top. Hovering a toast pauses its timer, clicking it runs the app's default action, and action buttons go straight back to the app. Urgent notifications stay until you close them and still pop up during Do Not Disturb.
+
+`sylvaris notify` opens the notification center: everything grouped by app, a Do Not Disturb switch and Clear buttons. Do Not Disturb is also the DND tile in SylCenter and `sylvaris dnd on|off|toggle`.
+
+| Setting (`settings.json`) | Default | Meaning |
+|---|---|---|
+| `notifications.dnd` | `false` | Do Not Disturb |
+| `notifications.timeout` | `5000` | How long a toast stays, in ms (1000–60000), unless the app asks otherwise |
+| `notifications.corner` | `top-right` | `top-left`, `top-center` or `top-right` |
+
+In `config.json`, `notifications.server = false` hands notifications back to another daemon (DND then drives swaync or mako), and `notifications.history` caps the center (100).
 
 ## Resin Glass
 

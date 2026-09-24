@@ -53,6 +53,8 @@
             pkgs.wlsunset
             pkgs.jq
             pkgs.socat
+            pkgs.libnotify
+            pkgs.dbus
           ];
         };
       });

@@ -169,3 +169,11 @@ test("resolveGlass rejects a glass block that is not an object", () => {
 test("validateSettings keeps the glass block for resolveGlass", () => {
     assert.deepEqual(validateSettings({ glass: { opacity: 0.3 } }).glass, { opacity: 0.3 })
 })
+
+test("notification settings and config are validated field by field", () => {
+    const v = validateSettings({ notifications: { dnd: "yes", timeout: 50, corner: "top-left" } })
+    assert.deepEqual(v.notifications, { dnd: false, timeout: 5000, corner: "top-left" })
+    const c = validateConfig({ notifications: { server: false, history: 5000 } })
+    assert.deepEqual(c.notifications, { server: false, history: 100 })
+    assert.deepEqual(validateConfig({}).notifications, { server: true, history: 100 })
+})

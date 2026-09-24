@@ -6,6 +6,7 @@ import qs.services
 import qs.center
 import qs.theme
 import qs.clock
+import qs.notify
 import "lib/ipc.mjs" as I
 
 ShellRoot {
@@ -14,9 +15,17 @@ ShellRoot {
     property var parts: ({
             center: centerPart,
             theme: themePart,
-            clock: clockPart
+            clock: clockPart,
+            notify: notifyPart
         })
-    readonly property var boot: [Tokens, Ipc, Config, Settings, Sky, Theme, Resin, ThemePreview, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
+    readonly property var boot: [Tokens, Ipc, Config, Settings, Sky, Notifications, Theme, Resin, ThemePreview, Compositor, Audio, Media, NightLight, Dnd, Toggles, BluetoothService, NetworkService, Hotspot, Displays]
+
+    function solo(keep: var): void {
+        for (const name of Object.keys(root.parts)) {
+            if (root.parts[name] !== keep)
+                root.parts[name].close();
+        }
+    }
 
     function part(name: string): var {
         return root.parts[name] === undefined ? null : root.parts[name];
@@ -95,6 +104,7 @@ ShellRoot {
                 open: clockPart.shown
             },
             sky: Sky.state(),
+            notifications: Notifications.state(),
             config: Config.values,
             configNotice: Config.notice,
             settings: Settings.values,
@@ -128,28 +138,27 @@ ShellRoot {
                 p.open();
         }
         onShownChanged: {
-            if (centerPart.shown) {
-                themePart.cancel();
-                clockPart.close();
-            }
+            if (centerPart.shown)
+                root.solo(centerPart);
         }
     }
 
     SylTheme {
         id: themePart
-        onOpened: {
-            centerPart.close();
-            clockPart.close();
-        }
+        onOpened: root.solo(themePart)
     }
 
     SylClock {
         id: clockPart
-        onOpened: {
-            centerPart.close();
-            themePart.cancel();
-        }
+        onOpened: root.solo(clockPart)
     }
+
+    SylNotify {
+        id: notifyPart
+        onOpened: root.solo(notifyPart)
+    }
+
+    Toasts {}
 
     function setting(key: string, value: string): string {
         if (key === "")
@@ -192,6 +201,22 @@ ShellRoot {
                 toggle: () => clockPart.toggle(),
                 open: () => clockPart.open(),
                 close: () => clockPart.close()
+            },
+            notify: {
+                toggle: () => notifyPart.toggle(),
+                open: () => notifyPart.open(),
+                close: () => notifyPart.close(),
+                clear: () => Notifications.clear(),
+                dismiss: id => {
+                    if (Notifications.entry(Number(id)) === null)
+                        throw new Error("no notification with id " + id);
+                    Notifications.dismiss(Number(id));
+                },
+                invoke: (id, action) => {
+                    if (Notifications.entry(Number(id)) === null)
+                        throw new Error("no notification with id " + id);
+                    Notifications.invoke(Number(id), action || "default");
+                }
             },
             audio: {
                 default: "mute",

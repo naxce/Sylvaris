@@ -40,7 +40,9 @@ export const GLYPHS = {
     sunset: g(0xF059B),
     sunny: g(0xF0599),
     night: g(0xF0594),
-    daylight: g(0xF051F)
+    daylight: g(0xF051F),
+    bell: g(0xF009A),
+    clearAll: g(0xF0C51)
 }
 
 const BLUETOOTH = {

@@ -8,34 +8,40 @@ Singleton {
     id: root
 
     readonly property bool demo: Demo.enabled
-    property string tool: ""
-    property bool enabled: false
+    readonly property bool own: Notifications.enabled
+    property string external: ""
+    property bool externalEnabled: false
+    readonly property string tool: root.own ? "sylvaris" : root.external
+    readonly property bool enabled: root.own ? Notifications.dnd : root.externalEnabled
     readonly property bool available: root.demo || root.tool !== ""
 
     function refresh(): void {
-        if (root.demo || root.tool === "" || query.running)
+        if (root.own || root.demo || root.external === "" || query.running)
             return;
-        query.command = root.tool === "swaync" ? ["swaync-client", "-D"] : ["makoctl", "mode"];
+        query.command = root.external === "swaync" ? ["swaync-client", "-D"] : ["makoctl", "mode"];
         query.running = true;
     }
 
     function setEnabled(v: bool): void {
+        if (root.own) {
+            Notifications.setDnd(v);
+            return;
+        }
         if (!root.demo) {
-            if (root.tool === "swaync")
+            if (root.external === "swaync")
                 Quickshell.execDetached(["swaync-client", v ? "-dn" : "-df"]);
-            else if (root.tool === "mako")
+            else if (root.external === "mako")
                 Quickshell.execDetached(["makoctl", "mode", v ? "-a" : "-r", "do-not-disturb"]);
         }
-        root.enabled = v;
+        root.externalEnabled = v;
     }
 
     Process {
-        id: probe
-        running: true
+        running: !root.own
         command: ["sh", "-c", "if command -v swaync-client >/dev/null; then echo swaync; elif command -v makoctl >/dev/null; then echo mako; fi"]
         stdout: StdioCollector {
             onStreamFinished: {
-                root.tool = text.trim();
+                root.external = text.trim();
                 root.refresh();
             }
         }
@@ -44,7 +50,7 @@ Singleton {
     Process {
         id: query
         stdout: StdioCollector {
-            onStreamFinished: root.enabled = root.tool === "swaync" ? text.trim() === "true" : text.split("\n").indexOf("do-not-disturb") >= 0
+            onStreamFinished: root.externalEnabled = root.external === "swaync" ? text.trim() === "true" : text.split("\n").indexOf("do-not-disturb") >= 0
         }
     }
 }

@@ -31,7 +31,7 @@ fi
 printf '%s\n' "$bg" >"$out/sway.conf"
 
 cleanup() {
-    kill "${qs_pid:-}" "${sway_pid:-}" 2>/dev/null || true
+    kill "${qs_pid:-}" "${sway_pid:-}" "${dbus_pid:-}" 2>/dev/null || true
     wait 2>/dev/null || true
     rm -rf "$rt"
 }
@@ -55,7 +55,11 @@ if [ -z "$display" ]; then
 fi
 sock="$rt/$(command ls "$rt" | grep -m1 '^sway-ipc')"
 
-hl_env=(env -i HOME="$home" PATH="${HL_QS_PATH:-$PATH}" XDG_RUNTIME_DIR="$rt"
+dbus_addr="unix:path=$rt/bus"
+dbus_conf="$(dirname "$(readlink -f "$(command -v dbus-daemon)")")/../share/dbus-1/session.conf"
+dbus_pid="$(dbus-daemon --config-file="$dbus_conf" --address="$dbus_addr" --fork --print-pid=1)"
+
+hl_env=(env -i DBUS_SESSION_BUS_ADDRESS="$dbus_addr" HOME="$home" PATH="${HL_QS_PATH:-$PATH}" XDG_RUNTIME_DIR="$rt"
     XDG_CONFIG_HOME="$home/.config" WAYLAND_DISPLAY="$display" SWAYSOCK="$sock"
     QT_QUICK_BACKEND="${HL_QT_BACKEND:-software}" SYLVARIS_DEMO="${SYLVARIS_DEMO:-1}" SYLVARIS_TRACE=1
     SYLVARIS_SKY_TIME="${SYLVARIS_SKY_TIME:-}"

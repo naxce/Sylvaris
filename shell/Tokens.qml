@@ -70,4 +70,10 @@ Singleton {
     readonly property int clockChipHeight: 72
     readonly property int clockMoonHeight: 172
     readonly property int clockDayHeight: 24
+    readonly property int notifyIcon: 36
+    readonly property int notifyThumb: 56
+    readonly property int toastWidth: 400
+    readonly property int toastGap: 10
+    readonly property int notifyWidth: 440
+    readonly property int notifyHeight: 640
 }
