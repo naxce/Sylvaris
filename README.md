@@ -89,6 +89,7 @@ Everything Sylvaris does is one command away. Every part registers its actions w
 sylvaris                     # start SylCore, the shell
 sylvaris center              # toggle SylCenter (also: open, close)
 sylvaris view orbit-wifi     # open SylCenter on a view
+sylvaris clock               # toggle SylClock (also: open, close)
 sylvaris theme               # toggle SylTheme (also: open, close, next, prev, apply)
 sylvaris theme set noir      # apply a theme without the picker (also: cycle, list)
 sylvaris audio up 5          # volume (also: down, set 40, mute)
