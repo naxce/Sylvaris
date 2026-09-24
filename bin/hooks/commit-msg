@@ -1,0 +1,16 @@
+#!/bin/sh
+msg=$(sed '/^# -\{24\} >8 -\{24\}$/,$d' "$1" | grep -v '^#')
+fail=0
+
+reject() {
+    echo "commit-msg: $1" >&2
+    fail=1
+}
+
+printf '%s\n' "$msg" | grep -qiE '(co-authored-by|signed-off-by|claude-session)[[:space:]]*:' && reject 'trailers are not allowed'
+printf '%s\n' "$msg" | grep -qi 'generated with' && reject '"Generated with" lines are not allowed'
+printf '%s\n' "$msg" | grep -qiE 'https?://[^[:space:]]*(claude|anthropic|session)' && reject 'session URLs are not allowed'
+emoji="$(printf '\360\237')|$(printf '\342')[$(printf '\214-\217\230-\237\254\255')]|$(printf '\357\270\217')"
+printf '%s\n' "$msg" | LC_ALL=C grep -qE "$emoji" && reject 'emoji are not allowed'
+
+exit "$fail"

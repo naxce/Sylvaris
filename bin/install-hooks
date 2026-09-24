@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
+dest=$(git -C "$root" rev-parse --path-format=absolute --git-path hooks)
+mkdir -p "$dest"
+for hook in pre-commit commit-msg; do
+    cp "$root/bin/hooks/$hook" "$dest/$hook"
+    chmod 755 "$dest/$hook"
+done
+echo "installed pre-commit and commit-msg into $dest"

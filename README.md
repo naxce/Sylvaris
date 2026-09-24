@@ -320,6 +320,7 @@ Missing or invalid colors fall back to the built-in theme, one value at a time.
 ## Development
 
 ```sh
+bin/install-hooks
 nix develop
 node --test tests/*.test.mjs
 nix flake check
@@ -328,6 +329,8 @@ tests/headless/run.sh tests/headless/out/compact tests/headless/compact.steps te
 ```
 
 `tests/headless/run.sh` starts a headless sway with no visible output, runs Sylvaris inside it with `SYLVARIS_DEMO=1` (fixture devices instead of real ones), drives it over IPC and saves screenshots. It never touches your real devices or screens. It renders in software by default; set `HL_RENDERER=gles2 HL_QT_BACKEND=opengl` to render on the GPU, which texture-filled shapes such as album art and theme photos need. `docs/design/reference.html` is the visual source of truth.
+
+`bin/install-hooks` copies the git hooks from `bin/hooks` into `.git/hooks`. Run it once after cloning and again whenever they change. They reject comments in staged code, commits whose author or committer is not the repository owner, and trailers, emoji or "Generated with" lines in commit messages.
 
 ## Credits
 

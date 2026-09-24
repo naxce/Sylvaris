@@ -1,0 +1,36 @@
+#!/bin/sh
+me='naxce <naxcehelltea@gmail.com>'
+fail=0
+
+if [ "$(git config user.name) <$(git config user.email)>" != "$me" ]; then
+    echo "pre-commit: git config user.name/user.email must be $me" >&2
+    fail=1
+fi
+for var in GIT_AUTHOR_IDENT GIT_COMMITTER_IDENT; do
+    ident=$(git var "$var" | sed 's/ [0-9]* [-+][0-9]*$//')
+    if [ "$ident" != "$me" ]; then
+        echo "pre-commit: $var is $ident, expected $me" >&2
+        fail=1
+    fi
+done
+
+hits=$(git diff --cached -U0 --no-color --no-ext-diff --src-prefix=a/ --dst-prefix=b/ --diff-filter=ACMR | awk '
+    /^\+\+\+ / { f = substr($0, 7); next }
+    /^\+/ {
+        l = substr($0, 2)
+        slash = f ~ /\.(qml|mjs|js|html)$/
+        block = slash || f ~ /\.(css|nix)$/
+        hash = f ~ /\.(py|nix|sh|steps)$|^bin\//
+        if ((slash && l ~ /(^|[[:space:]])\/\/([[:space:]]|$)|^[[:space:]]*\/\//) ||
+            (block && l ~ /(^|[[:space:]])\/\*|^[[:space:]]*\*([[:space:]]|\/|$)/) ||
+            (hash && l ~ /^[[:space:]]*#([^!]|$)|[[:space:]]#([[:space:]]|$)/) ||
+            (f ~ /\.html$/ && l ~ /<!--/))
+            print f ": " l
+    }')
+if [ -n "$hits" ]; then
+    echo "pre-commit: staged comments are not allowed:" >&2
+    echo "$hits" >&2
+    fail=1
+fi
+
+exit "$fail"
