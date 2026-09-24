@@ -1,3 +1,5 @@
+import { expandHome } from "./settings.mjs"
+
 export const COLOR_KEYS = ["base", "surface", "accent", "accentHi", "accentDeep", "onAccent", "text", "textDim", "textSoft", "danger"]
 export const ALPHA_KEYS = ["surface", "glass", "line", "tint"]
 
@@ -77,6 +79,16 @@ export function validateTheme(raw) {
         colors[key] = key === "textSoft" && parseHex(rc.text) !== null ? rc.text.toLowerCase() : DEFAULT_THEME.colors[key]
     }
 
+    const links = {}
+    if (raw.links !== undefined && !isObject(raw.links))
+        errors.push("links must be an object")
+    for (const [target, source] of Object.entries(isObject(raw.links) ? raw.links : {})) {
+        if (target === "" || target[0] === "/" || target.split("/").indexOf("..") >= 0 || typeof source !== "string" || source === "")
+            errors.push("invalid link " + target)
+        else
+            links[target] = source
+    }
+
     const ra = isObject(raw.alpha) ? raw.alpha : {}
     const alpha = {}
     for (const key of ALPHA_KEYS) {
@@ -100,7 +112,8 @@ export function validateTheme(raw) {
             description: typeof raw.description === "string" ? raw.description : "",
             wallpaper: typeof raw.wallpaper === "string" ? raw.wallpaper : "",
             colors: colors,
-            alpha: alpha
+            alpha: alpha,
+            links: links
         }
     }
 }
@@ -180,4 +193,25 @@ export function catalogEntry(id, raw) {
     const name = named ? raw.name : id
     const t = validateTheme(isObject(raw) ? Object.assign({}, raw, { id: ID.test(id) ? id : "theme", name: name }) : raw).theme
     return { id: id, name: name, description: t.description, wallpaper: t.wallpaper, colors: t.colors }
+}
+
+const LINK_SCRIPT = 'n=0; while [ $# -ge 2 ]; do if [ ! -e "$1" ]; then echo "missing $1"; elif [ "$(readlink "$2")" != "$1" ]; then mkdir -p "$(dirname "$2")" && ln -sfn "$1" "$2" && n=$((n + 1)); fi; shift 2; done; echo "changed $n"'
+
+export function linkCommand(links, home, configHome) {
+    const targets = Object.keys(links || {})
+    if (targets.length === 0)
+        return null
+    const pairs = targets.reduce((out, t) => out.concat([expandHome(links[t], home), configHome + "/" + t]), [])
+    return ["sh", "-c", LINK_SCRIPT, "sylvaris-links"].concat(pairs)
+}
+
+export function parseLinkOutput(text) {
+    const out = { changed: 0, missing: [] }
+    for (const line of String(text || "").split("\n")) {
+        if (line.indexOf("missing ") === 0)
+            out.missing.push(line.slice(8))
+        else if (/^changed \d+$/.test(line))
+            out.changed = Number(line.slice(8))
+    }
+    return out
 }

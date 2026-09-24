@@ -1,0 +1,11 @@
+write sylvaris/config.json {"version":1,"themesDir":"~/.config/sylvaris/themes","themeStateFile":"~/.config/sylvaris/theme-state"}
+write sylvaris/themes/birch.json {"version":1,"id":"birch","name":"Birch","colors":{"accent":"#8a9a5b"},"links":{"demo/linked.json":"~/.config/sylvaris/themes/amber.json","demo/missing.conf":"~/nope"}}
+sleep 1.5
+syl theme set birch
+sleep 1.5
+syl state theme
+syl theme set amber
+sleep 1
+syl theme set birch
+sleep 1.5
+syl state theme

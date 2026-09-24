@@ -137,7 +137,7 @@ A part with no action runs its default (usually `toggle`). Errors print `error: 
 
 `sylvaris watch` connects to `$XDG_RUNTIME_DIR/sylvaris/ipc.sock`. It prints every requested topic once, then a line each time one changes: `{"topic":"audio","data":{...}}`. Tools can talk to the socket directly: send one request per line, either plain words (`center toggle`) or a JSON array (`["center","view","orbit-wifi:My Network"]`), and read one JSON reply per line (`{"ok":true,"result":...}`). Sending `["watch","audio"]` turns the connection into a stream.
 
-SylTheme opens on the focused monitor with the current theme in front. Arrow keys, the mouse wheel, dragging or clicking a side card move the carousel; once it rests for half a second the whole desktop previews that theme through your `themeHook`. It slides up over everything, including your bar, and hides the cursor until you move the mouse. Start typing to search themes by name or description (`sylvaris theme search <text>` does it from scripts). Enter or **Apply theme** keeps it, Esc or a click on the backdrop brings back the theme you started with. SylCenter's Theme button and `sylvaris view theme` open it too.
+SylTheme opens on the focused monitor with the current theme in front. Arrow keys, the mouse wheel, dragging or clicking a side card move the carousel; once it rests for half a second the whole desktop previews that theme, including its `links`. It slides up over everything, including your bar, and hides the cursor until you move the mouse. Start typing to search themes by name or description (`sylvaris theme search <text>` does it from scripts). Enter or **Apply theme** keeps it, Esc or a click on the backdrop brings back the theme you started with. SylCenter's Theme button and `sylvaris view theme` open it too.
 
 Views: `compact`, `orbit-bluetooth`, `orbit-wifi`, `calendar`, `outputs`, `displays`, `hotspot`. Add `:<key>` to focus a device or network, for example `sylvaris view orbit-bluetooth:AA:BB:CC:DD:EE:FF`.
 
@@ -310,7 +310,7 @@ programs.sylvaris.settings = {
 | Key (`config.json` only) | Default | Meaning |
 |---|---|---|
 | `themesDir` | `~/.config/sylvaris/themes` | Folder of theme bundles |
-| `themeHook` | `""` | Command run with the theme id when a theme is applied. Empty means Sylvaris writes the id to `themeStateFile` itself. |
+| `themeHook` | `""` | Optional command run with the theme id when a theme is applied. Empty means Sylvaris writes the id to `themeStateFile` itself; theme `links` apply either way. |
 | `themeStateFile` | `~/.local/state/sylvaris/theme` | File holding the active theme id; Sylvaris watches it |
 | `avatar` | `~/.face` | Image shown in the control center header |
 | `lockCommand` | `loginctl lock-session` | Used by future parts |
@@ -334,11 +334,17 @@ The settings keys are `center`, `clock`, `notifications`, `nightLight`, `display
     "accentDeep": "#4c6ab3", "onAccent": "#0f1117", "text": "#e6e9f2", "textDim": "#8d94a8",
     "textSoft": "#c8cdda", "danger": "#e06c75"
   },
-  "alpha": { "surface": 0.9, "glass": 0.62, "line": 0.16, "tint": 0.08 }
+  "alpha": { "surface": 0.9, "glass": 0.62, "line": 0.16, "tint": 0.08 },
+  "links": {
+    "kitty/theme.conf": "~/dotfiles/kitty/midnight.conf",
+    "hypr/looknfeel.lua": "~/dotfiles/hypr/looknfeel-midnight.lua"
+  }
 }
 ```
 
 Missing or invalid colors fall back to the built-in theme, one value at a time.
+
+`links` themes the rest of your desktop without a hook. Each key is a path under `~/.config`, each value the file it should point to for this theme. When the theme is applied, Sylvaris symlinks every entry that changed, then reloads the compositor and signals kitty and waybar. Sources that do not exist are skipped and reported in `sylvaris state theme`.
 
 ## Development
 

@@ -14,6 +14,9 @@ Singleton {
     readonly property string home: Quickshell.env("HOME")
     readonly property string stateFile: S.expandHome(Config.values.themeStateFile, root.home)
     readonly property string themesDir: S.expandHome(Config.values.themesDir, root.home)
+    readonly property string configHome: Quickshell.env("XDG_CONFIG_HOME") || root.home + "/.config"
+    property int linked: 0
+    property bool relink: false
     property string currentId: ""
     property var theme: T.DEFAULT_THEME
     property var errors: []
@@ -58,6 +61,7 @@ Singleton {
     property var catalog: ({})
     property string hookError: ""
     property string queued: ""
+    property bool hookStuck: false
 
     function remember(id: string, text: string): void {
         const p = S.parseJson(text);
@@ -105,6 +109,35 @@ Singleton {
         const r = T.validateTheme(p.value);
         root.theme = r.theme;
         root.errors = r.errors;
+        root.link();
+    }
+
+    function link(): void {
+        const cmd = T.linkCommand(root.theme.links, root.home, root.configHome);
+        if (cmd === null)
+            return;
+        if (linkProc.running) {
+            root.relink = true;
+            return;
+        }
+        linkProc.command = cmd;
+        linkProc.running = true;
+    }
+
+    function linkDone(text: string): void {
+        const r = T.parseLinkOutput(text);
+        root.linked = r.changed;
+        if (r.missing.length > 0)
+            root.errors = root.errors.concat(r.missing.map(m => "link source not found: " + m));
+        if (r.changed === 0 || Demo.enabled)
+            return;
+        Quickshell.execDetached(["pkill", "-USR1", "kitty"]);
+        Quickshell.execDetached(["pkill", "-USR2", "waybar"]);
+        try {
+            Compositor.run("reload", []);
+        } catch (e) {
+            console.warn("sylvaris: " + e.message);
+        }
     }
 
     function refreshIds(): void {
@@ -119,6 +152,7 @@ Singleton {
             return;
         if (hookProc.running) {
             root.queued = id;
+            hookProc.running = false;
             return;
         }
         root.runHook(id);
@@ -164,12 +198,35 @@ Singleton {
     Process {
         id: hookProc
         onExited: code => {
-            root.hookError = code === 0 ? "" : "The theme hook failed with exit code " + code;
+            root.hookError = root.hookStuck ? "The theme hook did not finish in 15 seconds and was stopped" : code === 0 || root.queued !== "" ? "" : "The theme hook failed with exit code " + code;
+            root.hookStuck = false;
             if (root.queued !== "") {
                 const next = root.queued;
                 root.queued = "";
                 root.runHook(next);
             }
+        }
+    }
+
+    Process {
+        id: linkProc
+        stdout: StdioCollector {
+            onStreamFinished: root.linkDone(text)
+        }
+        onExited: {
+            if (!root.relink)
+                return;
+            root.relink = false;
+            root.link();
+        }
+    }
+
+    Timer {
+        interval: 15000
+        running: hookProc.running
+        onTriggered: {
+            root.hookStuck = true;
+            hookProc.running = false;
         }
     }
 

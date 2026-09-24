@@ -1,0 +1,10 @@
+write sylvaris/config.json {"version":1,"themesDir":"~/.config/sylvaris/themes","themeStateFile":"~/.config/sylvaris/theme-state","themeHook":"f() { [ \"$1\" = amber ] && sleep 60; printf %s \"$1\" > \"$HOME/.config/sylvaris/theme-state\"; }; f"}
+sleep 1.5
+syl theme set amber
+sleep 1
+syl theme set birch
+sleep 1.5
+syl state theme
+syl theme set amber
+sleep 17
+syl state theme

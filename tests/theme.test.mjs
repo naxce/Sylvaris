@@ -1,6 +1,10 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { DEFAULT_THEME, COLOR_KEYS, parseHex, withAlpha, validateTheme, tokens, nextThemeId, parseArgb, mixArgb, mixTokens, catalogEntry } from "../shell/lib/theme.mjs"
+import { DEFAULT_THEME, COLOR_KEYS, parseHex, withAlpha, validateTheme, tokens, nextThemeId, parseArgb, mixArgb, mixTokens, catalogEntry, linkCommand, parseLinkOutput } from "../shell/lib/theme.mjs"
+import { execFileSync } from "node:child_process"
+import { mkdtempSync, mkdirSync, writeFileSync, readlinkSync, symlinkSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 
 const warm = {
     id: "warm",
@@ -148,4 +152,39 @@ test("catalogEntry keeps a nameless theme's own colors", () => {
     const e = catalogEntry("coal", Object.assign({}, warm, { name: undefined, id: undefined }))
     assert.equal(e.colors.accent, warm.colors.accent)
     assert.equal(e.name, "coal")
+})
+
+test("validateTheme keeps safe links and reports bad ones", () => {
+    const r = validateTheme(Object.assign({}, warm, {
+        links: { "kitty/theme.conf": "~/cfg/kitty-warm.conf", "/etc/passwd": "~/x", "../out": "~/x", "a/../../b": "~/x", "rofi/theme.rasi": 3, "": "~/x" }
+    }))
+    assert.equal(r.ok, true)
+    assert.deepEqual(r.theme.links, { "kitty/theme.conf": "~/cfg/kitty-warm.conf" })
+    assert.equal(r.errors.filter(e => e.startsWith("invalid link")).length, 5)
+    assert.deepEqual(validateTheme(warm).theme.links, {})
+    assert.deepEqual(validateTheme(Object.assign({}, warm, { links: [1] })).errors, ["links must be an object"])
+})
+
+test("linkCommand relinks only changed targets and reports missing sources", () => {
+    const home = mkdtempSync(join(tmpdir(), "syl-links-"))
+    const conf = join(home, ".config")
+    mkdirSync(join(home, "cfg"))
+    writeFileSync(join(home, "cfg", "a"), "a")
+    writeFileSync(join(home, "cfg", "b"), "b")
+    mkdirSync(join(conf, "app2"), { recursive: true })
+    symlinkSync(join(home, "cfg", "b"), join(conf, "app2", "b"))
+    const links = { "app/a": "~/cfg/a", "app2/b": "~/cfg/b", "app3/c": "~/cfg/none" }
+    const run = () => {
+        const argv = linkCommand(links, home, conf)
+        return parseLinkOutput(execFileSync(argv[0], argv.slice(1), { encoding: "utf8" }))
+    }
+    assert.deepEqual(run(), { changed: 1, missing: [join(home, "cfg", "none")] })
+    assert.equal(readlinkSync(join(conf, "app", "a")), join(home, "cfg", "a"))
+    assert.deepEqual(run(), { changed: 0, missing: [join(home, "cfg", "none")] })
+    assert.deepEqual(linkCommand({}, home, conf), null)
+})
+
+test("parseLinkOutput tolerates junk", () => {
+    assert.deepEqual(parseLinkOutput(""), { changed: 0, missing: [] })
+    assert.deepEqual(parseLinkOutput("noise\nchanged 2\nmissing /x y\n"), { changed: 2, missing: ["/x y"] })
 })

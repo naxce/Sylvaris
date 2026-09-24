@@ -40,7 +40,7 @@ in
     themes = lib.mkOption {
       type = lib.types.attrsOf json.type;
       default = { };
-      description = "Theme bundles written to ~/.config/sylvaris/themes/<name>.json. The attribute name becomes the theme id.";
+      description = "Theme bundles written to ~/.config/sylvaris/themes/<name>.json. The attribute name becomes the theme id. `links` maps paths under ~/.config to the files they point to while the theme is active.";
     };
   };
 

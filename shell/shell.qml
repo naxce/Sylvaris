@@ -209,6 +209,7 @@ ShellRoot {
                 tokens: Theme.target,
                 catalog: Object.keys(Theme.catalog).sort(),
                 hookError: Theme.hookError,
+                linked: Theme.linked,
                 open: theme !== null && theme.shown,
                 front: theme !== null ? theme.front : null,
                 original: theme !== null ? ThemePreview.original : null,
