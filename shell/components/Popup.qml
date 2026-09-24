@@ -155,11 +155,11 @@ Scope {
 
         Region {
             id: blur
-            x: Math.round(root.visual.x)
-            y: Math.round(root.visual.y)
-            width: Math.round(root.visual.w)
-            height: Math.round(root.visual.h)
-            radius: root.radius * root.grow
+            x: Math.round(root.visual.x) + 1
+            y: Math.round(root.visual.y) + 1
+            width: Math.round(root.visual.w) - 2
+            height: Math.round(root.visual.h) - 2
+            radius: root.radius * root.grow - 1
         }
 
         onVisibleChanged: {

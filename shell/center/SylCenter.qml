@@ -247,11 +247,11 @@ Scope {
         Region {
             id: blur
             readonly property var r: M.scaledRect(panel.x, panel.y, panel.width, panel.height, root.corner, root.grow, (1 - root.phase) * -10)
-            x: Math.round(blur.r.x)
-            y: Math.round(blur.r.y)
-            width: Math.round(blur.r.w)
-            height: Math.round(blur.r.h)
-            radius: Tokens.radiusPanel * root.grow
+            x: Math.round(blur.r.x) + 1
+            y: Math.round(blur.r.y) + 1
+            width: Math.round(blur.r.w) - 2
+            height: Math.round(blur.r.h) - 2
+            radius: Tokens.radiusPanel * root.grow - 1
         }
 
         onVisibleChanged: {

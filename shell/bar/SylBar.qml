@@ -93,8 +93,11 @@ Scope {
 
             Region {
                 id: slabBlur
-                item: slab
-                radius: bar.floating ? Tokens.barRadius : 0
+                x: bar.floating ? 1 : 0
+                y: bar.floating ? 1 : 0
+                width: slab.width - (bar.floating ? 2 : 0)
+                height: slab.height - (bar.floating ? 2 : 0)
+                radius: bar.floating ? Tokens.barRadius - 1 : 0
             }
 
             Glass {

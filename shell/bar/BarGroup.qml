@@ -15,8 +15,11 @@ Item {
     property var moduleFor: null
     readonly property int pad: root.islands ? Tokens.barPadding : 0
     readonly property Region blur: Region {
-        item: root
-        radius: Tokens.barRadius
+        x: root.x + 1
+        y: root.y + 1
+        width: Math.max(0, root.width - 2)
+        height: Math.max(0, root.height - 2)
+        radius: Tokens.barRadius - 1
     }
 
     visible: root.list.length > 0 && (root.vertical ? grid.implicitHeight : grid.implicitWidth) > 0

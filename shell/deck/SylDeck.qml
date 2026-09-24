@@ -145,8 +145,11 @@ Scope {
 
             Region {
                 id: blur
-                item: dock
-                radius: Tokens.deckRadius
+                x: dock.x + 1
+                y: Math.round(dock.y) + 1
+                width: dock.width - 2
+                height: dock.height - 2
+                radius: Tokens.deckRadius - 1
             }
 
             Item {
