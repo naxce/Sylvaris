@@ -12,7 +12,8 @@ export const DEFAULT_BAR = {
     right: ["media", "tray", "audio", "network", "bluetooth", "battery", "notifications", "center", "power"]
 }
 
-export const DEFAULT_DECK = { enabled: false, pinned: [], pad: "start", power: "none", effect: "bloom", autohide: false, reserve: true, size: 56 }
+export const DEFAULT_DECK = { enabled: false, pinned: [], pad: "start", power: "none", effect: "bloom", hide: "never", peek: true, peekSize: 4, reserve: true, size: 56 }
+export const DECK_HIDE = ["never", "always", "windows"]
 export const DECK_EFFECTS = ["bloom", "magnify", "none"]
 
 function isObject(v) {
@@ -55,7 +56,9 @@ export function validateDeck(raw) {
         pad: ["start", "end", "none"].indexOf(d.pad) >= 0 ? d.pad : DEFAULT_DECK.pad,
         power: ["start", "end", "none"].indexOf(d.power) >= 0 ? d.power : DEFAULT_DECK.power,
         effect: DECK_EFFECTS.indexOf(d.effect) >= 0 ? d.effect : d.magnify === true ? "magnify" : DEFAULT_DECK.effect,
-        autohide: d.autohide === true,
+        hide: DECK_HIDE.indexOf(d.hide) >= 0 ? d.hide : d.autohide === true ? "always" : DEFAULT_DECK.hide,
+        peek: d.peek !== false,
+        peekSize: Number.isInteger(d.peekSize) && d.peekSize >= 2 && d.peekSize <= 12 ? d.peekSize : DEFAULT_DECK.peekSize,
         reserve: d.reserve !== false,
         size: Number.isInteger(d.size) && d.size >= 36 && d.size <= 96 ? d.size : DEFAULT_DECK.size
     })
@@ -124,4 +127,19 @@ export function placeCorner(corner, position) {
     if (position === "left" || position === "right")
         return (side === "left" ? "top" : side === "right" ? "bottom" : "center") + "-" + position
     return "top-" + side
+}
+
+export function deckHidden(mode, s) {
+    if (s.hovering || s.menu || s.holding)
+        return false
+    return mode === "always" || mode === "windows" && s.busy
+}
+
+export function screenBusy(workspaces, windows, output) {
+    const shown = workspaces.filter(w => w.output === output && w.active)
+    if (shown.length === 0)
+        return false
+    if (shown.some(w => w.windows > 0))
+        return true
+    return shown.some(w => w.windows < 0) && windows.some(w => !w.minimized)
 }

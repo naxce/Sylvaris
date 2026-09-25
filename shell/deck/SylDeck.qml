@@ -104,7 +104,13 @@ Scope {
             required property var modelData
             readonly property var list: root.slots()
             readonly property bool hovering: dockHover.hovered || stripHover.hovered
-            readonly property bool hidden: root.cfg.autohide && !deck.hovering && !menu.visible && !hideDelay.running
+            readonly property bool busy: B.screenBusy(Compositor.workspaces, Compositor.windows, deck.modelData.name)
+            readonly property bool hidden: B.deckHidden(root.cfg.hide, {
+                hovering: deck.hovering,
+                menu: menu.visible,
+                holding: hideDelay.running,
+                busy: deck.busy
+            })
             property real pointer: -1
             property real reveal: deck.hidden ? 0 : 1
 
@@ -116,8 +122,8 @@ Scope {
             }
             implicitHeight: root.size * 1.5 + Tokens.deckPadding * 2 + Tokens.deckMargin + 40
             color: "transparent"
-            exclusionMode: root.cfg.autohide || !root.cfg.reserve ? ExclusionMode.Ignore : ExclusionMode.Normal
-            exclusiveZone: root.cfg.autohide || !root.cfg.reserve ? 0 : root.size + Tokens.deckPadding * 2 + Tokens.deckMargin
+            exclusionMode: root.cfg.hide !== "never" || !root.cfg.reserve ? ExclusionMode.Ignore : ExclusionMode.Normal
+            exclusiveZone: root.cfg.hide !== "never" || !root.cfg.reserve ? 0 : root.size + Tokens.deckPadding * 2 + Tokens.deckMargin
             WlrLayershell.layer: WlrLayer.Top
             WlrLayershell.namespace: "syldeck"
             mask: Region {
@@ -127,9 +133,8 @@ Scope {
 
             Behavior on reveal {
                 NumberAnimation {
-                    duration: deck.hidden ? Tokens.exitDuration + 80 : Tokens.enterDuration
-                    easing.type: Easing.BezierSpline
-                    easing.bezierCurve: deck.hidden ? Tokens.exitCurve : Tokens.enterCurve
+                    duration: Math.round((deck.hidden ? 300 : 460) * Tokens.pace)
+                    easing.type: deck.hidden ? Easing.InOutCubic : Easing.OutQuint
                 }
             }
 
@@ -148,7 +153,7 @@ Scope {
                 x: dock.x + 1
                 y: Math.round(dock.y) + 1
                 width: dock.width - 2
-                height: dock.height - 2
+                height: Math.max(0, Math.min(dock.height, deck.height - Math.round(dock.y)) - 2)
                 radius: Tokens.deckRadius - 1
             }
 
@@ -156,20 +161,43 @@ Scope {
                 id: strip
                 anchors.bottom: parent.bottom
                 width: parent.width
-                height: 4
+                height: Math.max(4, root.cfg.peek ? root.cfg.peekSize + 6 : 4)
 
                 HoverHandler {
                     id: stripHover
+                }
+
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 3
+                    visible: root.cfg.peek && opacity > 0
+                    width: Math.max(48, dock.width * 0.22) * (stripHover.hovered ? 1.25 : 1)
+                    height: root.cfg.peekSize
+                    radius: height / 2
+                    color: stripHover.hovered ? Theme.accentHi : Theme.accent
+                    opacity: (1 - deck.reveal) * 0.85
+
+                    Behavior on width {
+                        NumberAnimation {
+                            duration: Tokens.stateDuration
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Tokens.stateDuration
+                        }
+                    }
                 }
             }
 
             Item {
                 id: dock
                 anchors.horizontalCenter: parent.horizontalCenter
-                y: parent.height - height - Tokens.deckMargin + (1 - deck.reveal) * (height + Tokens.deckMargin + 4)
-                opacity: 0.3 + 0.7 * deck.reveal
-                scale: 0.96 + 0.04 * deck.reveal
-                transformOrigin: Item.Bottom
+                y: Math.round(parent.height - height - Tokens.deckMargin + (1 - deck.reveal) * (height + Tokens.deckMargin + 4))
+                opacity: Math.min(1, 0.2 + deck.reveal * 1.2)
                 width: row.width + Tokens.deckPadding * 2
                 height: root.size + Tokens.deckPadding * 2
 

@@ -1280,12 +1280,50 @@ Scope {
                 }
 
                 SettingRow {
-                    title: "Hide automatically"
-                    subtitle: "Slides away until the pointer reaches the bottom edge"
+                    title: "Hide"
+                    subtitle: Settings.values.deck.hide === "windows" ? "Shows on an empty desktop and slides away when a window opens on this screen" : Settings.values.deck.hide === "always" ? "Slides away until the pointer reaches the bottom edge" : "Always visible"
+
+                    Segmented {
+                        width: 300
+                        options: [
+                            {
+                                key: "never",
+                                label: "Never"
+                            },
+                            {
+                                key: "windows",
+                                label: "With windows"
+                            },
+                            {
+                                key: "always",
+                                label: "Always"
+                            }
+                        ]
+                        current: Settings.values.deck.hide
+                        onPicked: key => Settings.set("deck.hide", key)
+                    }
+                }
+
+                SettingRow {
+                    title: "Peek line"
+                    subtitle: "A small line in your theme colour that stays while the deck is hidden"
 
                     Toggle {
-                        checked: Settings.values.deck.autohide
-                        onToggled: v => Settings.set("deck.autohide", v)
+                        checked: Settings.values.deck.peek
+                        onToggled: v => Settings.set("deck.peek", v)
+                    }
+                }
+
+                SettingRow {
+                    title: "Peek thickness"
+                    enabled: Settings.values.deck.peek
+
+                    Stepper {
+                        value: Settings.values.deck.peekSize
+                        from: 2
+                        to: 12
+                        suffix: " px"
+                        onStepped: v => Settings.set("deck.peekSize", v)
                     }
                 }
 

@@ -1,6 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { unused, shift, validateBar, validateDeck, deckItems, nextWindow, togglePin, magnify, DEFAULT_BAR, vertical, drawerArrow, placeCorner } from "../shell/lib/bar.mjs"
+import { unused, shift, validateBar, validateDeck, deckItems, nextWindow, togglePin, magnify, DEFAULT_BAR, vertical, drawerArrow, placeCorner, deckHidden, screenBusy } from "../shell/lib/bar.mjs"
 
 test("validateBar keeps known modules once and falls back per side", () => {
     const b = validateBar({ left: ["clock", "nope", "clock", "pad"], floating: false })
@@ -88,4 +88,38 @@ test("deck effect replaces the old magnify flag", () => {
     assert.equal(validateDeck({}).reserve, true)
     assert.equal(validateDeck({ reserve: false }).reserve, false)
     assert.equal(validateDeck({ power: "end" }).power, "end")
+})
+
+test("validateDeck turns the old autohide switch into a hide mode and keeps the peek pill in range", () => {
+    assert.equal(validateDeck({}).hide, "never")
+    assert.equal(validateDeck({ autohide: true }).hide, "always")
+    assert.equal(validateDeck({ hide: "windows", autohide: true }).hide, "windows")
+    assert.equal(validateDeck({ hide: "sometimes" }).hide, "never")
+    assert.equal(validateDeck({}).peek, true)
+    assert.equal(validateDeck({ peek: false }).peek, false)
+    assert.equal(validateDeck({}).peekSize, 4)
+    assert.equal(validateDeck({ peekSize: 40 }).peekSize, 4)
+    assert.equal(validateDeck({ peekSize: 8 }).peekSize, 8)
+})
+
+test("deckHidden hides for always, for windows only when the screen is busy, and never while in use", () => {
+    const idle = { hovering: false, menu: false, holding: false, busy: false }
+    assert.equal(deckHidden("never", Object.assign({}, idle, { busy: true })), false)
+    assert.equal(deckHidden("always", idle), true)
+    assert.equal(deckHidden("windows", idle), false)
+    assert.equal(deckHidden("windows", Object.assign({}, idle, { busy: true })), true)
+    assert.equal(deckHidden("always", Object.assign({}, idle, { hovering: true })), false)
+    assert.equal(deckHidden("windows", Object.assign({}, idle, { busy: true, menu: true })), false)
+    assert.equal(deckHidden("always", Object.assign({}, idle, { holding: true })), false)
+})
+
+test("screenBusy uses the visible workspace's window count and falls back to open windows when it is unknown", () => {
+    const ws = [{ output: "A", active: true, windows: 2 }, { output: "A", active: false, windows: 0 }, { output: "B", active: true, windows: 0 }]
+    assert.equal(screenBusy(ws, [], "A"), true)
+    assert.equal(screenBusy(ws, [{ minimized: false }], "B"), false)
+    const sway = [{ output: "A", active: true, windows: -1 }]
+    assert.equal(screenBusy(sway, [], "A"), false)
+    assert.equal(screenBusy(sway, [{ minimized: true }], "A"), false)
+    assert.equal(screenBusy(sway, [{ minimized: false }], "A"), true)
+    assert.equal(screenBusy([], [{ minimized: false }], "A"), false)
 })
