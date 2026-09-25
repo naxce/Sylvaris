@@ -1,0 +1,12 @@
+sleep 1.5
+syl polkit preview
+sleep 1
+syl state polkit
+shot polkit
+bg wtype -k Shift_L wrong -k Return
+sleep 1
+syl state polkit
+shot polkit-wrong
+bg wtype -k Shift_L right -k Return
+sleep 1
+syl state polkit

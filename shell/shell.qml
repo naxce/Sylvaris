@@ -17,6 +17,7 @@ import qs.paper
 import qs.diver
 import qs.switcher
 import qs.lock
+import qs.polkit
 import "lib/ipc.mjs" as I
 import "lib/eq.mjs" as E
 import "lib/settings.mjs" as S
@@ -39,7 +40,8 @@ ShellRoot {
             paper: paperLoader,
             diver: diverLoader,
             switcher: switcherLoader,
-            lock: lockLoader
+            lock: lockLoader,
+            polkit: polkitLoader
         })
     readonly property var parts: {
         const out = {};
@@ -213,6 +215,7 @@ ShellRoot {
             } : undefined,
             switcher: root.part("switcher") !== null ? root.part("switcher").state() : undefined,
             lock: root.part("lock") !== null ? root.part("lock").state() : undefined,
+            polkit: root.part("polkit") !== null ? root.part("polkit").state() : undefined,
             config: Config.values,
             configNotice: Config.notice,
             settings: Settings.values,
@@ -363,6 +366,16 @@ ShellRoot {
         SylDiver {
             id: diverPart
             onOpened: root.solo(diverPart)
+        }
+    }
+
+    LazyLoader {
+        id: polkitLoader
+        active: root.on("polkit")
+
+        SylPolkit {
+            id: polkitPart
+            onOpened: root.solo(polkitPart)
         }
     }
 
@@ -603,6 +616,12 @@ ShellRoot {
                 toggle: () => root.need("pad").toggle(),
                 open: () => root.need("pad").open(),
                 close: () => root.need("pad").close()
+            },
+            polkit: {
+                default: "state",
+                state: () => root.need("polkit").state(),
+                preview: () => root.need("polkit").showPreview(),
+                cancel: () => root.need("polkit").cancel()
             },
             lock: {
                 default: "now",

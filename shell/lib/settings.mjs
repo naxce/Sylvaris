@@ -20,6 +20,7 @@ export const PARTS = {
     paper: [],
     power: [],
     lock: [],
+    polkit: [],
     switcher: ["Apps"],
     settings: ["Audio", "Equalizer", "NightLight", "Diver", "Weather", "Sky", "Dnd", "Apps", "Notifications"],
     theme: ["ThemePreview"]

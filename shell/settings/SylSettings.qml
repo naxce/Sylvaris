@@ -114,6 +114,11 @@ Scope {
             glyph: Icons.GLYPHS.lock
         },
         {
+            key: "polkit",
+            label: "Authentication",
+            glyph: Icons.GLYPHS.lock
+        },
+        {
             key: "commands",
             label: "Commands",
             glyph: Icons.GLYPHS.keyboard
@@ -880,11 +885,20 @@ Scope {
                                 diver: diverPage,
                                 switcher: switcherPage,
                                 lock: lockPage,
+                                polkit: polkitPage,
                                 commands: commandsPage
                             })[root.shownSection] || null
                     }
                 }
             }
+        }
+    }
+
+    Component {
+        id: polkitPage
+
+        PolkitPage {
+            onPreviewRequested: Ipc.run(["polkit", "preview"])
         }
     }
 

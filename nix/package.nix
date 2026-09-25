@@ -60,6 +60,7 @@ let
     paper = [ ];
     power = [ ];
     lock = [ glib ];
+    polkit = [ ];
     switcher = [ ];
     settings = [
       wlsunset
