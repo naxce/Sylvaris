@@ -260,3 +260,10 @@ test("PARTS lists every service a part references", () => {
             assert.ok(listed.includes(svc), name + " uses " + svc)
     }
 })
+
+test("motion.reveal picks how full-screen backgrounds open", () => {
+    assert.equal(validateSettings({}).motion.reveal, "edges")
+    assert.equal(validateSettings({ motion: { reveal: "center" } }).motion.reveal, "center")
+    assert.equal(validateSettings({ motion: { reveal: "fade" } }).motion.reveal, "fade")
+    assert.equal(validateSettings({ motion: { reveal: "spin" } }).motion.reveal, "edges")
+})

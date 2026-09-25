@@ -5,6 +5,7 @@ import { DEFAULT_PAPER, validatePaper } from "./paper.mjs"
 import { DEFAULT_WEATHER, validateWeather } from "./weather.mjs"
 
 export const CORNERS = ["top-left", "top-center", "top-right"]
+export const REVEALS = ["edges", "center", "fade"]
 
 export const PARTS = {
     bar: ["Audio", "BluetoothService", "NetworkService", "Diver", "Dnd", "Media", "Notifications"],
@@ -62,7 +63,7 @@ export const DEFAULT_SETTINGS = {
     bar: DEFAULT_BAR,
     deck: DEFAULT_DECK,
     media: { eq: DEFAULT_EQ, airpods: "" },
-    motion: { scale: 1, reduced: false },
+    motion: { scale: 1, reduced: false, reveal: "edges" },
     power: DEFAULT_POWER,
     paper: DEFAULT_PAPER,
     weather: DEFAULT_WEATHER,
@@ -230,7 +231,8 @@ export function validateSettings(raw) {
     const motion = isObject(v.motion) ? v.motion : {}
     v.motion = Object.assign({}, motion, {
         scale: typeof motion.scale === "number" && motion.scale >= 0.25 && motion.scale <= 2 ? motion.scale : d.motion.scale,
-        reduced: motion.reduced === true
+        reduced: motion.reduced === true,
+        reveal: REVEALS.indexOf(motion.reveal) >= 0 ? motion.reveal : d.motion.reveal
     })
     v.performance = v.performance === true
     v.power = validatePower(v.power)

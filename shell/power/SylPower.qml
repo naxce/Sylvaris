@@ -192,7 +192,7 @@ Scope {
 
         Backdrop {
             anchors.fill: parent
-            opacity: root.phase(0, 0.3)
+            reveal: root.reveal
             tint: root.pending !== "" ? Theme.danger : Theme.accentDeep
         }
 

@@ -200,10 +200,10 @@ Scope {
             id: backdrop
             anchors.fill: parent
             visible: !root.listMode
-            opacity: root.phase(0, 0.35)
 
             Backdrop {
                 anchors.fill: parent
+                reveal: root.reveal
             }
 
             MouseArea {

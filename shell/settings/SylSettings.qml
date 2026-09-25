@@ -463,7 +463,7 @@ Scope {
 
         Backdrop {
             anchors.fill: parent
-            opacity: root.phase(0, 0.3)
+            reveal: root.reveal
         }
 
         Item {
@@ -1704,6 +1704,31 @@ Scope {
                         value: (Settings.values.motion.scale - 0.25) / 1.75
                         label: "×" + (1 / Settings.values.motion.scale).toFixed(2)
                         onMoved: v => Settings.set("motion.scale", Math.round((0.25 + v * 1.75) * 20) / 20)
+                    }
+                }
+
+                SettingRow {
+                    title: "Background reveal"
+                    subtitle: "How the blurred background of SylSettings, SylPad and SylPower spreads when they open and close"
+
+                    Segmented {
+                        width: 300
+                        options: [
+                            {
+                                key: "edges",
+                                label: "Edges in"
+                            },
+                            {
+                                key: "center",
+                                label: "Center out"
+                            },
+                            {
+                                key: "fade",
+                                label: "Fade"
+                            }
+                        ]
+                        current: Settings.values.motion.reveal
+                        onPicked: key => Settings.set("motion.reveal", key)
                     }
                 }
 
