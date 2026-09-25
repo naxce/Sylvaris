@@ -8,6 +8,7 @@ Singleton {
 
     property real motion: 1
     property bool lite: false
+    property real textScale: 1
     readonly property real pace: root.lite ? 0.55 : root.motion
     readonly property int enterDuration: Math.round(340 * root.pace)
     readonly property int exitDuration: Math.round(190 * root.pace)
@@ -40,13 +41,13 @@ Singleton {
     readonly property int avatarSize: 56
     readonly property int artSize: 64
     readonly property int cardPadding: 14
-    readonly property int clockSize: 52
-    readonly property int dateSize: 17
-    readonly property int titleSize: 17
-    readonly property int bodySize: 15
-    readonly property int nodeSize: 14
-    readonly property int smallSize: 13
-    readonly property int tinySize: 12
+    readonly property int clockSize: Math.round(52 * root.textScale)
+    readonly property int dateSize: Math.round(17 * root.textScale)
+    readonly property int titleSize: Math.round(17 * root.textScale)
+    readonly property int bodySize: Math.round(15 * root.textScale)
+    readonly property int nodeSize: Math.round(14 * root.textScale)
+    readonly property int smallSize: Math.round(13 * root.textScale)
+    readonly property int tinySize: Math.round(12 * root.textScale)
     readonly property string fontUi: "Inter"
     readonly property string fontMono: "JetBrainsMono Nerd Font"
     readonly property int openDuration: root.enterDuration
@@ -125,6 +126,8 @@ Singleton {
     readonly property int clipHeight: 580
     readonly property int captureWidth: 460
     readonly property int captureHeight: 300
+    readonly property int accessWidth: 560
+    readonly property int accessHeight: 660
     readonly property int diverHeight: 720
     readonly property int settingsHeight: 760
     readonly property int settingsSidebar: 250

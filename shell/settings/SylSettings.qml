@@ -129,6 +129,11 @@ Scope {
             glyph: Icons.GLYPHS.camera
         },
         {
+            key: "access",
+            label: "Accessibility",
+            glyph: Icons.GLYPHS.accessibility
+        },
+        {
             key: "commands",
             label: "Commands",
             glyph: Icons.GLYPHS.keyboard
@@ -898,12 +903,19 @@ Scope {
                                 polkit: polkitPage,
                                 clip: clipPage,
                                 capture: capturePage,
+                                access: accessPage,
                                 commands: commandsPage
                             })[root.shownSection] || null
                     }
                 }
             }
         }
+    }
+
+    Component {
+        id: accessPage
+
+        AccessPage {}
     }
 
     Component {

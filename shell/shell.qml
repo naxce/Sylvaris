@@ -20,6 +20,7 @@ import qs.lock
 import qs.polkit
 import qs.clip
 import qs.capture
+import qs.access
 import "lib/ipc.mjs" as I
 import "lib/eq.mjs" as E
 import "lib/settings.mjs" as S
@@ -45,7 +46,8 @@ ShellRoot {
             lock: lockLoader,
             polkit: polkitLoader,
             clip: clipLoader,
-            capture: captureLoader
+            capture: captureLoader,
+            access: accessLoader
         })
     readonly property var parts: {
         const out = {};
@@ -222,6 +224,7 @@ ShellRoot {
             polkit: root.part("polkit") !== null ? root.part("polkit").state() : undefined,
             clip: root.part("clip") !== null ? root.part("clip").state() : undefined,
             capture: root.part("capture") !== null ? root.part("capture").state() : undefined,
+            access: root.part("access") !== null ? root.part("access").state() : undefined,
             config: Config.values,
             configNotice: Config.notice,
             settings: Settings.values,
@@ -372,6 +375,16 @@ ShellRoot {
         SylDiver {
             id: diverPart
             onOpened: root.solo(diverPart)
+        }
+    }
+
+    LazyLoader {
+        id: accessLoader
+        active: root.on("access")
+
+        SylAccess {
+            id: accessPart
+            onOpened: root.solo(accessPart)
         }
     }
 
@@ -643,6 +656,14 @@ ShellRoot {
                 open: () => root.need("pad").open(),
                 close: () => root.need("pad").close()
             },
+            access: {
+                toggle: () => root.need("access").toggle(),
+                open: () => root.need("access").open(),
+                close: () => root.need("access").close(),
+                zoom: v => root.need("access").zoom(v || "in"),
+                filter: name => root.need("access").filter(name || "none"),
+                state: () => root.need("access").state()
+            },
             capture: {
                 toggle: () => root.need("capture").toggle(),
                 open: () => root.need("capture").open(),
@@ -812,6 +833,12 @@ ShellRoot {
         target: Tokens
         property: "lite"
         value: Settings.values.performance || Settings.values.toggleState.performance === true
+    }
+
+    Binding {
+        target: Tokens
+        property: "textScale"
+        value: Settings.values.access.text
     }
 
     Binding {

@@ -15,7 +15,8 @@ export const MODULES = {
     lock: { label: "Lock screen", section: "lock", glyph: "lock" },
     polkit: { label: "Authentication", section: "polkit", glyph: "shield" },
     clip: { label: "Clipboard", section: "clip", glyph: "clipboard" },
-    capture: { label: "Screenshots", section: "capture", glyph: "camera" }
+    capture: { label: "Screenshots", section: "capture", glyph: "camera" },
+    access: { label: "Accessibility", section: "access", glyph: "accessibility" }
 }
 
 export function tiles() {

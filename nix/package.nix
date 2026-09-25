@@ -65,6 +65,7 @@ let
     lock = [ glib ];
     polkit = [ ];
     clip = [ wl-clipboard ];
+    access = [ ];
     capture = [
       grim
       slurp

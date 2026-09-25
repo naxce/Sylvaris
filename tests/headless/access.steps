@@ -1,0 +1,13 @@
+sleep 1.5
+syl access open
+sleep 0.8
+shot access
+syl access zoom in
+syl access filter deuteranopia
+syl state access
+syl access close
+syl set access.text 1.3
+sleep 0.5
+syl center open
+sleep 0.8
+shot access-text
