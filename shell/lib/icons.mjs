@@ -44,6 +44,7 @@ export const GLYPHS = {
     bell: g(0xF009A),
     clearAll: g(0xF0C51),
     apps: g(0xF003B),
+    switcher: g(0xF04E1),
     tune: g(0xF062E),
     ethernet: g(0xF0200),
     music: g(0xF075A),

@@ -58,6 +58,7 @@ let
     pad = [ ];
     paper = [ ];
     power = [ ];
+    switcher = [ ];
     settings = [
       wlsunset
       pipewire

@@ -104,6 +104,11 @@ Scope {
             glyph: Icons.GLYPHS.planner
         },
         {
+            key: "switcher",
+            label: "Switcher",
+            glyph: Icons.GLYPHS.switcher
+        },
+        {
             key: "commands",
             label: "Commands",
             glyph: Icons.GLYPHS.keyboard
@@ -868,12 +873,19 @@ Scope {
                                 weather: weatherPage,
                                 power: powerPage,
                                 diver: diverPage,
+                                switcher: switcherPage,
                                 commands: commandsPage
                             })[root.shownSection] || null
                     }
                 }
             }
         }
+    }
+
+    Component {
+        id: switcherPage
+
+        SwitcherPage {}
     }
 
     Component {

@@ -15,6 +15,7 @@ import qs.settings
 import qs.power
 import qs.paper
 import qs.diver
+import qs.switcher
 import "lib/ipc.mjs" as I
 import "lib/eq.mjs" as E
 import "lib/settings.mjs" as S
@@ -35,7 +36,8 @@ ShellRoot {
             settings: settingsLoader,
             power: powerLoader,
             paper: paperLoader,
-            diver: diverLoader
+            diver: diverLoader,
+            switcher: switcherLoader
         })
     readonly property var parts: {
         const out = {};
@@ -207,6 +209,7 @@ ShellRoot {
                 selected: pad.selected,
                 launched: Apps.lastLaunched
             } : undefined,
+            switcher: root.part("switcher") !== null ? root.part("switcher").state() : undefined,
             config: Config.values,
             configNotice: Config.notice,
             settings: Settings.values,
@@ -357,6 +360,16 @@ ShellRoot {
         SylDiver {
             id: diverPart
             onOpened: root.solo(diverPart)
+        }
+    }
+
+    LazyLoader {
+        id: switcherLoader
+        active: root.on("switcher")
+
+        SylSwitch {
+            id: switcherPart
+            onOpened: root.solo(switcherPart)
         }
     }
 
@@ -577,6 +590,14 @@ ShellRoot {
                 toggle: () => root.need("pad").toggle(),
                 open: () => root.need("pad").open(),
                 close: () => root.need("pad").close()
+            },
+            switcher: {
+                default: "next",
+                next: () => root.need("switcher").step(1),
+                prev: () => root.need("switcher").step(-1),
+                commit: () => root.need("switcher").commit(),
+                close: () => root.need("switcher").close(),
+                state: () => root.need("switcher").state()
             },
             wm: {
                 default: "state",

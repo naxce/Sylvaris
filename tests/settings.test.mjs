@@ -267,3 +267,10 @@ test("motion.reveal picks how full-screen backgrounds open", () => {
     assert.equal(validateSettings({ motion: { reveal: "fade" } }).motion.reveal, "fade")
     assert.equal(validateSettings({ motion: { reveal: "spin" } }).motion.reveal, "edges")
 })
+
+test("switcher shows previews and titles unless turned off, and is a part", () => {
+    assert.deepEqual(validateSettings({}).switcher, { previews: true, titles: true })
+    assert.deepEqual(validateSettings({ switcher: { previews: false, titles: "no" } }).switcher, { previews: false, titles: true })
+    assert.deepEqual(PARTS.switcher, ["Apps"])
+    assert.equal(validateSettings({ parts: { switcher: false } }).parts.switcher, false)
+})

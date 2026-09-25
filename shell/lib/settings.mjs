@@ -18,6 +18,7 @@ export const PARTS = {
     pad: ["Apps"],
     paper: [],
     power: [],
+    switcher: ["Apps"],
     settings: ["Audio", "Equalizer", "NightLight", "Diver", "Weather", "Sky", "Dnd", "Apps", "Notifications"],
     theme: ["ThemePreview"]
 }
@@ -69,6 +70,7 @@ export const DEFAULT_SETTINGS = {
     weather: DEFAULT_WEATHER,
     diver: { enabled: true, refresh: 2, notify: true, alarms: true, sound: true, calendar: true },
     constellation: { speed: 1, links: true, ring: true, labels: true, stars: true },
+    switcher: { previews: true, titles: true },
     performance: false,
     parts: partFlags({})
 }
@@ -254,6 +256,12 @@ export function validateSettings(raw) {
         ring: cons.ring !== false,
         labels: cons.labels !== false,
         stars: cons.stars !== false
+    })
+
+    const sw = isObject(v.switcher) ? v.switcher : {}
+    v.switcher = Object.assign({}, sw, {
+        previews: sw.previews !== false,
+        titles: sw.titles !== false
     })
 
     const parts = isObject(v.parts) ? v.parts : {}

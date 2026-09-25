@@ -10,7 +10,8 @@ export const MODULES = {
     settings: { label: "Settings", section: "general", glyph: "tune" },
     power: { label: "Power", section: "power", glyph: "power" },
     paper: { label: "Wallpaper", section: "wallpaper", glyph: "image" },
-    diver: { label: "Diver", section: "diver", glyph: "planner" }
+    diver: { label: "Diver", section: "diver", glyph: "planner" },
+    switcher: { label: "Window switcher", section: "switcher", glyph: "switcher" }
 }
 
 export function tiles() {

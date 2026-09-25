@@ -1,0 +1,15 @@
+sleep 1.5
+syl switcher next
+sleep 0.5
+syl state switcher
+shot switcher
+syl switcher next
+syl switcher prev
+syl switcher prev
+syl state switcher
+syl settings set switcher.previews false
+sleep 0.4
+shot switcher-icons
+syl switcher commit
+sleep 0.3
+syl state switcher
