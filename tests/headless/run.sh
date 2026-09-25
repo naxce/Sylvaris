@@ -63,6 +63,7 @@ hl_env=(env -i DBUS_SESSION_BUS_ADDRESS="$dbus_addr" HOME="$home" PATH="${HL_QS_
     XDG_CONFIG_HOME="$home/.config" WAYLAND_DISPLAY="$display" SWAYSOCK="$sock"
     QT_QUICK_BACKEND="${HL_QT_BACKEND:-software}" SYLVARIS_DEMO="${SYLVARIS_DEMO:-1}" SYLVARIS_TRACE=1
     SYLVARIS_SKY_TIME="${SYLVARIS_SKY_TIME:-}"
+    SYLVARIS_PAM_DIR="${SYLVARIS_PAM_DIR:-}"
     USER="${USER:-user}" LANG="${LANG:-C.UTF-8}")
 if [ -n "${HL_NIRI_SOCKET:-}" ]; then
     hl_env+=(NIRI_SOCKET="$HL_NIRI_SOCKET")

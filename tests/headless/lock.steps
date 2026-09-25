@@ -1,0 +1,12 @@
+sleep 1.5
+syl lock now
+sleep 1.5
+syl state lock
+shot lock
+bg wtype -k Shift_L wrong -k Return
+sleep 1.5
+syl state lock
+shot lock-wrong
+bg wtype -k Shift_L right -k Return
+sleep 1.5
+syl state lock

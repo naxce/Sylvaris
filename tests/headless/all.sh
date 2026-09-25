@@ -18,6 +18,9 @@ for steps in "$here"/*.steps; do
     if [ "$name" = niri-toggles ]; then
         extra=(env HL_NIRI_SOCKET=/nonexistent PATH="$here/fake-niri:$PATH")
     fi
+    if [ "$name" = lock ]; then
+        extra=(env SYLVARIS_PAM_DIR="$here/../fixtures/pam")
+    fi
     if ! "${extra[@]}" "$here/run.sh" "$here/out/$name" "$steps" ${seed:+"$seed"} >/dev/null 2>&1; then
         echo "FAIL $name (run.sh)"
         failed=1

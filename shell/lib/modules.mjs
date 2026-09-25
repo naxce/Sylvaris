@@ -11,7 +11,8 @@ export const MODULES = {
     power: { label: "Power", section: "power", glyph: "power" },
     paper: { label: "Wallpaper", section: "wallpaper", glyph: "image" },
     diver: { label: "Diver", section: "diver", glyph: "planner" },
-    switcher: { label: "Window switcher", section: "switcher", glyph: "switcher" }
+    switcher: { label: "Window switcher", section: "switcher", glyph: "switcher" },
+    lock: { label: "Lock screen", section: "lock", glyph: "lock" }
 }
 
 export function tiles() {

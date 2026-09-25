@@ -109,6 +109,11 @@ Scope {
             glyph: Icons.GLYPHS.switcher
         },
         {
+            key: "lock",
+            label: "Lock",
+            glyph: Icons.GLYPHS.lock
+        },
+        {
             key: "commands",
             label: "Commands",
             glyph: Icons.GLYPHS.keyboard
@@ -874,11 +879,20 @@ Scope {
                                 power: powerPage,
                                 diver: diverPage,
                                 switcher: switcherPage,
+                                lock: lockPage,
                                 commands: commandsPage
                             })[root.shownSection] || null
                     }
                 }
             }
+        }
+    }
+
+    Component {
+        id: lockPage
+
+        LockPage {
+            onLockRequested: Ipc.run(["lock", "now"])
         }
     }
 

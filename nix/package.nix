@@ -15,6 +15,7 @@
   python3,
   curl,
   libnotify,
+  glib,
   sylvarisParts ? { },
 }:
 
@@ -58,6 +59,7 @@ let
     pad = [ ];
     paper = [ ];
     power = [ ];
+    lock = [ glib ];
     switcher = [ ];
     settings = [
       wlsunset

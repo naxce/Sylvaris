@@ -16,6 +16,7 @@ import qs.power
 import qs.paper
 import qs.diver
 import qs.switcher
+import qs.lock
 import "lib/ipc.mjs" as I
 import "lib/eq.mjs" as E
 import "lib/settings.mjs" as S
@@ -37,7 +38,8 @@ ShellRoot {
             power: powerLoader,
             paper: paperLoader,
             diver: diverLoader,
-            switcher: switcherLoader
+            switcher: switcherLoader,
+            lock: lockLoader
         })
     readonly property var parts: {
         const out = {};
@@ -210,6 +212,7 @@ ShellRoot {
                 launched: Apps.lastLaunched
             } : undefined,
             switcher: root.part("switcher") !== null ? root.part("switcher").state() : undefined,
+            lock: root.part("lock") !== null ? root.part("lock").state() : undefined,
             config: Config.values,
             configNotice: Config.notice,
             settings: Settings.values,
@@ -360,6 +363,16 @@ ShellRoot {
         SylDiver {
             id: diverPart
             onOpened: root.solo(diverPart)
+        }
+    }
+
+    LazyLoader {
+        id: lockLoader
+        active: root.on("lock")
+
+        SylLock {
+            id: lockPart
+            onOpened: root.solo(lockPart)
         }
     }
 
@@ -590,6 +603,11 @@ ShellRoot {
                 toggle: () => root.need("pad").toggle(),
                 open: () => root.need("pad").open(),
                 close: () => root.need("pad").close()
+            },
+            lock: {
+                default: "now",
+                now: () => root.need("lock").lock(),
+                state: () => root.need("lock").state()
             },
             switcher: {
                 default: "next",

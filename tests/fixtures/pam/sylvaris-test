@@ -1,0 +1,2 @@
+auth required /run/current-system/sw/lib/security/pam_exec.so expose_authtok quiet /bin/sh -c [read -r p; test "$p" = right]
+account required /run/current-system/sw/lib/security/pam_permit.so

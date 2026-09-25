@@ -1,3 +1,4 @@
+import { DEFAULT_LOCK, validateLock } from "./lock.mjs"
 import { DEFAULT_BAR, DEFAULT_DECK, validateBar, validateDeck } from "./bar.mjs"
 import { DEFAULT_EQ, validateEq } from "./eq.mjs"
 import { DEFAULT_POWER, validatePower } from "./power.mjs"
@@ -18,6 +19,7 @@ export const PARTS = {
     pad: ["Apps"],
     paper: [],
     power: [],
+    lock: [],
     switcher: ["Apps"],
     settings: ["Audio", "Equalizer", "NightLight", "Diver", "Weather", "Sky", "Dnd", "Apps", "Notifications"],
     theme: ["ThemePreview"]
@@ -71,6 +73,7 @@ export const DEFAULT_SETTINGS = {
     diver: { enabled: true, refresh: 2, notify: true, alarms: true, sound: true, calendar: true },
     constellation: { speed: 1, links: true, ring: true, labels: true, stars: true },
     switcher: { previews: true, titles: true },
+    lock: DEFAULT_LOCK,
     performance: false,
     parts: partFlags({})
 }
@@ -257,6 +260,8 @@ export function validateSettings(raw) {
         labels: cons.labels !== false,
         stars: cons.stars !== false
     })
+
+    v.lock = validateLock(v.lock)
 
     const sw = isObject(v.switcher) ? v.switcher : {}
     v.switcher = Object.assign({}, sw, {
