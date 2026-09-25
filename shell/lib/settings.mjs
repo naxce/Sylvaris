@@ -1,4 +1,5 @@
 import { DEFAULT_LOCK, validateLock } from "./lock.mjs"
+import { DEFAULT_CLIP, validateClip } from "./clip.mjs"
 import { DEFAULT_BAR, DEFAULT_DECK, validateBar, validateDeck } from "./bar.mjs"
 import { DEFAULT_EQ, validateEq } from "./eq.mjs"
 import { DEFAULT_POWER, validatePower } from "./power.mjs"
@@ -21,6 +22,7 @@ export const PARTS = {
     power: [],
     lock: [],
     polkit: [],
+    clip: [],
     switcher: ["Apps"],
     settings: ["Audio", "Equalizer", "NightLight", "Diver", "Weather", "Sky", "Dnd", "Apps", "Notifications"],
     theme: ["ThemePreview"]
@@ -75,6 +77,7 @@ export const DEFAULT_SETTINGS = {
     constellation: { speed: 1, links: true, ring: true, labels: true, stars: true },
     switcher: { previews: true, titles: true },
     lock: DEFAULT_LOCK,
+    clip: DEFAULT_CLIP,
     performance: false,
     parts: partFlags({})
 }
@@ -263,6 +266,7 @@ export function validateSettings(raw) {
     })
 
     v.lock = validateLock(v.lock)
+    v.clip = validateClip(v.clip)
 
     const sw = isObject(v.switcher) ? v.switcher : {}
     v.switcher = Object.assign({}, sw, {

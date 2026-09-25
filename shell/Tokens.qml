@@ -121,6 +121,8 @@ Singleton {
     readonly property int diverWidth: 980
     readonly property int switchCardWidth: 260
     readonly property int switchIconCard: 128
+    readonly property int clipWidth: 540
+    readonly property int clipHeight: 580
     readonly property int diverHeight: 720
     readonly property int settingsHeight: 760
     readonly property int settingsSidebar: 250

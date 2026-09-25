@@ -1,0 +1,10 @@
+sleep 1.5
+syl clip open
+sleep 0.8
+syl state clip
+shot clip
+bg wtype -k Shift_L river
+sleep 0.5
+shot clip-search
+syl clip close
+syl clip list

@@ -116,7 +116,12 @@ Scope {
         {
             key: "polkit",
             label: "Authentication",
-            glyph: Icons.GLYPHS.lock
+            glyph: Icons.GLYPHS.shield
+        },
+        {
+            key: "clip",
+            label: "Clipboard",
+            glyph: Icons.GLYPHS.clipboard
         },
         {
             key: "commands",
@@ -886,12 +891,19 @@ Scope {
                                 switcher: switcherPage,
                                 lock: lockPage,
                                 polkit: polkitPage,
+                                clip: clipPage,
                                 commands: commandsPage
                             })[root.shownSection] || null
                     }
                 }
             }
         }
+    }
+
+    Component {
+        id: clipPage
+
+        ClipPage {}
     }
 
     Component {

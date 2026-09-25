@@ -18,6 +18,7 @@ import qs.diver
 import qs.switcher
 import qs.lock
 import qs.polkit
+import qs.clip
 import "lib/ipc.mjs" as I
 import "lib/eq.mjs" as E
 import "lib/settings.mjs" as S
@@ -41,7 +42,8 @@ ShellRoot {
             diver: diverLoader,
             switcher: switcherLoader,
             lock: lockLoader,
-            polkit: polkitLoader
+            polkit: polkitLoader,
+            clip: clipLoader
         })
     readonly property var parts: {
         const out = {};
@@ -216,6 +218,7 @@ ShellRoot {
             switcher: root.part("switcher") !== null ? root.part("switcher").state() : undefined,
             lock: root.part("lock") !== null ? root.part("lock").state() : undefined,
             polkit: root.part("polkit") !== null ? root.part("polkit").state() : undefined,
+            clip: root.part("clip") !== null ? root.part("clip").state() : undefined,
             config: Config.values,
             configNotice: Config.notice,
             settings: Settings.values,
@@ -366,6 +369,16 @@ ShellRoot {
         SylDiver {
             id: diverPart
             onOpened: root.solo(diverPart)
+        }
+    }
+
+    LazyLoader {
+        id: clipLoader
+        active: root.on("clip")
+
+        SylClip {
+            id: clipPart
+            onOpened: root.solo(clipPart)
         }
     }
 
@@ -616,6 +629,21 @@ ShellRoot {
                 toggle: () => root.need("pad").toggle(),
                 open: () => root.need("pad").open(),
                 close: () => root.need("pad").close()
+            },
+            clip: {
+                toggle: () => root.need("clip").toggle(),
+                open: () => root.need("clip").open(),
+                close: () => root.need("clip").close(),
+                clear: () => root.need("clip").clear(),
+                list: () => root.need("clip").state().items,
+                copy: n => {
+                    const c = root.need("clip");
+                    const e = c.shownList[Number(n || 1) - 1];
+                    if (e === undefined)
+                        throw new Error("usage: clip copy <number from clip list>");
+                    c.copy(e);
+                },
+                state: () => root.need("clip").state()
             },
             polkit: {
                 default: "state",

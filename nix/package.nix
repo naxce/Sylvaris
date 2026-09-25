@@ -61,6 +61,7 @@ let
     power = [ ];
     lock = [ glib ];
     polkit = [ ];
+    clip = [ wl-clipboard ];
     switcher = [ ];
     settings = [
       wlsunset

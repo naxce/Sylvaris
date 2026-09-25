@@ -13,7 +13,8 @@ export const MODULES = {
     diver: { label: "Diver", section: "diver", glyph: "planner" },
     switcher: { label: "Window switcher", section: "switcher", glyph: "switcher" },
     lock: { label: "Lock screen", section: "lock", glyph: "lock" },
-    polkit: { label: "Authentication", section: "polkit", glyph: "lock" }
+    polkit: { label: "Authentication", section: "polkit", glyph: "shield" },
+    clip: { label: "Clipboard", section: "clip", glyph: "clipboard" }
 }
 
 export function tiles() {
