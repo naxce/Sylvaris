@@ -124,6 +124,11 @@ Scope {
             glyph: Icons.GLYPHS.clipboard
         },
         {
+            key: "capture",
+            label: "Capture",
+            glyph: Icons.GLYPHS.camera
+        },
+        {
             key: "commands",
             label: "Commands",
             glyph: Icons.GLYPHS.keyboard
@@ -892,12 +897,19 @@ Scope {
                                 lock: lockPage,
                                 polkit: polkitPage,
                                 clip: clipPage,
+                                capture: capturePage,
                                 commands: commandsPage
                             })[root.shownSection] || null
                     }
                 }
             }
         }
+    }
+
+    Component {
+        id: capturePage
+
+        CapturePage {}
     }
 
     Component {

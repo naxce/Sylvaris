@@ -16,6 +16,9 @@
   curl,
   libnotify,
   glib,
+  grim,
+  slurp,
+  wf-recorder,
   sylvarisParts ? { },
 }:
 
@@ -62,6 +65,14 @@ let
     lock = [ glib ];
     polkit = [ ];
     clip = [ wl-clipboard ];
+    capture = [
+      grim
+      slurp
+      wf-recorder
+      wl-clipboard
+      libnotify
+      pulseaudio
+    ];
     switcher = [ ];
     settings = [
       wlsunset

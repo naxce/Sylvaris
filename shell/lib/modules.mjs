@@ -14,7 +14,8 @@ export const MODULES = {
     switcher: { label: "Window switcher", section: "switcher", glyph: "switcher" },
     lock: { label: "Lock screen", section: "lock", glyph: "lock" },
     polkit: { label: "Authentication", section: "polkit", glyph: "shield" },
-    clip: { label: "Clipboard", section: "clip", glyph: "clipboard" }
+    clip: { label: "Clipboard", section: "clip", glyph: "clipboard" },
+    capture: { label: "Screenshots", section: "capture", glyph: "camera" }
 }
 
 export function tiles() {

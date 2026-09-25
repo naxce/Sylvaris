@@ -1,5 +1,6 @@
 import { DEFAULT_LOCK, validateLock } from "./lock.mjs"
 import { DEFAULT_CLIP, validateClip } from "./clip.mjs"
+import { DEFAULT_CAPTURE, validateCapture } from "./capture.mjs"
 import { DEFAULT_BAR, DEFAULT_DECK, validateBar, validateDeck } from "./bar.mjs"
 import { DEFAULT_EQ, validateEq } from "./eq.mjs"
 import { DEFAULT_POWER, validatePower } from "./power.mjs"
@@ -23,6 +24,7 @@ export const PARTS = {
     lock: [],
     polkit: [],
     clip: [],
+    capture: [],
     switcher: ["Apps"],
     settings: ["Audio", "Equalizer", "NightLight", "Diver", "Weather", "Sky", "Dnd", "Apps", "Notifications"],
     theme: ["ThemePreview"]
@@ -78,6 +80,7 @@ export const DEFAULT_SETTINGS = {
     switcher: { previews: true, titles: true },
     lock: DEFAULT_LOCK,
     clip: DEFAULT_CLIP,
+    capture: DEFAULT_CAPTURE,
     performance: false,
     parts: partFlags({})
 }
@@ -267,6 +270,7 @@ export function validateSettings(raw) {
 
     v.lock = validateLock(v.lock)
     v.clip = validateClip(v.clip)
+    v.capture = validateCapture(v.capture)
 
     const sw = isObject(v.switcher) ? v.switcher : {}
     v.switcher = Object.assign({}, sw, {

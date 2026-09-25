@@ -19,6 +19,7 @@ import qs.switcher
 import qs.lock
 import qs.polkit
 import qs.clip
+import qs.capture
 import "lib/ipc.mjs" as I
 import "lib/eq.mjs" as E
 import "lib/settings.mjs" as S
@@ -43,7 +44,8 @@ ShellRoot {
             switcher: switcherLoader,
             lock: lockLoader,
             polkit: polkitLoader,
-            clip: clipLoader
+            clip: clipLoader,
+            capture: captureLoader
         })
     readonly property var parts: {
         const out = {};
@@ -219,6 +221,7 @@ ShellRoot {
             lock: root.part("lock") !== null ? root.part("lock").state() : undefined,
             polkit: root.part("polkit") !== null ? root.part("polkit").state() : undefined,
             clip: root.part("clip") !== null ? root.part("clip").state() : undefined,
+            capture: root.part("capture") !== null ? root.part("capture").state() : undefined,
             config: Config.values,
             configNotice: Config.notice,
             settings: Settings.values,
@@ -369,6 +372,16 @@ ShellRoot {
         SylDiver {
             id: diverPart
             onOpened: root.solo(diverPart)
+        }
+    }
+
+    LazyLoader {
+        id: captureLoader
+        active: root.on("capture")
+
+        SylCapture {
+            id: capturePart
+            onOpened: root.solo(capturePart)
         }
     }
 
@@ -629,6 +642,15 @@ ShellRoot {
                 toggle: () => root.need("pad").toggle(),
                 open: () => root.need("pad").open(),
                 close: () => root.need("pad").close()
+            },
+            capture: {
+                toggle: () => root.need("capture").toggle(),
+                open: () => root.need("capture").open(),
+                close: () => root.need("capture").close(),
+                shot: mode => root.need("capture").shoot(mode || "region"),
+                record: mode => root.need("capture").record(mode || "region"),
+                stop: () => root.need("capture").stop(),
+                state: () => root.need("capture").state()
             },
             clip: {
                 toggle: () => root.need("clip").toggle(),

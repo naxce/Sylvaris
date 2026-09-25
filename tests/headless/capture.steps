@@ -1,0 +1,17 @@
+sleep 1.5
+syl capture open
+sleep 0.8
+shot capture
+syl capture close
+syl capture shot screen
+sleep 2
+syl state capture
+syl capture record screen
+sleep 3
+syl state capture
+shot capture-recording
+syl capture stop
+sleep 2
+syl state capture
+bg ls -la $HOME/Pictures/Screenshots $HOME/Videos/Recordings > $HOME/files.txt 2>&1
+sleep 0.5
