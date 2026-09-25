@@ -11,6 +11,8 @@ Scope {
 
     readonly property string corner: B.placeCorner(Settings.values.notifications.corner, Settings.values.parts.bar ? Settings.values.bar.position : "top")
     property var screenInfo: null
+    property var avoid: null
+    readonly property var shift: N.toastShift(root.corner, root.screenInfo ? root.screenInfo.name : "", root.avoid, Tokens.toastGap)
     property var regions: []
     readonly property bool active: Notifications.toasts.length > 0
 
@@ -70,10 +72,10 @@ Scope {
             right: root.corner.indexOf("right") > 0
         }
         margins {
-            top: Tokens.edgeMargin
-            bottom: Tokens.edgeMargin
-            left: Tokens.edgeMargin
-            right: Tokens.edgeMargin
+            top: Tokens.edgeMargin + root.shift.y
+            bottom: Tokens.edgeMargin + root.shift.y
+            left: Tokens.edgeMargin + root.shift.x
+            right: Tokens.edgeMargin + root.shift.x
         }
         implicitWidth: Tokens.toastWidth
         implicitHeight: Math.max(1, stack.implicitHeight)

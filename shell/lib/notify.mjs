@@ -77,3 +77,11 @@ export function iconSource(icon, lookup) {
     const found = lookup(s)
     return found ? String(found) : ""
 }
+
+export function toastShift(corner, screen, panel, gap) {
+    if (!panel || panel.corner !== corner || panel.screen !== screen)
+        return { x: 0, y: 0 }
+    if (corner.indexOf("left") > 0 || corner.indexOf("right") > 0)
+        return { x: panel.width + gap, y: 0 }
+    return { x: 0, y: panel.height + gap }
+}

@@ -66,6 +66,20 @@ ShellRoot {
         })
     readonly property var boot: [Tokens, Ipc, Config, Settings, Theme, Resin, Compositor].concat(root.live.filter(name => root.services[name] !== undefined).map(name => root.services[name]()))
 
+    readonly property var openPanel: {
+        for (const name of ["center", "clock", "media", "notify", "paper"]) {
+            const p = root.part(name);
+            if (p !== null && p.wanted && p.screenInfo && p.placed !== undefined)
+                return {
+                    corner: p.placed,
+                    width: p.panelWidth,
+                    height: p.panelHeight,
+                    screen: p.screenInfo.name
+                };
+        }
+        return null;
+    }
+
     function on(name: string): bool {
         return root.live.indexOf(name) >= 0;
     }
@@ -349,7 +363,9 @@ ShellRoot {
     LazyLoader {
         active: root.on("notify")
 
-        Toasts {}
+        Toasts {
+            avoid: root.openPanel
+        }
     }
 
     LazyLoader {

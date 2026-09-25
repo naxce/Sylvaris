@@ -1,6 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { isPicture, timeoutFor, insert, remove, pushToast, groups, ago, cleanBody, plainText, iconSource, CRITICAL } from "../shell/lib/notify.mjs"
+import { isPicture, timeoutFor, insert, remove, pushToast, groups, ago, cleanBody, plainText, iconSource, CRITICAL, toastShift } from "../shell/lib/notify.mjs"
 
 test("timeoutFor keeps critical and zero-timeout notifications up, honours the app, else the default", () => {
     assert.equal(timeoutFor(CRITICAL, 3000, 5000), 0)
@@ -60,4 +60,14 @@ test("iconSource resolves names, paths and URLs", () => {
     assert.equal(isPicture("image://qsimage/1/2"), true)
     assert.equal(iconSource("image://icon/firefox", lookup), "image://icon/firefox")
     assert.equal(iconSource("image://icon/nope", lookup), "")
+})
+
+test("toastShift moves toasts beside or below an open panel in the same corner only", () => {
+    const panel = { corner: "top-right", width: 400, height: 600, screen: "A" }
+    assert.deepEqual(toastShift("top-right", "A", panel, 12), { x: 412, y: 0 })
+    assert.deepEqual(toastShift("top-left", "A", panel, 12), { x: 0, y: 0 })
+    assert.deepEqual(toastShift("top-right", "B", panel, 12), { x: 0, y: 0 })
+    assert.deepEqual(toastShift("top-center", "A", Object.assign({}, panel, { corner: "top-center" }), 12), { x: 0, y: 612 })
+    assert.deepEqual(toastShift("center-left", "A", Object.assign({}, panel, { corner: "center-left" }), 12), { x: 412, y: 0 })
+    assert.deepEqual(toastShift("top-right", "A", null, 12), { x: 0, y: 0 })
 })
