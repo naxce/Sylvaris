@@ -190,10 +190,19 @@ Scope {
                 verticalItemAlignment: Grid.AlignVCenter
 
                 Repeater {
-                    model: ws.list
+                    model: ws.list.length
 
                     delegate: Rectangle {
-                        required property var modelData
+                        id: pill
+                        required property int index
+                        readonly property var modelData: ws.list[pill.index] || ({
+                                name: "",
+                                index: 0,
+                                focused: false,
+                                active: false,
+                                urgent: false,
+                                windows: 0
+                            })
                         width: root.vertical ? 26 : modelData.focused ? 38 : 26
                         height: root.vertical ? (modelData.focused ? 38 : 26) : 26
                         radius: 13
@@ -252,11 +261,52 @@ Scope {
             id: wm
             property var screenRef: null
             property var win: null
-            readonly property var active: Compositor.activeWindow
+            property var active: null
+            property string title: ""
             readonly property var entry: wm.active === null ? null : DesktopEntries.heuristicLookup(wm.active.appId)
-            implicitWidth: wm.active === null ? 0 : Math.min(titleRow.implicitWidth, Tokens.barTitleMax) + 12
+            implicitWidth: wm.active === null ? 0 : Math.ceil((Math.min(titleRow.implicitWidth, Tokens.barTitleMax) + 12) / 24) * 24
             implicitHeight: Tokens.barItemHeight
-            property bool wanted: !root.vertical && wm.active !== null && wm.active.title !== ""
+            property bool wanted: !root.vertical && wm.active !== null && wm.title !== ""
+
+            function settle(force: bool): void {
+                const next = Compositor.activeWindow;
+                if (next === null && wm.active !== null && !force) {
+                    holdTimer.restart();
+                    return;
+                }
+                holdTimer.stop();
+                wm.active = next;
+                wm.title = next === null ? "" : next.title;
+            }
+
+            Component.onCompleted: wm.settle(true)
+
+            Connections {
+                target: Compositor
+                function onActiveWindowChanged() {
+                    settleTimer.restart();
+                }
+            }
+
+            Timer {
+                id: settleTimer
+                interval: 120
+                onTriggered: wm.settle(false)
+            }
+
+            Timer {
+                id: holdTimer
+                interval: 450
+                onTriggered: wm.settle(true)
+            }
+
+            Behavior on implicitWidth {
+                NumberAnimation {
+                    duration: Tokens.moveDuration
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Tokens.morphCurve
+                }
+            }
 
             Row {
                 id: titleRow
@@ -274,7 +324,7 @@ Scope {
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     width: Math.min(implicitWidth, Tokens.barTitleMax - 26)
-                    text: wm.active === null ? "" : wm.active.title
+                    text: wm.title
                     elide: Text.ElideRight
                     color: Theme.textSoft
                     font.family: Tokens.fontUi
@@ -292,23 +342,55 @@ Scope {
             property var win: null
             label: root.vertical ? "" : Qt.formatDate(root.now, "ddd d MMM") + "   " + Qt.formatTime(root.now, "HH:mm")
             implicitHeight: root.vertical ? stack.implicitHeight + 16 : Tokens.barItemHeight
+            width: root.vertical ? Tokens.barItemHeight : Math.max(implicitWidth, implicitHeight)
 
             Column {
                 id: stack
                 visible: root.vertical
                 anchors.verticalCenter: parent.verticalCenter
+                spacing: 3
 
-                Repeater {
-                    model: [Qt.formatTime(root.now, "HH"), Qt.formatTime(root.now, "mm")]
-
-                    delegate: Text {
-                        required property string modelData
-                        text: modelData
-                        color: Theme.text
-                        font.family: Tokens.fontUi
-                        font.pixelSize: Tokens.barText + 1
-                        font.weight: Font.DemiBold
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: Qt.formatTime(root.now, "HH")
+                    color: Theme.text
+                    font.family: Tokens.fontUi
+                    font.pixelSize: Tokens.barText + 3
+                    font.weight: Font.Bold
+                    font.features: {
+                        "tnum": 1
                     }
+                }
+
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: 12
+                    height: 2
+                    radius: 1
+                    color: Theme.accent
+                }
+
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: Qt.formatTime(root.now, "mm")
+                    color: Theme.textSoft
+                    font.family: Tokens.fontUi
+                    font.pixelSize: Tokens.barText + 1
+                    font.weight: Font.Medium
+                    font.features: {
+                        "tnum": 1
+                    }
+                }
+
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    topPadding: 2
+                    text: Qt.formatDate(root.now, "ddd").slice(0, 2) + "\n" + Qt.formatDate(root.now, "d")
+                    horizontalAlignment: Text.AlignHCenter
+                    lineHeight: 0.9
+                    color: Theme.textDim
+                    font.family: Tokens.fontUi
+                    font.pixelSize: Tokens.tinySize
                 }
             }
             lit: root.isOpen("clock", screenRef)
