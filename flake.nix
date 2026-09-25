@@ -23,6 +23,11 @@
         default = self.homeManagerModules.sylvaris;
       };
 
+      nixosModules = {
+        sylvaris = import ./nix/nixos-module.nix self;
+        default = self.nixosModules.sylvaris;
+      };
+
       checks = forAll (pkgs: {
         tests =
           pkgs.runCommand "sylvaris-tests"
@@ -41,6 +46,36 @@
               find shell -name '*.qml' -print0 | xargs -0 qmllint -I ${pkgs.qt6.qtdeclarative}/lib/qt-6/qml -I ${pkgs.quickshell}/lib/qt-6/qml
               touch $out
             '';
+
+        greeter =
+          let
+            host = nixpkgs.lib.nixosSystem {
+              system = pkgs.stdenv.hostPlatform.system;
+              modules = [
+                self.nixosModules.sylvaris
+                {
+                  programs.sylvaris.greeter = {
+                    enable = true;
+                    user = "ada";
+                  };
+                  boot.loader.grub.enable = false;
+                  fileSystems."/" = {
+                    device = "none";
+                    fsType = "tmpfs";
+                  };
+                  system.stateVersion = "25.11";
+                }
+              ];
+            };
+            cfg = host.config;
+          in
+          pkgs.runCommand "sylvaris-greeter" { } ''
+            grep -q "sylvaris greet" ${cfg.services.greetd.settings.default_session.command}
+            grep -q "SYLVARIS_GREET_USER=ada" ${cfg.services.greetd.settings.default_session.command}
+            test "${cfg.services.greetd.settings.default_session.user}" = greeter
+            test -n "${builtins.toString cfg.security.pam.services.sylvaris.unixAuth}"
+            touch $out
+          '';
 
         parts =
           let

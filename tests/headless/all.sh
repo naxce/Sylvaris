@@ -21,6 +21,13 @@ for steps in "$here"/*.steps; do
     if [ "$name" = lock ]; then
         extra=(env SYLVARIS_PAM_DIR="$here/../fixtures/pam")
     fi
+    if [ "$name" = greet ]; then
+        seed=""
+        gdir="$(mktemp -d)"
+        python3 "$here/fake-greetd.py" "$gdir/greetd.sock" "$gdir/log" &
+        gpid=$!
+        extra=(env HL_ENTRY=greet.qml GREETD_SOCK="$gdir/greetd.sock" SYLVARIS_GREET_PASSWD="$here/../fixtures/greet/passwd" SYLVARIS_GREET_SESSIONS="$here/../fixtures/greet/sessions" SYLVARIS_GREET_STATE="$gdir" SYLVARIS_GREET_DRY=1)
+    fi
     if ! "${extra[@]}" "$here/run.sh" "$here/out/$name" "$steps" ${seed:+"$seed"} >/dev/null 2>&1; then
         echo "FAIL $name (run.sh)"
         failed=1
@@ -30,6 +37,14 @@ for steps in "$here"/*.steps; do
         failed=1
     else
         echo "ok   $name"
+    fi
+    if [ "$name" = greet ]; then
+        if ! grep -q '"start_session"' "$gdir/log" 2>/dev/null; then
+            echo "FAIL greet (no session started)"
+            failed=1
+        fi
+        kill "$gpid" 2>/dev/null
+        rm -rf "$gdir"
     fi
 done
 exit "$failed"

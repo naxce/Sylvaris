@@ -11,6 +11,7 @@ steps="$(realpath "$2")"
 seed="${3:-}"
 repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 shell_dir="${SYLVARIS_DIR:-$repo/shell}"
+entry="$shell_dir${HL_ENTRY:+/$HL_ENTRY}"
 qs_bin="$(command -v qs)"
 rt="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/syl-hl-$$"
 home="$out/home"
@@ -65,19 +66,22 @@ hl_env=(env -i DBUS_SESSION_BUS_ADDRESS="$dbus_addr" HOME="$home" PATH="${HL_QS_
     SYLVARIS_SKY_TIME="${SYLVARIS_SKY_TIME:-}"
     SYLVARIS_PAM_DIR="${SYLVARIS_PAM_DIR:-}"
     USER="${USER:-user}" LANG="${LANG:-C.UTF-8}")
+while IFS= read -r var; do
+    hl_env+=("$var")
+done < <(env | grep -E '^(SYLVARIS_GREET_[A-Z]+|GREETD_SOCK)=' || true)
 if [ -n "${HL_NIRI_SOCKET:-}" ]; then
     hl_env+=(NIRI_SOCKET="$HL_NIRI_SOCKET")
 fi
 
-"${hl_env[@]}" "$qs_bin" -p "$shell_dir" >"$out/qs.log" 2>&1 &
+"${hl_env[@]}" "$qs_bin" -p "$entry" >"$out/qs.log" 2>&1 &
 qs_pid=$!
 
 ipc() {
-    "${hl_env[@]}" "$qs_bin" -p "$shell_dir" ipc call sylvaris run "$*"
+    "${hl_env[@]}" "$qs_bin" -p "$entry" ipc call sylvaris run "$*"
 }
 
 for _ in $(seq 100); do
-    "${hl_env[@]}" "$qs_bin" -p "$shell_dir" ipc show 2>/dev/null | grep -q sylvaris && break
+    "${hl_env[@]}" "$qs_bin" -p "$entry" ipc show 2>/dev/null | grep -q sylvaris && break
     sleep 0.1
 done
 

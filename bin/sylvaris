@@ -9,6 +9,7 @@ usage() {
 Usage: sylvaris [command]
 
   (no command)                 start the shell
+  greet                        start the SylGreet login screen (for greetd)
   <part> [action] [args...]    run an action; `sylvaris list` shows them all
   center [toggle|open|close]   control SylCenter
   center view <name>           open SylCenter on a view
@@ -55,6 +56,9 @@ case "${1:-}" in
     ;;
 -h | --help | help)
     usage
+    ;;
+greet)
+    exec qs -p "$dir/greet.qml" -n
     ;;
 view)
     run center view "${@:2}"

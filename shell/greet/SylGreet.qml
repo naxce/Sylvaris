@@ -1,0 +1,211 @@
+import QtQuick
+import Quickshell
+import Quickshell.Io
+import Quickshell.Services.Greetd
+import qs
+import qs.services
+import qs.components
+import "../lib/greet.mjs" as G
+import "../lib/icons.mjs" as Icons
+
+Scope {
+    id: root
+
+    readonly property string stateDir: Quickshell.env("SYLVARIS_GREET_STATE") || ""
+    readonly property string wallpaper: Quickshell.env("SYLVARIS_GREET_WALLPAPER") || Theme.wallpaper
+    readonly property string defaultUser: Quickshell.env("SYLVARIS_GREET_USER") || ""
+    readonly property string defaultSession: Quickshell.env("SYLVARIS_GREET_SESSION") || ""
+    readonly property string sessionDirs: Quickshell.env("SYLVARIS_GREET_SESSIONS") || "/run/current-system/sw/share/wayland-sessions:/usr/share/wayland-sessions"
+    readonly property bool dry: Quickshell.env("SYLVARIS_GREET_DRY") === "1"
+    property var users: []
+    property var sessions: []
+    property int userIndex: -1
+    property int sessionIndex: -1
+    property var last: ({})
+    property bool busy: false
+    property bool error: false
+    property bool awaiting: false
+    property bool echo: false
+    property string message: ""
+    property string pending: ""
+    property string launched: ""
+    property real now: Date.now()
+    readonly property var user: root.userIndex >= 0 ? root.users[root.userIndex] : null
+    readonly property var session: root.sessionIndex >= 0 ? root.sessions[root.sessionIndex] : null
+
+    signal failed
+
+    function choose(): void {
+        root.userIndex = G.pick(root.users, root.last.user || "", root.defaultUser);
+        root.sessionIndex = G.pick(root.sessions, root.last.session || "", root.defaultSession);
+    }
+
+    function stepUser(d: int): void {
+        if (root.users.length < 2 || root.busy)
+            return;
+        root.cancel();
+        root.error = false;
+        root.message = "";
+        root.userIndex = (root.userIndex + d + root.users.length) % root.users.length;
+    }
+
+    function stepSession(d: int): void {
+        if (root.sessions.length < 2)
+            return;
+        root.sessionIndex = (root.sessionIndex + d + root.sessions.length) % root.sessions.length;
+    }
+
+    function cancel(): void {
+        if (Greetd.state !== GreetdState.Inactive)
+            Greetd.cancelSession();
+        root.busy = false;
+        root.awaiting = false;
+        root.pending = "";
+    }
+
+    function submit(text: string): void {
+        if (root.user === null || root.busy)
+            return;
+        if (!Greetd.available) {
+            root.error = true;
+            root.message = "greetd is not running";
+            return;
+        }
+        root.error = false;
+        root.message = "";
+        root.busy = true;
+        if (root.awaiting) {
+            root.awaiting = false;
+            Greetd.respond(text);
+            return;
+        }
+        root.pending = text;
+        Greetd.createSession(root.user.id);
+    }
+
+    function power(action: string): void {
+        if (root.dry) {
+            root.launched = action;
+            return;
+        }
+        Quickshell.execDetached(["systemctl", action]);
+    }
+
+    function state(): var {
+        return {
+            available: Greetd.available,
+            users: root.users.map(u => u.id),
+            user: root.user === null ? "" : root.user.id,
+            sessions: root.sessions.map(s => s.id),
+            session: root.session === null ? "" : root.session.id,
+            busy: root.busy,
+            error: root.error,
+            message: root.message,
+            launched: root.launched
+        };
+    }
+
+    Connections {
+        target: Greetd
+        function onAuthMessage(message, error, responseRequired, echoResponse) {
+            if (responseRequired) {
+                if (root.pending !== "") {
+                    const text = root.pending;
+                    root.pending = "";
+                    Greetd.respond(text);
+                } else {
+                    root.busy = false;
+                    root.awaiting = true;
+                    root.echo = echoResponse;
+                    root.message = message;
+                }
+            } else {
+                root.error = error;
+                root.message = message;
+                Greetd.respond("");
+            }
+        }
+        function onAuthFailure(message) {
+            root.busy = false;
+            root.awaiting = false;
+            root.pending = "";
+            root.error = true;
+            root.message = "Wrong password";
+            root.failed();
+        }
+        function onError(err) {
+            root.busy = false;
+            root.awaiting = false;
+            root.pending = "";
+            root.error = true;
+            root.message = err;
+            root.failed();
+        }
+        function onReadyToLaunch() {
+            if (root.stateDir !== "")
+                lastFile.setText(JSON.stringify({
+                    user: root.user.id,
+                    session: root.session === null ? "" : root.session.id
+                }));
+            const cmd = root.session === null ? ["sh", "-l"] : G.splitExec(root.session.exec);
+            root.launched = cmd.join(" ");
+            Greetd.launch(cmd, [], true);
+        }
+    }
+
+    FileView {
+        path: Quickshell.env("SYLVARIS_GREET_PASSWD") || "/etc/passwd"
+        printErrors: false
+        onLoaded: {
+            root.users = G.parsePasswd(text()).map(u => Object.assign({
+                    id: u.name
+                }, u));
+            root.choose();
+        }
+    }
+
+    FileView {
+        id: lastFile
+        path: root.stateDir === "" ? "" : root.stateDir + "/last.json"
+        printErrors: false
+        blockLoading: true
+        onLoaded: {
+            try {
+                root.last = JSON.parse(text());
+            } catch (e) {
+                root.last = {};
+            }
+            root.choose();
+        }
+    }
+
+    Process {
+        running: true
+        command: ["sh", "-c", "IFS=:; for d in $0; do for f in \"$d\"/*.desktop; do [ -e \"$f\" ] && printf '@@%s\\n' \"$f\" && cat \"$f\"; done; done", root.sessionDirs]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.sessions = G.parseSessions(text);
+                root.choose();
+            }
+        }
+    }
+
+    Timer {
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: root.now = Date.now()
+    }
+
+    FloatingWindow {
+        visible: true
+        color: Theme.base
+        implicitWidth: 1280
+        implicitHeight: 800
+
+        GreetView {
+            anchors.fill: parent
+            greet: root
+        }
+    }
+}
