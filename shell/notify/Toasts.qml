@@ -4,11 +4,12 @@ import Quickshell.Wayland
 import qs
 import qs.services
 import "../lib/notify.mjs" as N
+import "../lib/bar.mjs" as B
 
 Scope {
     id: root
 
-    readonly property string corner: Settings.values.notifications.corner
+    readonly property string corner: B.placeCorner(Settings.values.notifications.corner, Settings.values.parts.bar ? Settings.values.bar.position : "top")
     property var screenInfo: null
     property var regions: []
     readonly property bool active: Notifications.toasts.length > 0

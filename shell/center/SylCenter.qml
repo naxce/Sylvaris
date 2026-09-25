@@ -5,6 +5,7 @@ import qs
 import qs.services
 import qs.components
 import "../lib/motion.mjs" as M
+import "../lib/bar.mjs" as B
 
 Scope {
     id: root
@@ -18,7 +19,8 @@ Scope {
     property bool settled: true
     readonly property bool live: root.shown || root.phase > 0
     readonly property real grow: 0.94 + 0.06 * root.phase
-    readonly property string corner: Settings.values.center.corner
+    readonly property string corner: B.placeCorner(Settings.values.center.corner, Settings.values.parts.bar ? Settings.values.bar.position : "top")
+    readonly property var origin: M.origin(root.corner)
     readonly property bool expanded: root.view !== "compact"
     signal partRequested(string name)
 
@@ -222,12 +224,14 @@ Scope {
         visible: root.live
         screen: root.screenInfo
         anchors {
-            top: true
-            left: root.corner === "top-left"
-            right: root.corner === "top-right"
+            top: root.origin.v === 0
+            bottom: root.origin.v === 1
+            left: root.origin.h === 0
+            right: root.origin.h === 1
         }
         margins {
             top: Tokens.edgeMargin
+            bottom: Tokens.edgeMargin
             left: Tokens.edgeMargin
             right: Tokens.edgeMargin
         }
@@ -246,7 +250,7 @@ Scope {
 
         Region {
             id: blur
-            readonly property var r: M.scaledRect(panel.x, panel.y, panel.width, panel.height, root.corner, root.grow, (1 - root.phase) * -10)
+            readonly property var r: M.scaledRect(panel.x, panel.y, panel.width, panel.height, root.corner, root.grow, (1 - root.phase) * 10 * M.rise(root.corner))
             x: Math.round(blur.r.x) + 1
             y: Math.round(blur.r.y) + 1
             width: Math.round(blur.r.w) - 2
@@ -267,16 +271,17 @@ Scope {
 
             width: root.expanded ? Tokens.centerExpandedWidth : Tokens.centerCompactWidth
             height: root.expanded ? Tokens.centerHeight : compact.implicitHeight
-            x: root.corner === "top-left" ? 0 : root.corner === "top-right" ? win.width - width : (win.width - width) / 2
+            x: (win.width - width) * root.origin.h
+            y: (win.height - height) * root.origin.v
             opacity: Math.min(1, root.phase * 1.6)
             scale: root.grow
-            transformOrigin: root.corner === "top-left" ? Item.TopLeft : root.corner === "top-right" ? Item.TopRight : Item.Top
+            transformOrigin: [[Item.TopLeft, Item.Top, Item.TopRight], [Item.Left, Item.Center, Item.Right], [Item.BottomLeft, Item.Bottom, Item.BottomRight]][root.origin.v * 2][root.origin.h * 2]
             focus: true
             clip: true
             Keys.onEscapePressed: root.back()
 
             transform: Translate {
-                y: (1 - root.phase) * -10
+                y: (1 - root.phase) * 10 * M.rise(root.corner)
             }
 
             Behavior on width {
@@ -307,7 +312,7 @@ Scope {
             CompactView {
                 id: compact
                 width: Tokens.centerCompactWidth
-                x: root.corner === "top-left" ? 0 : root.corner === "top-right" ? panel.width - width : (panel.width - width) / 2
+                x: (panel.width - width) * root.origin.h
                 opacity: root.expanded ? 0 : 1
                 visible: opacity > 0
                 enabled: !root.expanded

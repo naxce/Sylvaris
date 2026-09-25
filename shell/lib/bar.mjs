@@ -115,12 +115,13 @@ export function drawerArrow(position) {
     return { top: "down", bottom: "up", left: "right", right: "left" }[position] || "down"
 }
 
-export function popupCorner(position, side) {
+export function placeCorner(corner, position) {
+    if (corner === "center")
+        return corner
+    const side = corner === "top-left" ? "left" : corner === "top-right" ? "right" : "center"
     if (position === "bottom")
-        return side === "left" ? "bottom-left" : side === "center" ? "bottom-center" : "bottom-right"
-    if (position === "left")
-        return "top-left"
-    if (position === "right")
-        return "top-right"
-    return side === "left" ? "top-left" : side === "center" ? "top-center" : "top-right"
+        return "bottom-" + side
+    if (position === "left" || position === "right")
+        return (side === "left" ? "top" : side === "right" ? "bottom" : "center") + "-" + position
+    return "top-" + side
 }

@@ -4,12 +4,14 @@ import Quickshell.Wayland
 import qs
 import qs.services
 import "../lib/motion.mjs" as M
+import "../lib/bar.mjs" as B
 
 Scope {
     id: root
 
     property string namespace: "sylpopup"
     property string corner: "top-center"
+    readonly property string placed: B.placeCorner(root.corner, Settings.values.parts.bar ? Settings.values.bar.position : "top")
     property int panelWidth: Tokens.centerCompactWidth
     property int panelHeight: Tokens.centerHeight
     property real radius: Tokens.radiusPanel
@@ -23,13 +25,13 @@ Scope {
     readonly property Item panel: panel
     readonly property bool live: root.shown || root.phase > 0
     readonly property real grow: 0.94 + 0.06 * root.phase
-    readonly property var visual: M.scaledRect(0, 0, win.width, win.height, root.corner, root.grow, (1 - root.phase) * 10 * M.rise(root.corner))
+    readonly property var visual: M.scaledRect(0, 0, win.width, win.height, root.placed, root.grow, (1 - root.phase) * 10 * M.rise(root.placed))
 
     signal opened
     signal closed
 
     function originItem(): int {
-        const o = M.origin(root.corner);
+        const o = M.origin(root.placed);
         const table = [[Item.TopLeft, Item.Top, Item.TopRight], [Item.Left, Item.Center, Item.Right], [Item.BottomLeft, Item.Bottom, Item.BottomRight]];
         return table[o.v * 2][o.h * 2];
     }
@@ -129,10 +131,10 @@ Scope {
         visible: root.live
         screen: root.screenInfo
         anchors {
-            top: root.corner.indexOf("top") === 0
-            bottom: root.corner.indexOf("bottom") === 0
-            left: root.corner.indexOf("left") > 0
-            right: root.corner.indexOf("right") > 0
+            top: root.placed.indexOf("top") === 0
+            bottom: root.placed.indexOf("bottom") === 0
+            left: root.placed.indexOf("left") > 0
+            right: root.placed.indexOf("right") > 0
         }
         margins {
             top: Tokens.edgeMargin
@@ -178,7 +180,7 @@ Scope {
             Keys.onEscapePressed: root.close()
 
             transform: Translate {
-                y: (1 - root.phase) * 10 * M.rise(root.corner)
+                y: (1 - root.phase) * 10 * M.rise(root.placed)
             }
 
             Glass {

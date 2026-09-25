@@ -1,6 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { unused, shift, validateBar, validateDeck, deckItems, nextWindow, togglePin, magnify, DEFAULT_BAR, vertical, drawerArrow, popupCorner } from "../shell/lib/bar.mjs"
+import { unused, shift, validateBar, validateDeck, deckItems, nextWindow, togglePin, magnify, DEFAULT_BAR, vertical, drawerArrow, placeCorner } from "../shell/lib/bar.mjs"
 
 test("validateBar keeps known modules once and falls back per side", () => {
     const b = validateBar({ left: ["clock", "nope", "clock", "pad"], floating: false })
@@ -65,9 +65,20 @@ test("bar position, style and drawer direction", () => {
     assert.equal(vertical("right"), true)
     assert.equal(vertical("bottom"), false)
     assert.deepEqual(["top", "bottom", "left", "right"].map(drawerArrow), ["down", "up", "right", "left"])
-    assert.equal(popupCorner("bottom", "center"), "bottom-center")
-    assert.equal(popupCorner("right", "left"), "top-right")
-    assert.equal(popupCorner("top", "left"), "top-left")
+})
+
+test("placeCorner opens popups next to the bar wherever it sits", () => {
+    assert.equal(placeCorner("top-left", "top"), "top-left")
+    assert.equal(placeCorner("top-center", "bottom"), "bottom-center")
+    assert.equal(placeCorner("top-right", "bottom"), "bottom-right")
+    assert.equal(placeCorner("top-left", "left"), "top-left")
+    assert.equal(placeCorner("top-center", "left"), "center-left")
+    assert.equal(placeCorner("top-right", "left"), "bottom-left")
+    assert.equal(placeCorner("top-left", "right"), "top-right")
+    assert.equal(placeCorner("top-center", "right"), "center-right")
+    assert.equal(placeCorner("top-right", "right"), "bottom-right")
+    assert.equal(placeCorner("center", "bottom"), "center")
+    assert.equal(placeCorner("nonsense", "top"), "top-center")
 })
 
 test("deck effect replaces the old magnify flag", () => {
