@@ -343,14 +343,22 @@ Singleton {
             if (next[r.rid])
                 continue;
             next[r.rid] = true;
-            if (root.cfg.alarms && (r.alarm || r.before === 0)) {
+            if (root.cfg.alarms && (r.alarm || r.before === 0) && (root.alarm === null || r.alarm && !root.alarm.alarm)) {
+                if (root.alarm !== null)
+                    root.notifyOf(root.alarm);
                 root.alarm = r;
-            } else if (root.cfg.notify) {
-                const when = r.before > 0 ? "in " + r.before + " min · " : "";
-                Quickshell.execDetached(["notify-send", "-a", "Diver", "-u", r.alarm ? "critical" : "normal", r.title, when + Qt.formatTime(new Date(r.start), "HH:mm") + (r.path !== "" ? " · " + r.path : "")]);
+            } else {
+                root.notifyOf(r);
             }
         }
         root.fired = next;
+    }
+
+    function notifyOf(r: var): void {
+        if (!root.cfg.notify)
+            return;
+        const when = r.before > 0 ? "in " + r.before + " min · " : "";
+        Quickshell.execDetached(["notify-send", "-a", "Diver", "-u", r.alarm ? "critical" : "normal", r.title, when + Qt.formatTime(new Date(r.start), "HH:mm") + (r.path !== "" ? " · " + r.path : "")]);
     }
 
     function state(): var {

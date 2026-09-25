@@ -44,6 +44,10 @@ Scope {
 
     Connections {
         target: Diver
+        function onAlarmChanged() {
+            if (Diver.alarm !== null)
+                root.shownAlarm = Diver.alarm;
+        }
         function onOpenRequested(mode, id, day) {
             panel.open();
             if (mode === "edit")
