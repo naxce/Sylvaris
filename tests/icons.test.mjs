@@ -1,6 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { GLYPHS, bluetoothIcon, isAudioDevice, normalizeSignal, wifiIcon, batteryIcon } from "../shell/lib/icons.mjs"
+import { GLYPHS, bluetoothIcon, isAudioDevice, normalizeSignal, wifiIcon, batteryIcon, nudge } from "../shell/lib/icons.mjs"
 
 const g = cp => String.fromCodePoint(cp)
 
@@ -55,4 +55,11 @@ test("batteryIcon picks a level glyph", () => {
     assert.equal(batteryIcon(52), g(0xF007E))
     assert.equal(batteryIcon(10), g(0xF007A))
     assert.equal(batteryIcon(3), g(0xF0083))
+})
+
+test("nudge lowers the chevrons whose ink sits high in their box and leaves other glyphs alone", () => {
+    assert.deepEqual(nudge(GLYPHS.chevronDown), { x: 0, y: 0.083 })
+    assert.deepEqual(nudge(GLYPHS.chevronRight), { x: 0, y: 0.049 })
+    assert.deepEqual(nudge(GLYPHS.bell), { x: 0, y: 0 })
+    assert.deepEqual(nudge(""), { x: 0, y: 0 })
 })

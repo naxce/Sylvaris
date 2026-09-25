@@ -32,7 +32,6 @@ Rectangle {
         offColor: hover.hovered ? Theme.tintMid : Theme.tintSoft
     }
 
-
     HoverHandler {
         id: hover
         cursorShape: Qt.PointingHandCursor
@@ -46,7 +45,7 @@ Rectangle {
 
     Row {
         id: row
-        x: 16
+        x: root.label === "" ? Math.round((root.width - row.width) / 2) : 16
         anchors.verticalCenter: parent.verticalCenter
         spacing: 14
 

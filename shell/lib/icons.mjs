@@ -151,3 +151,15 @@ export function batteryIcon(percent) {
     const level = Math.min(10, Math.round(percent / 10))
     return level === 10 ? g(0xF0079) : g(0xF007A + level - 1)
 }
+
+const NUDGE = {
+    0xF0140: { x: 0, y: 0.083 },
+    0xF0143: { x: 0, y: 0.083 },
+    0xF0141: { x: 0, y: 0.049 },
+    0xF0142: { x: 0, y: 0.049 }
+}
+
+export function nudge(text) {
+    const cp = typeof text === "string" && text.length > 0 ? text.codePointAt(0) : 0
+    return NUDGE[cp] || { x: 0, y: 0 }
+}

@@ -1,10 +1,12 @@
 import QtQuick
 import qs
+import "../lib/icons.mjs" as Icons
 
 Text {
     id: root
 
     property real size: 20
+    readonly property var nudge: Icons.nudge(root.text)
 
     font.family: Tokens.fontMono
     font.pixelSize: size
@@ -23,7 +25,7 @@ Text {
     }
 
     transform: Translate {
-        x: root.text === "" ? 0 : Math.round(ink.advanceWidth / 2 - ink.tightBoundingRect.x - ink.tightBoundingRect.width / 2)
-        y: root.text === "" ? 0 : Math.round(line.height / 2 - line.ascent - ink.tightBoundingRect.y - ink.tightBoundingRect.height / 2)
+        x: root.text === "" ? 0 : Math.round(ink.advanceWidth / 2 - ink.tightBoundingRect.x - ink.tightBoundingRect.width / 2 + root.nudge.x * root.size)
+        y: root.text === "" ? 0 : Math.round(line.height / 2 - line.ascent - ink.tightBoundingRect.y - ink.tightBoundingRect.height / 2 + root.nudge.y * root.size)
     }
 }
