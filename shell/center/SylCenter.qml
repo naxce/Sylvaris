@@ -18,6 +18,10 @@ Scope {
     property real phase: 0
     property bool settled: true
     readonly property bool live: root.shown || root.phase > 0
+    property var detailItem: null
+    readonly property string placed: root.corner
+    readonly property int panelWidth: root.expanded ? Tokens.centerExpandedWidth : Tokens.centerCompactWidth
+    readonly property int panelHeight: Tokens.centerHeight
     readonly property real grow: 0.94 + 0.06 * root.phase
     readonly property string corner: B.placeCorner(Settings.values.center.corner, Settings.values.parts.bar ? Settings.values.bar.position : "top")
     readonly property var origin: M.origin(root.corner)
@@ -105,7 +109,7 @@ Scope {
     }
 
     function back(): void {
-        if (detail.item !== null && typeof detail.item.back === "function" && detail.item.back())
+        if (root.detailItem !== null && typeof root.detailItem.back === "function" && root.detailItem.back())
             return;
         if (root.expanded)
             root.applyView("compact");
@@ -198,145 +202,172 @@ Scope {
         }
     }
 
-    PanelWindow {
-        id: catcher
-        visible: root.shown
-        screen: root.screenInfo
-        anchors {
-            top: true
-            bottom: true
-            left: true
-            right: true
-        }
-        color: "transparent"
-        exclusionMode: ExclusionMode.Normal
-        WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.namespace: "sylcatcher"
+    onLiveChanged: {
+        if (!root.live)
+            keep.restart();
+    }
 
-        MouseArea {
-            anchors.fill: parent
-            onClicked: root.close()
+    Timer {
+        id: keep
+        interval: 20000
+    }
+
+    LazyLoader {
+        active: root.live || keep.running
+
+        PanelWindow {
+            id: catcher
+            visible: root.shown
+            screen: root.screenInfo
+            anchors {
+                top: true
+                bottom: true
+                left: true
+                right: true
+            }
+            color: "transparent"
+            exclusionMode: ExclusionMode.Normal
+            WlrLayershell.layer: WlrLayer.Top
+            WlrLayershell.namespace: "sylcatcher"
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: root.close()
+            }
         }
     }
 
-    PanelWindow {
-        id: win
-        visible: root.live
-        screen: root.screenInfo
-        anchors {
-            top: root.origin.v === 0
-            bottom: root.origin.v === 1
-            left: root.origin.h === 0
-            right: root.origin.h === 1
-        }
-        margins {
-            top: Tokens.edgeMargin
-            bottom: Tokens.edgeMargin
-            left: Tokens.edgeMargin
-            right: Tokens.edgeMargin
-        }
-        implicitWidth: Tokens.centerExpandedWidth
-        implicitHeight: Math.max(Tokens.centerHeight, compact.implicitHeight)
-        color: "transparent"
-        exclusionMode: ExclusionMode.Normal
-        exclusiveZone: 0
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.namespace: "sylcenter"
-        WlrLayershell.keyboardFocus: root.shown ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-        mask: Region {
-            item: root.shown ? panel : null
-        }
-        BackgroundEffect.blurRegion: Resin.enabled && root.phase > 0.02 ? blur : null
+    LazyLoader {
+        active: root.live || keep.running
 
-        Region {
-            id: blur
-            readonly property var r: M.scaledRect(panel.x, panel.y, panel.width, panel.height, root.corner, root.grow, (1 - root.phase) * 10 * M.rise(root.corner))
-            x: Math.round(blur.r.x) + 1
-            y: Math.round(blur.r.y) + 1
-            width: Math.round(blur.r.w) - 2
-            height: Math.round(blur.r.h) - 2
-            radius: Tokens.radiusPanel * root.grow - 1
-        }
+        PanelWindow {
+            id: win
+            visible: root.live
+            screen: root.screenInfo
+            anchors {
+                top: root.origin.v === 0
+                bottom: root.origin.v === 1
+                left: root.origin.h === 0
+                right: root.origin.h === 1
+            }
+            margins {
+                top: Tokens.edgeMargin
+                bottom: Tokens.edgeMargin
+                left: Tokens.edgeMargin
+                right: Tokens.edgeMargin
+            }
+            implicitWidth: Tokens.centerExpandedWidth
+            implicitHeight: Math.max(Tokens.centerHeight, compact.implicitHeight)
+            color: "transparent"
+            exclusionMode: ExclusionMode.Normal
+            exclusiveZone: 0
+            WlrLayershell.layer: WlrLayer.Overlay
+            WlrLayershell.namespace: "sylcenter"
+            WlrLayershell.keyboardFocus: root.shown ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+            mask: Region {
+                item: root.shown ? panel : null
+            }
+            BackgroundEffect.blurRegion: Resin.enabled && root.phase > 0.02 ? blur : null
 
-        onVisibleChanged: {
-            if (!visible)
-                return;
-            panel.forceActiveFocus();
-            if (Quickshell.env("SYLVARIS_TRACE") === "1")
-                console.log("SYLVARIS_SHOWN " + Date.now());
-        }
-
-        Item {
-            id: panel
-
-            width: root.expanded ? Tokens.centerExpandedWidth : Tokens.centerCompactWidth
-            height: root.expanded ? Tokens.centerHeight : compact.implicitHeight
-            x: (win.width - width) * root.origin.h
-            y: (win.height - height) * root.origin.v
-            opacity: Math.min(1, root.phase * 1.6)
-            scale: root.grow
-            transformOrigin: [[Item.TopLeft, Item.Top, Item.TopRight], [Item.Left, Item.Center, Item.Right], [Item.BottomLeft, Item.Bottom, Item.BottomRight]][root.origin.v * 2][root.origin.h * 2]
-            focus: true
-            clip: true
-            Keys.onEscapePressed: root.back()
-
-            transform: Translate {
-                y: (1 - root.phase) * 10 * M.rise(root.corner)
+            Region {
+                id: blur
+                readonly property var r: M.scaledRect(panel.x, panel.y, panel.width, panel.height, root.corner, root.grow, (1 - root.phase) * 10 * M.rise(root.corner))
+                x: Math.round(blur.r.x) + 1
+                y: Math.round(blur.r.y) + 1
+                width: Math.round(blur.r.w) - 2
+                height: Math.round(blur.r.h) - 2
+                radius: Tokens.radiusPanel * root.grow - 1
             }
 
-            Behavior on width {
-                enabled: root.settled
-                NumberAnimation {
-                    duration: Tokens.morphDuration
-                    easing.type: Easing.BezierSpline
-                    easing.bezierCurve: Tokens.morphCurve
+            onVisibleChanged: {
+                if (!visible)
+                    return;
+                panel.forceActiveFocus();
+                if (Quickshell.env("SYLVARIS_TRACE") === "1")
+                    console.log("SYLVARIS_SHOWN " + Date.now());
+            }
+            Component.onCompleted: {
+                if (!visible)
+                    return;
+                panel.forceActiveFocus();
+                if (Quickshell.env("SYLVARIS_TRACE") === "1")
+                    console.log("SYLVARIS_SHOWN " + Date.now());
+            }
+
+            Item {
+                id: panel
+
+                width: root.expanded ? Tokens.centerExpandedWidth : Tokens.centerCompactWidth
+                height: root.expanded ? Tokens.centerHeight : compact.implicitHeight
+                x: (win.width - width) * root.origin.h
+                y: (win.height - height) * root.origin.v
+                opacity: Math.min(1, root.phase * 1.6)
+                scale: root.grow
+                transformOrigin: [[Item.TopLeft, Item.Top, Item.TopRight], [Item.Left, Item.Center, Item.Right], [Item.BottomLeft, Item.Bottom, Item.BottomRight]][root.origin.v * 2][root.origin.h * 2]
+                focus: true
+                clip: true
+                Keys.onEscapePressed: root.back()
+
+                transform: Translate {
+                    y: (1 - root.phase) * 10 * M.rise(root.corner)
                 }
-            }
 
-            Behavior on height {
-                enabled: root.settled
-                NumberAnimation {
-                    duration: Tokens.morphDuration
-                    easing.type: Easing.BezierSpline
-                    easing.bezierCurve: Tokens.morphCurve
-                }
-            }
-
-            Glass {
-                anchors.fill: parent
-                radius: Tokens.radiusPanel
-                offColor: Theme.surface
-                offBorder: Theme.line
-            }
-
-            CompactView {
-                id: compact
-                width: Tokens.centerCompactWidth
-                x: (panel.width - width) * root.origin.h
-                opacity: root.expanded ? 0 : 1
-                visible: opacity > 0
-                enabled: !root.expanded
-                onOpenView: name => name === "theme" || name === "media" || name === "settings" ? root.handOff(name) : root.applyView(name)
-
-                Behavior on opacity {
+                Behavior on width {
                     enabled: root.settled
                     NumberAnimation {
-                        duration: Tokens.fadeDuration
+                        duration: Tokens.morphDuration
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Tokens.morphCurve
                     }
                 }
-            }
 
-            Loader {
-                id: detail
-                anchors.fill: parent
-                active: root.expanded
-                opacity: root.expanded ? 1 : 0
-                sourceComponent: root.componentFor(root.view)
-
-                Behavior on opacity {
+                Behavior on height {
                     enabled: root.settled
                     NumberAnimation {
-                        duration: Tokens.fadeDuration
+                        duration: Tokens.morphDuration
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Tokens.morphCurve
+                    }
+                }
+
+                Glass {
+                    anchors.fill: parent
+                    radius: Tokens.radiusPanel
+                    offColor: Theme.surface
+                    offBorder: Theme.line
+                }
+
+                CompactView {
+                    id: compact
+                    width: Tokens.centerCompactWidth
+                    x: (panel.width - width) * root.origin.h
+                    opacity: root.expanded ? 0 : 1
+                    visible: opacity > 0
+                    enabled: !root.expanded
+                    onOpenView: name => name === "theme" || name === "media" || name === "settings" ? root.handOff(name) : root.applyView(name)
+
+                    Behavior on opacity {
+                        enabled: root.settled
+                        NumberAnimation {
+                            duration: Tokens.fadeDuration
+                        }
+                    }
+                }
+
+                Loader {
+                    id: detail
+                    anchors.fill: parent
+                    active: root.expanded
+                    onItemChanged: root.detailItem = item
+                    Component.onDestruction: root.detailItem = null
+                    opacity: root.expanded ? 1 : 0
+                    sourceComponent: root.componentFor(root.view)
+
+                    Behavior on opacity {
+                        enabled: root.settled
+                        NumberAnimation {
+                            duration: Tokens.fadeDuration
+                        }
                     }
                 }
             }

@@ -16,6 +16,7 @@ Scope {
     property var screenInfo: null
     property real wheelAcc: 0
     property real reveal: 0
+    readonly property bool live: root.shown || root.reveal > 0
     property real time: 0
     property bool cursorIdle: false
     property point pointer: Qt.point(-1, -1)
@@ -24,11 +25,15 @@ Scope {
     property string query: ""
     property string previous: ""
     readonly property var ids: Theme.ids.filter(id => root.matches(id))
-    readonly property string front: carousel.count > 0 && carousel.currentIndex >= 0 && carousel.currentIndex < root.ids.length ? root.ids[carousel.currentIndex] : ""
+    property int index: 0
+    readonly property string front: root.index >= 0 && root.index < root.ids.length ? root.ids[root.index] : ""
     readonly property var frontEntry: root.front !== "" && Theme.catalog[root.front] !== undefined ? Theme.catalog[root.front] : null
     readonly property string frontName: root.frontEntry === null ? "" : root.frontEntry.name
 
     signal opened
+    signal jumped
+    signal stepped(int delta)
+    signal nameSwapped
 
     function matches(id: string): bool {
         const q = root.query.trim().toLowerCase();
@@ -66,8 +71,8 @@ Scope {
             root.screenInfo = Compositor.screenFor(Compositor.focusedName());
             root.query = "";
             const i = root.ids.indexOf(Theme.currentId);
-            carousel.positionViewAtIndex(Math.max(0, i), PathView.Beginning);
-            carousel.currentIndex = Math.max(0, i);
+            root.index = Math.max(0, i);
+            root.jumped();
             ThemePreview.begin(Theme.currentId);
             root.wheelAcc = 0;
             root.cursorIdle = false;
@@ -116,17 +121,14 @@ Scope {
     }
 
     function step(delta: int): void {
-        if (!root.shown || carousel.count < 2)
+        if (!root.shown || root.ids.length < 2)
             return;
-        if (delta > 0)
-            carousel.incrementCurrentIndex();
-        else
-            carousel.decrementCurrentIndex();
+        root.stepped(delta);
     }
 
     onQueryChanged: {
-        if (carousel.count > 0)
-            carousel.currentIndex = 0;
+        if (root.ids.length > 0)
+            root.index = 0;
     }
 
     onFrontChanged: {
@@ -136,7 +138,7 @@ Scope {
 
     onFrontNameChanged: {
         if (root.shown)
-            nameSwap.restart();
+            root.nameSwapped();
         else
             root.shownName = root.frontName;
     }
@@ -163,568 +165,612 @@ Scope {
         onTriggered: root.cursorIdle = true
     }
 
-    PanelWindow {
-        id: win
-        visible: root.shown || root.reveal > 0
-        screen: root.screenInfo
-        anchors {
-            top: true
-            bottom: true
-            left: true
-            right: true
-        }
-        color: "transparent"
-        exclusionMode: ExclusionMode.Ignore
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.namespace: "syltheme"
-        WlrLayershell.keyboardFocus: root.shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    onLiveChanged: {
+        if (!root.live)
+            keep.restart();
+    }
 
-        onVisibleChanged: {
-            if (visible)
-                stage.forceActiveFocus();
-        }
+    Timer {
+        id: keep
+        interval: 20000
+    }
 
-        FrameAnimation {
-            running: win.visible && !Tokens.lite
-            onTriggered: root.time += frameTime
-        }
+    LazyLoader {
+        active: root.live || keep.running
 
-        SequentialAnimation {
-            id: nameSwap
+        PanelWindow {
+            id: win
+            visible: root.shown || root.reveal > 0
+            screen: root.screenInfo
+            anchors {
+                top: true
+                bottom: true
+                left: true
+                right: true
+            }
+            color: "transparent"
+            exclusionMode: ExclusionMode.Ignore
+            WlrLayershell.layer: WlrLayer.Overlay
+            WlrLayershell.namespace: "syltheme"
+            WlrLayershell.keyboardFocus: root.shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
-            ParallelAnimation {
-                NumberAnimation {
-                    target: nameColumn
-                    property: "slide"
-                    to: 40
-                    duration: 140
-                    easing.type: Easing.InCubic
-                }
-                NumberAnimation {
-                    target: nameColumn
-                    property: "opacity"
-                    to: 0
-                    duration: 140
+            onVisibleChanged: {
+                if (visible)
+                    stage.forceActiveFocus();
+            }
+
+            FrameAnimation {
+                running: win.visible && !Tokens.lite
+                onTriggered: root.time += frameTime
+            }
+
+            Connections {
+                target: root
+                function onNameSwapped() {
+                    nameSwap.restart();
                 }
             }
-            ScriptAction {
-                script: {
-                    root.shownName = root.frontName;
-                    root.shownDescription = root.frontEntry === null ? "" : root.frontEntry.description;
-                }
-            }
-            ParallelAnimation {
-                NumberAnimation {
-                    target: nameColumn
-                    property: "slide"
-                    from: 40
-                    to: 0
-                    duration: 300
-                    easing.type: Easing.OutCubic
-                }
-                NumberAnimation {
-                    target: nameColumn
-                    property: "opacity"
-                    to: 1
-                    duration: 300
-                }
-            }
-        }
 
-        Item {
-            id: backdrop
-            anchors.fill: parent
-            readonly property bool gpu: backdrop.GraphicsInfo.api !== GraphicsInfo.Software && backdrop.GraphicsInfo.api !== GraphicsInfo.Unknown
+            SequentialAnimation {
+                id: nameSwap
+
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: nameColumn
+                        property: "slide"
+                        to: 40
+                        duration: 140
+                        easing.type: Easing.InCubic
+                    }
+                    NumberAnimation {
+                        target: nameColumn
+                        property: "opacity"
+                        to: 0
+                        duration: 140
+                    }
+                }
+                ScriptAction {
+                    script: {
+                        root.shownName = root.frontName;
+                        root.shownDescription = root.frontEntry === null ? "" : root.frontEntry.description;
+                    }
+                }
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: nameColumn
+                        property: "slide"
+                        from: 40
+                        to: 0
+                        duration: 300
+                        easing.type: Easing.OutCubic
+                    }
+                    NumberAnimation {
+                        target: nameColumn
+                        property: "opacity"
+                        to: 1
+                        duration: 300
+                    }
+                }
+            }
 
             Item {
+                id: backdrop
                 anchors.fill: parent
-                opacity: root.phase(0, 0.18)
+                readonly property bool gpu: backdrop.GraphicsInfo.api !== GraphicsInfo.Software && backdrop.GraphicsInfo.api !== GraphicsInfo.Unknown
+
+                Item {
+                    anchors.fill: parent
+                    opacity: root.phase(0, 0.18)
+
+                    Rectangle {
+                        anchors.fill: parent
+                        color: Theme.base
+                    }
+
+                    Image {
+                        anchors.fill: parent
+                        visible: backdrop.gpu
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
+                        sourceSize.width: 2560
+                        source: !backdrop.gpu || Theme.wallpaper === "" ? "" : "file://" + Theme.wallpaper
+                    }
+                }
 
                 Rectangle {
                     anchors.fill: parent
-                    color: Theme.base
+                    opacity: root.phase(0.12, 0.45)
+                    color: root.frontEntry === null ? Theme.base : root.frontEntry.colors.base
+                }
+
+                Item {
+                    anchors.fill: parent
+                    opacity: root.phase(0.12, 0.45)
+
+                    Repeater {
+                        model: root.ids
+                        delegate: Item {
+                            id: layerItem
+                            required property string modelData
+                            readonly property var e: Theme.catalog[modelData] === undefined ? null : Theme.catalog[modelData]
+                            anchors.fill: parent
+                            opacity: modelData === root.front ? 1 : 0
+                            visible: opacity > 0
+                            readonly property bool heavy: visible || modelData === root.previous
+
+                            Behavior on opacity {
+                                NumberAnimation {
+                                    duration: 400
+                                }
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                visible: backdrop.gpu && layerItem.e !== null
+                                gradient: Gradient {
+                                    GradientStop {
+                                        position: 0
+                                        color: layerItem.e === null ? Theme.base : layerItem.e.colors.base
+                                    }
+                                    GradientStop {
+                                        position: 1
+                                        color: layerItem.e === null ? Theme.base : Qt.darker(layerItem.e.colors.accentDeep, 2.2)
+                                    }
+                                }
+                            }
+
+                            Item {
+                                anchors.fill: parent
+                                scale: 1.06 + 0.02 * Math.sin(root.time * 0.11)
+
+                                transform: Translate {
+                                    x: 22 * Math.sin(root.time * 0.07)
+                                    y: 14 * Math.cos(root.time * 0.05)
+                                }
+
+                                Image {
+                                    id: wall
+                                    cache: true
+                                    anchors.fill: parent
+                                    anchors.margins: -64
+                                    visible: false
+                                    fillMode: Image.PreserveAspectCrop
+                                    asynchronous: true
+                                    sourceSize.width: 1280
+                                    source: !backdrop.gpu || !layerItem.heavy || Tokens.lite || layerItem.e === null || layerItem.e.wallpaper === "" ? "" : "file://" + layerItem.e.wallpaper
+                                }
+
+                                MultiEffect {
+                                    anchors.fill: wall
+                                    visible: backdrop.gpu && wall.status === Image.Ready
+                                    source: wall
+                                    blurEnabled: true
+                                    blur: 1
+                                    blurMax: 32
+                                    saturation: 0.1
+                                    brightness: -0.35
+                                }
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                visible: backdrop.gpu && wall.status === Image.Ready
+                                color: Qt.alpha(layerItem.e === null ? "#000000" : layerItem.e.colors.base, 0.35)
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                visible: Resin.enabled && Resin.tint > 0 && layerItem.e !== null
+                                gradient: Gradient {
+                                    GradientStop {
+                                        position: 0
+                                        color: Qt.alpha(layerItem.e === null ? "#000000" : layerItem.e.colors.accent, Resin.tint * 0.6)
+                                    }
+                                    GradientStop {
+                                        position: 0.55
+                                        color: "transparent"
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 Image {
+                    opacity: Resin.grain * root.phase(0.12, 0.45)
+                    visible: Resin.enabled && Resin.grain > 0
                     anchors.fill: parent
-                    visible: backdrop.gpu
-                    fillMode: Image.PreserveAspectCrop
-                    asynchronous: true
-                    sourceSize.width: 2560
-                    source: !backdrop.gpu || Theme.wallpaper === "" ? "" : "file://" + Theme.wallpaper
-                }
-            }
-
-            Rectangle {
-                anchors.fill: parent
-                opacity: root.phase(0.12, 0.45)
-                color: root.frontEntry === null ? Theme.base : root.frontEntry.colors.base
-            }
-
-            Item {
-                anchors.fill: parent
-                opacity: root.phase(0.12, 0.45)
-
-                Repeater {
-                    model: root.ids
-                    delegate: Item {
-                        id: layerItem
-                        required property string modelData
-                        readonly property var e: Theme.catalog[modelData] === undefined ? null : Theme.catalog[modelData]
-                        anchors.fill: parent
-                        opacity: modelData === root.front ? 1 : 0
-                        visible: opacity > 0
-                        readonly property bool heavy: visible || modelData === root.previous
-
-                        Behavior on opacity {
-                            NumberAnimation {
-                                duration: 400
-                            }
-                        }
-
-                        Rectangle {
-                            anchors.fill: parent
-                            visible: backdrop.gpu && layerItem.e !== null
-                            gradient: Gradient {
-                                GradientStop {
-                                    position: 0
-                                    color: layerItem.e === null ? Theme.base : layerItem.e.colors.base
-                                }
-                                GradientStop {
-                                    position: 1
-                                    color: layerItem.e === null ? Theme.base : Qt.darker(layerItem.e.colors.accentDeep, 2.2)
-                                }
-                            }
-                        }
-
-                        Item {
-                            anchors.fill: parent
-                            scale: 1.06 + 0.02 * Math.sin(root.time * 0.11)
-
-                            transform: Translate {
-                                x: 22 * Math.sin(root.time * 0.07)
-                                y: 14 * Math.cos(root.time * 0.05)
-                            }
-
-                            Image {
-                                id: wall
-                                cache: true
-                                anchors.fill: parent
-                                anchors.margins: -64
-                                visible: false
-                                fillMode: Image.PreserveAspectCrop
-                                asynchronous: true
-                                sourceSize.width: 1280
-                                source: !backdrop.gpu || !layerItem.heavy || Tokens.lite || layerItem.e === null || layerItem.e.wallpaper === "" ? "" : "file://" + layerItem.e.wallpaper
-                            }
-
-                            MultiEffect {
-                                anchors.fill: wall
-                                visible: backdrop.gpu && wall.status === Image.Ready
-                                source: wall
-                                blurEnabled: true
-                                blur: 1
-                                blurMax: 32
-                                saturation: 0.1
-                                brightness: -0.35
-                            }
-                        }
-
-                        Rectangle {
-                            anchors.fill: parent
-                            visible: backdrop.gpu && wall.status === Image.Ready
-                            color: Qt.alpha(layerItem.e === null ? "#000000" : layerItem.e.colors.base, 0.35)
-                        }
-
-                        Rectangle {
-                            anchors.fill: parent
-                            visible: Resin.enabled && Resin.tint > 0 && layerItem.e !== null
-                            gradient: Gradient {
-                                GradientStop {
-                                    position: 0
-                                    color: Qt.alpha(layerItem.e === null ? "#000000" : layerItem.e.colors.accent, Resin.tint * 0.6)
-                                }
-                                GradientStop {
-                                    position: 0.55
-                                    color: "transparent"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            Image {
-                opacity: Resin.grain * root.phase(0.12, 0.45)
-                visible: Resin.enabled && Resin.grain > 0
-                anchors.fill: parent
-                source: Qt.resolvedUrl("../assets/grain.png")
-                fillMode: Image.Tile
-                smooth: false
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                enabled: root.shown
-                onClicked: root.cancel()
-            }
-        }
-
-        Item {
-            id: stage
-            readonly property real k: win.height > 0 ? Math.min(win.width / 2560, win.height / 1440) : 1
-            width: 2560
-            height: 1440
-            scale: stage.k
-            transformOrigin: Item.TopLeft
-            x: (win.width - 2560 * stage.k) / 2
-            y: (win.height - 1440 * stage.k) / 2
-            focus: true
-            enabled: root.shown
-
-            HoverHandler {
-                cursorShape: root.cursorIdle ? Qt.BlankCursor : Qt.ArrowCursor
-                onPointChanged: {
-                    root.cursorIdle = false;
-                    idleTimer.restart();
-                    root.pointer = point.position;
-                }
-                onHoveredChanged: {
-                    if (!hovered)
-                        root.pointer = Qt.point(-1, -1);
-                }
-            }
-
-            Keys.onLeftPressed: root.step(-1)
-            Keys.onRightPressed: root.step(1)
-            Keys.onReturnPressed: root.commit()
-            Keys.onEnterPressed: root.commit()
-            Keys.onEscapePressed: {
-                if (root.query !== "")
-                    root.query = "";
-                else
-                    root.cancel();
-            }
-            Keys.onPressed: event => {
-                if (root.type(event))
-                    event.accepted = true;
-            }
-
-            PathView {
-                id: carousel
-                anchors.fill: parent
-                model: root.ids
-                pathItemCount: Math.min(count, 7)
-                preferredHighlightBegin: 0
-                preferredHighlightEnd: 0
-                highlightRangeMode: PathView.StrictlyEnforceRange
-                highlightMoveDuration: 450
-                snapMode: PathView.SnapOneItem
-                interactive: count > 1
-                onCurrentIndexChanged: {
-                    if (root.shown && currentIndex >= 0 && currentIndex < root.ids.length)
-                        ThemePreview.settle(root.ids[currentIndex]);
-                }
-
-                path: Path {
-                    startX: 1280
-                    startY: Tokens.themeRingCenterY + Tokens.themeRingY
-
-                    PathAttribute {
-                        name: "depth"
-                        value: 1
-                    }
-                    PathAttribute {
-                        name: "turn"
-                        value: 0
-                    }
-                    PathArc {
-                        x: 1280 + Tokens.themeRingX
-                        y: Tokens.themeRingCenterY
-                        radiusX: Tokens.themeRingX
-                        radiusY: Tokens.themeRingY
-                        direction: PathArc.Counterclockwise
-                    }
-                    PathAttribute {
-                        name: "depth"
-                        value: 0.775
-                    }
-                    PathAttribute {
-                        name: "turn"
-                        value: -28
-                    }
-                    PathArc {
-                        x: 1280
-                        y: Tokens.themeRingCenterY - Tokens.themeRingY
-                        radiusX: Tokens.themeRingX
-                        radiusY: Tokens.themeRingY
-                        direction: PathArc.Counterclockwise
-                    }
-                    PathAttribute {
-                        name: "depth"
-                        value: 0.55
-                    }
-                    PathAttribute {
-                        name: "turn"
-                        value: 0
-                    }
-                    PathArc {
-                        x: 1280 - Tokens.themeRingX
-                        y: Tokens.themeRingCenterY
-                        radiusX: Tokens.themeRingX
-                        radiusY: Tokens.themeRingY
-                        direction: PathArc.Counterclockwise
-                    }
-                    PathAttribute {
-                        name: "depth"
-                        value: 0.775
-                    }
-                    PathAttribute {
-                        name: "turn"
-                        value: 28
-                    }
-                    PathArc {
-                        x: 1280
-                        y: Tokens.themeRingCenterY + Tokens.themeRingY
-                        radiusX: Tokens.themeRingX
-                        radiusY: Tokens.themeRingY
-                        direction: PathArc.Counterclockwise
-                    }
-                }
-
-                delegate: ThemeCard {
-                    enter: root.phase(0.28 + 0.16 * (1 - depth) / 0.45, 0.66 + 0.16 * (1 - depth) / 0.45)
-                    time: root.time
-                    pointer: root.pointer
-                    onPicked: i => {
-                        if (i === carousel.currentIndex)
-                            root.commit();
-                        else
-                            carousel.currentIndex = i;
-                    }
-                }
-
-                TapHandler {
-                    onTapped: root.cancel()
-                }
-
-                WheelHandler {
-                    onWheel: event => {
-                        const r = P.wheelStep(root.wheelAcc, event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x);
-                        root.wheelAcc = r.acc;
-                        for (let i = 0; i < Math.abs(r.steps); i++)
-                            root.step(r.steps > 0 ? 1 : -1);
-                    }
-                }
-            }
-
-            Item {
-                id: searchPill
-                x: 140
-                y: 110 - 60 * (1 - root.phase(0.35, 0.8))
-                width: 620 + (root.query !== "" ? 60 : 0)
-                height: 76
-                opacity: root.phase(0.35, 0.8)
-
-                Behavior on width {
-                    NumberAnimation {
-                        duration: Tokens.moveDuration
-                        easing.type: Easing.BezierSpline
-                        easing.bezierCurve: Tokens.springCurve
-                    }
-                }
-
-                Glass {
-                    anchors.fill: parent
-                    radius: height / 2
-                    lit: root.query !== ""
-                    litColor: Qt.alpha(Theme.accent, 0.18)
-                }
-
-                Glyph {
-                    id: searchIcon
-                    x: 30
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: Icons.GLYPHS.search
-                    size: 30
-                    color: root.query !== "" ? Theme.accent : Theme.textDim
-                }
-
-                Text {
-                    anchors.left: searchIcon.right
-                    anchors.leftMargin: 18
-                    anchors.right: countText.left
-                    anchors.rightMargin: 12
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.query !== "" ? root.query : "Type to search themes"
-                    elide: Text.ElideLeft
-                    color: root.query !== "" ? Theme.text : Theme.textDim
-                    font.family: Tokens.fontUi
-                    font.pixelSize: 28
-
-                    Rectangle {
-                        visible: root.query !== ""
-                        x: Math.min(parent.width, parent.implicitWidth) + 3
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 3
-                        height: 32
-                        radius: 1.5
-                        color: Theme.accent
-
-                        SequentialAnimation on opacity {
-                            running: root.query !== "" && root.shown
-                            loops: Animation.Infinite
-                            NumberAnimation {
-                                to: 0
-                                duration: 500
-                            }
-                            NumberAnimation {
-                                to: 1
-                                duration: 500
-                            }
-                        }
-                    }
-                }
-
-                Text {
-                    id: countText
-                    anchors.right: parent.right
-                    anchors.rightMargin: 30
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.ids.length + " / " + Theme.ids.length
-                    color: Theme.textDim
-                    font.family: Tokens.fontUi
-                    font.pixelSize: 22
-                }
-            }
-
-            Text {
-                visible: carousel.count === 0
-                anchors.centerIn: parent
-                opacity: root.phase(0.28, 0.66)
-                text: root.query !== "" ? "No theme matches “" + root.query + "”" : "No themes found"
-                color: Theme.textDim
-                font.family: Tokens.fontUi
-                font.pixelSize: 48
-            }
-
-            Item {
-                x: 140
-                y: 1440 - 170 - nameText.height
-                width: nameColumn.width
-                height: nameColumn.height
-                opacity: root.phase(0.45, 0.86)
-
-                transform: Translate {
-                    y: (1 - root.phase(0.45, 0.86)) * 240
-                }
-
-                Column {
-                    id: nameColumn
-                    property real slide: 0
-                    spacing: 6
-
-                    transform: Translate {
-                        y: nameColumn.slide
-                    }
-
-                    Text {
-                        id: nameText
-                        text: root.shownName
-                        color: Qt.alpha(root.frontEntry === null ? Theme.text : root.frontEntry.colors.text, 0.92)
-                        font.family: Tokens.fontUi
-                        font.pixelSize: Tokens.themeNameSize
-                        font.weight: Font.ExtraBold
-                        font.letterSpacing: -6
-                        layer.enabled: backdrop.gpu
-                        layer.effect: MultiEffect {
-                            shadowEnabled: true
-                            shadowBlur: 0.6
-                            shadowOpacity: 0.45
-                        }
-                    }
-
-                    Text {
-                        text: root.shownDescription
-                        color: root.frontEntry === null ? Theme.textDim : root.frontEntry.colors.textDim
-                        font.family: Tokens.fontUi
-                        font.pixelSize: 28
-                    }
-                }
-            }
-
-            Item {
-                id: applyButton
-                visible: carousel.count > 0
-                x: 2560 - 140 - width
-                y: 1440 - 140 - height
-                width: applyLabel.implicitWidth + 68
-                height: applyLabel.implicitHeight + 40
-                opacity: root.phase(0.58, 0.94)
-                scale: applyArea.pressed ? 0.96 : applyArea.containsMouse ? 1.03 : 1
-
-                transform: Translate {
-                    y: (1 - root.phase(0.58, 0.94)) * 220
-                }
-
-                Behavior on scale {
-                    NumberAnimation {
-                        duration: 140
-                        easing.type: Easing.OutCubic
-                    }
-                }
-
-                Glass {
-                    anchors.fill: parent
-                    radius: height / 2
-                    lit: true
-                    hot: applyArea.containsMouse
-                }
-
-                Text {
-                    id: applyLabel
-                    anchors.centerIn: parent
-                    text: "Apply theme"
-                    color: Theme.onAccent
-                    font.family: Tokens.fontUi
-                    font.pixelSize: 24
-                    font.weight: Font.DemiBold
+                    source: Qt.resolvedUrl("../assets/grain.png")
+                    fillMode: Image.Tile
+                    smooth: false
                 }
 
                 MouseArea {
-                    id: applyArea
                     anchors.fill: parent
-                    hoverEnabled: true
-                    onClicked: root.commit()
+                    enabled: root.shown
+                    onClicked: root.cancel()
                 }
             }
 
             Item {
-                anchors.horizontalCenter: parent.horizontalCenter
-                y: 1440 - 50 - height
-                width: hint.implicitWidth + 40
-                height: hint.implicitHeight + 16
-                opacity: root.phase(0.66, 1)
+                id: stage
+                readonly property real k: win.height > 0 ? Math.min(win.width / 2560, win.height / 1440) : 1
+                width: 2560
+                height: 1440
+                scale: stage.k
+                transformOrigin: Item.TopLeft
+                x: (win.width - 2560 * stage.k) / 2
+                y: (win.height - 1440 * stage.k) / 2
+                focus: true
+                enabled: root.shown
 
-                transform: Translate {
-                    y: (1 - root.phase(0.66, 1)) * 180
+                HoverHandler {
+                    cursorShape: root.cursorIdle ? Qt.BlankCursor : Qt.ArrowCursor
+                    onPointChanged: {
+                        root.cursorIdle = false;
+                        idleTimer.restart();
+                        root.pointer = point.position;
+                    }
+                    onHoveredChanged: {
+                        if (!hovered)
+                            root.pointer = Qt.point(-1, -1);
+                    }
                 }
 
-                Glass {
+                Keys.onLeftPressed: root.step(-1)
+                Keys.onRightPressed: root.step(1)
+                Keys.onReturnPressed: root.commit()
+                Keys.onEnterPressed: root.commit()
+                Keys.onEscapePressed: {
+                    if (root.query !== "")
+                        root.query = "";
+                    else
+                        root.cancel();
+                }
+                Keys.onPressed: event => {
+                    if (root.type(event))
+                        event.accepted = true;
+                }
+
+                PathView {
+                    id: carousel
                     anchors.fill: parent
-                    radius: height / 2
+                    model: root.ids
+                    pathItemCount: Math.min(count, 7)
+                    preferredHighlightBegin: 0
+                    preferredHighlightEnd: 0
+                    highlightRangeMode: PathView.StrictlyEnforceRange
+                    highlightMoveDuration: 450
+                    snapMode: PathView.SnapOneItem
+                    interactive: count > 1
+                    onCurrentIndexChanged: {
+                        root.index = currentIndex;
+                        if (root.shown && currentIndex >= 0 && currentIndex < root.ids.length)
+                            ThemePreview.settle(root.ids[currentIndex]);
+                    }
+                    Component.onCompleted: {
+                        carousel.positionViewAtIndex(root.index, PathView.Beginning);
+                        carousel.currentIndex = root.index;
+                    }
+
+                    Connections {
+                        target: root
+                        function onIndexChanged() {
+                            if (carousel.currentIndex !== root.index)
+                                carousel.currentIndex = root.index;
+                        }
+                        function onJumped() {
+                            carousel.positionViewAtIndex(root.index, PathView.Beginning);
+                            carousel.currentIndex = root.index;
+                        }
+                        function onStepped(delta) {
+                            if (delta > 0)
+                                carousel.incrementCurrentIndex();
+                            else
+                                carousel.decrementCurrentIndex();
+                        }
+                    }
+
+                    path: Path {
+                        startX: 1280
+                        startY: Tokens.themeRingCenterY + Tokens.themeRingY
+
+                        PathAttribute {
+                            name: "depth"
+                            value: 1
+                        }
+                        PathAttribute {
+                            name: "turn"
+                            value: 0
+                        }
+                        PathArc {
+                            x: 1280 + Tokens.themeRingX
+                            y: Tokens.themeRingCenterY
+                            radiusX: Tokens.themeRingX
+                            radiusY: Tokens.themeRingY
+                            direction: PathArc.Counterclockwise
+                        }
+                        PathAttribute {
+                            name: "depth"
+                            value: 0.775
+                        }
+                        PathAttribute {
+                            name: "turn"
+                            value: -28
+                        }
+                        PathArc {
+                            x: 1280
+                            y: Tokens.themeRingCenterY - Tokens.themeRingY
+                            radiusX: Tokens.themeRingX
+                            radiusY: Tokens.themeRingY
+                            direction: PathArc.Counterclockwise
+                        }
+                        PathAttribute {
+                            name: "depth"
+                            value: 0.55
+                        }
+                        PathAttribute {
+                            name: "turn"
+                            value: 0
+                        }
+                        PathArc {
+                            x: 1280 - Tokens.themeRingX
+                            y: Tokens.themeRingCenterY
+                            radiusX: Tokens.themeRingX
+                            radiusY: Tokens.themeRingY
+                            direction: PathArc.Counterclockwise
+                        }
+                        PathAttribute {
+                            name: "depth"
+                            value: 0.775
+                        }
+                        PathAttribute {
+                            name: "turn"
+                            value: 28
+                        }
+                        PathArc {
+                            x: 1280
+                            y: Tokens.themeRingCenterY + Tokens.themeRingY
+                            radiusX: Tokens.themeRingX
+                            radiusY: Tokens.themeRingY
+                            direction: PathArc.Counterclockwise
+                        }
+                    }
+
+                    delegate: ThemeCard {
+                        enter: root.phase(0.28 + 0.16 * (1 - depth) / 0.45, 0.66 + 0.16 * (1 - depth) / 0.45)
+                        time: root.time
+                        pointer: root.pointer
+                        onPicked: i => {
+                            if (i === carousel.currentIndex)
+                                root.commit();
+                            else
+                                carousel.currentIndex = i;
+                        }
+                    }
+
+                    TapHandler {
+                        onTapped: root.cancel()
+                    }
+
+                    WheelHandler {
+                        onWheel: event => {
+                            const r = P.wheelStep(root.wheelAcc, event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x);
+                            root.wheelAcc = r.acc;
+                            for (let i = 0; i < Math.abs(r.steps); i++)
+                                root.step(r.steps > 0 ? 1 : -1);
+                        }
+                    }
+                }
+
+                Item {
+                    id: searchPill
+                    x: 140
+                    y: 110 - 60 * (1 - root.phase(0.35, 0.8))
+                    width: 620 + (root.query !== "" ? 60 : 0)
+                    height: 76
+                    opacity: root.phase(0.35, 0.8)
+
+                    Behavior on width {
+                        NumberAnimation {
+                            duration: Tokens.moveDuration
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Tokens.springCurve
+                        }
+                    }
+
+                    Glass {
+                        anchors.fill: parent
+                        radius: height / 2
+                        lit: root.query !== ""
+                        litColor: Qt.alpha(Theme.accent, 0.18)
+                    }
+
+                    Glyph {
+                        id: searchIcon
+                        x: 30
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: Icons.GLYPHS.search
+                        size: 30
+                        color: root.query !== "" ? Theme.accent : Theme.textDim
+                    }
+
+                    Text {
+                        anchors.left: searchIcon.right
+                        anchors.leftMargin: 18
+                        anchors.right: countText.left
+                        anchors.rightMargin: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: root.query !== "" ? root.query : "Type to search themes"
+                        elide: Text.ElideLeft
+                        color: root.query !== "" ? Theme.text : Theme.textDim
+                        font.family: Tokens.fontUi
+                        font.pixelSize: 28
+
+                        Rectangle {
+                            visible: root.query !== ""
+                            x: Math.min(parent.width, parent.implicitWidth) + 3
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 3
+                            height: 32
+                            radius: 1.5
+                            color: Theme.accent
+
+                            SequentialAnimation on opacity {
+                                running: root.query !== "" && root.shown
+                                loops: Animation.Infinite
+                                NumberAnimation {
+                                    to: 0
+                                    duration: 500
+                                }
+                                NumberAnimation {
+                                    to: 1
+                                    duration: 500
+                                }
+                            }
+                        }
+                    }
+
+                    Text {
+                        id: countText
+                        anchors.right: parent.right
+                        anchors.rightMargin: 30
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: root.ids.length + " / " + Theme.ids.length
+                        color: Theme.textDim
+                        font.family: Tokens.fontUi
+                        font.pixelSize: 22
+                    }
                 }
 
                 Text {
-                    id: hint
+                    visible: carousel.count === 0
                     anchors.centerIn: parent
-                    text: Theme.hookError !== "" ? Theme.hookError : "◀ ▶ switch · type to search · Enter apply · Esc cancel"
-                    color: Theme.hookError !== "" ? Theme.danger : Theme.textSoft
+                    opacity: root.phase(0.28, 0.66)
+                    text: root.query !== "" ? "No theme matches “" + root.query + "”" : "No themes found"
+                    color: Theme.textDim
                     font.family: Tokens.fontUi
-                    font.pixelSize: 20
+                    font.pixelSize: 48
+                }
+
+                Item {
+                    x: 140
+                    y: 1440 - 170 - nameText.height
+                    width: nameColumn.width
+                    height: nameColumn.height
+                    opacity: root.phase(0.45, 0.86)
+
+                    transform: Translate {
+                        y: (1 - root.phase(0.45, 0.86)) * 240
+                    }
+
+                    Column {
+                        id: nameColumn
+                        property real slide: 0
+                        spacing: 6
+
+                        transform: Translate {
+                            y: nameColumn.slide
+                        }
+
+                        Text {
+                            id: nameText
+                            text: root.shownName
+                            color: Qt.alpha(root.frontEntry === null ? Theme.text : root.frontEntry.colors.text, 0.92)
+                            font.family: Tokens.fontUi
+                            font.pixelSize: Tokens.themeNameSize
+                            font.weight: Font.ExtraBold
+                            font.letterSpacing: -6
+                            layer.enabled: backdrop.gpu
+                            layer.effect: MultiEffect {
+                                shadowEnabled: true
+                                shadowBlur: 0.6
+                                shadowOpacity: 0.45
+                            }
+                        }
+
+                        Text {
+                            text: root.shownDescription
+                            color: root.frontEntry === null ? Theme.textDim : root.frontEntry.colors.textDim
+                            font.family: Tokens.fontUi
+                            font.pixelSize: 28
+                        }
+                    }
+                }
+
+                Item {
+                    id: applyButton
+                    visible: carousel.count > 0
+                    x: 2560 - 140 - width
+                    y: 1440 - 140 - height
+                    width: applyLabel.implicitWidth + 68
+                    height: applyLabel.implicitHeight + 40
+                    opacity: root.phase(0.58, 0.94)
+                    scale: applyArea.pressed ? 0.96 : applyArea.containsMouse ? 1.03 : 1
+
+                    transform: Translate {
+                        y: (1 - root.phase(0.58, 0.94)) * 220
+                    }
+
+                    Behavior on scale {
+                        NumberAnimation {
+                            duration: 140
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+
+                    Glass {
+                        anchors.fill: parent
+                        radius: height / 2
+                        lit: true
+                        hot: applyArea.containsMouse
+                    }
+
+                    Text {
+                        id: applyLabel
+                        anchors.centerIn: parent
+                        text: "Apply theme"
+                        color: Theme.onAccent
+                        font.family: Tokens.fontUi
+                        font.pixelSize: 24
+                        font.weight: Font.DemiBold
+                    }
+
+                    MouseArea {
+                        id: applyArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: root.commit()
+                    }
+                }
+
+                Item {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    y: 1440 - 50 - height
+                    width: hint.implicitWidth + 40
+                    height: hint.implicitHeight + 16
+                    opacity: root.phase(0.66, 1)
+
+                    transform: Translate {
+                        y: (1 - root.phase(0.66, 1)) * 180
+                    }
+
+                    Glass {
+                        anchors.fill: parent
+                        radius: height / 2
+                    }
+
+                    Text {
+                        id: hint
+                        anchors.centerIn: parent
+                        text: Theme.hookError !== "" ? Theme.hookError : "◀ ▶ switch · type to search · Enter apply · Esc cancel"
+                        color: Theme.hookError !== "" ? Theme.danger : Theme.textSoft
+                        font.family: Tokens.fontUi
+                        font.pixelSize: 20
+                    }
                 }
             }
-        }
 
+        }
     }
 }

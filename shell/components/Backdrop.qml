@@ -18,6 +18,16 @@ Item {
 
     opacity: root.style === "fade" ? Math.min(1, root.reveal * 3) : root.reveal > 0 ? 1 : 0
 
+    onRevealChanged: {
+        if (root.reveal === 0)
+            keep.restart();
+    }
+
+    Timer {
+        id: keep
+        interval: 20000
+    }
+
     Item {
         id: content
         anchors.fill: parent
@@ -35,32 +45,37 @@ Item {
             color: Theme.base
         }
 
-        Item {
+        Loader {
             anchors.fill: parent
-            visible: root.gpu && wall.status === Image.Ready && !Tokens.lite
-            layer.enabled: visible
-            layer.smooth: true
+            active: root.gpu && !Tokens.lite && (root.reveal > 0 && root.visible || keep.running)
+            sourceComponent: Component {
+                Item {
+                    visible: root.gpu && wall.status === Image.Ready && !Tokens.lite
+                    layer.enabled: visible
+                    layer.smooth: true
 
-            Image {
-                id: wall
-                anchors.fill: parent
-                anchors.margins: -64
-                visible: false
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                cache: true
-                sourceSize.width: 1280
-                source: !root.gpu || Tokens.lite || root.source === "" ? "" : "file://" + root.source
-            }
+                    Image {
+                        id: wall
+                        anchors.fill: parent
+                        anchors.margins: -64
+                        visible: false
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
+                        cache: true
+                        sourceSize.width: 1280
+                        source: !root.gpu || Tokens.lite || root.source === "" ? "" : "file://" + root.source
+                    }
 
-            MultiEffect {
-                anchors.fill: wall
-                source: wall
-                blurEnabled: root.blur > 0
-                blur: root.blur
-                blurMax: 48
-                saturation: 0.2
-                brightness: -root.dim
+                    MultiEffect {
+                        anchors.fill: wall
+                        source: wall
+                        blurEnabled: root.blur > 0
+                        blur: root.blur
+                        blurMax: 48
+                        saturation: 0.2
+                        brightness: -root.dim
+                    }
+                }
             }
         }
 

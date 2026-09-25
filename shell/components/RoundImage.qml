@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 
 Item {
     id: root
@@ -6,50 +7,43 @@ Item {
     property string source: ""
     property real radius: width / 2
     property color fallbackColor: "transparent"
-    readonly property bool ready: canvas.loaded
+    readonly property bool ready: img.status === Image.Ready
+    readonly property bool gpu: root.GraphicsInfo.api !== GraphicsInfo.Software && root.GraphicsInfo.api !== GraphicsInfo.Unknown
 
     Rectangle {
         anchors.fill: parent
         radius: root.radius
         color: root.fallbackColor
-        visible: !canvas.loaded
+        visible: !root.ready
     }
 
-    Canvas {
-        id: canvas
-
-        property bool loaded: false
-
+    Image {
+        id: img
         anchors.fill: parent
-        onWidthChanged: requestPaint()
-        onHeightChanged: requestPaint()
-        onImageLoaded: {
-            loaded = isImageLoaded(root.source);
-            requestPaint();
-        }
-        onPaint: {
-            const ctx = getContext("2d");
-            ctx.reset();
-            if (!loaded)
-                return;
-            ctx.drawImage(root.source, 0, 0, width, height);
-            ctx.globalCompositeOperation = "destination-in";
-            ctx.beginPath();
-            ctx.roundedRect(0, 0, width, height, root.radius, root.radius);
-            ctx.fill();
-            ctx.globalCompositeOperation = "source-over";
-        }
+        visible: root.ready && !root.gpu
+        source: root.source
+        sourceSize.width: Math.ceil(root.width * 2)
+        sourceSize.height: Math.ceil(root.height * 2)
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+        smooth: true
     }
 
-    onSourceChanged: {
-        canvas.loaded = false;
-        canvas.requestPaint();
-        if (root.source !== "")
-            canvas.loadImage(root.source);
+    Rectangle {
+        id: mask
+        anchors.fill: parent
+        radius: root.radius
+        visible: false
+        layer.enabled: root.gpu
     }
 
-    Component.onCompleted: {
-        if (root.source !== "")
-            canvas.loadImage(root.source);
+    MultiEffect {
+        anchors.fill: parent
+        visible: root.ready && root.gpu
+        source: img
+        maskEnabled: true
+        maskSource: mask
+        maskThresholdMin: 0.5
+        maskSpreadAtMin: 1
     }
 }

@@ -390,7 +390,6 @@ Scope {
         ScriptAction {
             script: {
                 root.shownSection = root.section;
-                content.contentY = 0;
             }
         }
         NumberAnimation {
@@ -430,423 +429,448 @@ Scope {
         }
     }
 
-    PanelWindow {
-        id: win
-        visible: root.shown
-        screen: root.screenInfo
-        anchors {
-            top: true
-            bottom: true
-            left: true
-            right: true
-        }
-        color: "transparent"
-        exclusionMode: ExclusionMode.Ignore
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.namespace: "sylsettings"
-        WlrLayershell.keyboardFocus: root.wanted ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    onShownChanged: {
+        if (!root.shown)
+            keep.restart();
+    }
 
-        readonly property real side: Math.min(400, Math.max(300, width * 0.17))
-        readonly property real gutter: Math.max(24, width * 0.018)
-        readonly property real midX: win.gutter * 2 + win.side
-        readonly property real midW: win.width - (win.gutter * 2 + win.side) * 2
+    Timer {
+        id: keep
+        interval: 20000
+    }
 
-        onVisibleChanged: {
-            if (visible)
-                keys.forceActiveFocus();
-        }
+    LazyLoader {
+        active: root.shown || keep.running
 
-        FrameAnimation {
-            running: win.visible && !Tokens.lite && (root.cons.speed > 0 || root.cons.stars)
-            onTriggered: root.time += frameTime * Math.max(0.2, root.cons.speed)
-        }
+        PanelWindow {
+            id: win
+            visible: root.shown
+            screen: root.screenInfo
+            anchors {
+                top: true
+                bottom: true
+                left: true
+                right: true
+            }
+            color: "transparent"
+            exclusionMode: ExclusionMode.Ignore
+            WlrLayershell.layer: WlrLayer.Overlay
+            WlrLayershell.namespace: "sylsettings"
+            WlrLayershell.keyboardFocus: root.wanted ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
-        Backdrop {
-            anchors.fill: parent
-            reveal: root.reveal
-        }
+            readonly property real side: Math.min(400, Math.max(300, width * 0.17))
+            readonly property real gutter: Math.max(24, width * 0.018)
+            readonly property real midX: win.gutter * 2 + win.side
+            readonly property real midW: win.width - (win.gutter * 2 + win.side) * 2
 
-        Item {
-            anchors.fill: parent
-            visible: root.cons.stars && !Tokens.lite
-            opacity: root.phase(0.1, 0.6)
+            onVisibleChanged: {
+                if (visible)
+                    keys.forceActiveFocus();
+            }
+            Component.onCompleted: {
+                if (visible)
+                    keys.forceActiveFocus();
+            }
 
-            Repeater {
-                model: 90
-
-                delegate: Rectangle {
-                    required property int index
-                    readonly property var s: root.star(index)
-                    x: s.x * win.width
-                    y: s.y * win.height
-                    width: s.size
-                    height: s.size
-                    radius: s.size / 2
-                    color: s.glow > 0.8 ? Theme.accentHi : Theme.text
-                    opacity: (0.15 + 0.35 * s.glow) * (0.6 + 0.4 * Math.sin(root.time * s.speed + index))
+            Connections {
+                target: root
+                function onShownSectionChanged() {
+                    content.contentY = 0;
                 }
             }
-        }
 
-        MouseArea {
-            anchors.fill: parent
-            onClicked: root.back()
-        }
-
-        Item {
-            id: keys
-            focus: true
-            Keys.onEscapePressed: root.back()
-            Keys.onLeftPressed: root.hovered = (root.hovered - 1 + root.sections.length) % root.sections.length
-            Keys.onRightPressed: root.hovered = (root.hovered + 1) % root.sections.length
-            Keys.onReturnPressed: {
-                if (root.hovered >= 0)
-                    root.go(root.sections[root.hovered].key);
+            FrameAnimation {
+                running: win.visible && !Tokens.lite && (root.cons.speed > 0 || root.cons.stars)
+                onTriggered: root.time += frameTime * Math.max(0.2, root.cons.speed)
             }
-        }
 
-        Item {
-            id: hub
-            readonly property real cx: win.midX + win.midW / 2
-            readonly property real cy: win.height * 0.5
-            readonly property real rx: Math.min(win.midW * 0.42, 560)
-            readonly property real ry: Math.min(win.height * 0.3, hub.rx * 0.52)
-            readonly property real mini: 0.38
-            readonly property real targetY: win.gutter + 20 + (hub.ry + 70) * hub.mini
-            anchors.fill: parent
-            opacity: root.phase(0.1, 0.5) * (1 - 0.2 * root.dive)
-
-            transform: [
-                Scale {
-                    origin.x: hub.cx
-                    origin.y: hub.cy
-                    xScale: 1 - (1 - hub.mini) * root.dive
-                    yScale: 1 - (1 - hub.mini) * root.dive
-                },
-                Translate {
-                    y: (hub.targetY - hub.cy) * root.dive
-                }
-            ]
-
-            Shape {
+            Backdrop {
                 anchors.fill: parent
-                visible: root.cons.ring
-                opacity: root.phase(0.15, 0.55) * 0.8
-                preferredRendererType: Shape.CurveRenderer
+                reveal: root.reveal
+            }
 
-                ShapePath {
-                    strokeColor: Qt.alpha(Theme.text, 0.14)
-                    strokeWidth: 1.5
-                    fillColor: "transparent"
-                    strokeStyle: ShapePath.DashLine
-                    dashPattern: [2, 9]
+            Item {
+                anchors.fill: parent
+                visible: root.cons.stars && !Tokens.lite
+                opacity: root.phase(0.1, 0.6)
 
-                    PathAngleArc {
-                        centerX: hub.cx
-                        centerY: hub.cy
-                        radiusX: hub.rx * (0.7 + 0.3 * root.phase(0.15, 0.55))
-                        radiusY: hub.ry * (0.7 + 0.3 * root.phase(0.15, 0.55))
-                        startAngle: 0
-                        sweepAngle: 360
+                Repeater {
+                    model: 90
+
+                    delegate: Rectangle {
+                        required property int index
+                        readonly property var s: root.star(index)
+                        x: s.x * win.width
+                        y: s.y * win.height
+                        width: s.size
+                        height: s.size
+                        radius: s.size / 2
+                        color: s.glow > 0.8 ? Theme.accentHi : Theme.text
+                        opacity: (0.15 + 0.35 * s.glow) * (0.6 + 0.4 * Math.sin(root.time * s.speed + index))
                     }
                 }
             }
 
-            Repeater {
-                model: root.cons.links ? root.sections : []
+            MouseArea {
+                anchors.fill: parent
+                onClicked: root.back()
+            }
 
-                delegate: Shape {
-                    id: link
-                    required property var modelData
-                    required property int index
-                    readonly property var p: root.node(link.index, root.sections.length, hub.rx, hub.ry)
-                    readonly property bool on: root.hovered === link.index || root.section === link.modelData.key
-                    anchors.fill: parent
-                    opacity: root.phase(0.35, 0.8) * (link.on ? 0.85 : 0.14)
-                    preferredRendererType: Shape.CurveRenderer
-
-                    ShapePath {
-                        strokeWidth: link.on ? 2.5 : 1.5
-                        strokeColor: link.on ? Theme.accentHi : Theme.text
-                        fillColor: "transparent"
-                        startX: hub.cx
-                        startY: hub.cy
-                        PathQuad {
-                            controlX: hub.cx + link.p.x * 0.5 + 30 * Math.sin(root.time * 0.7 + link.index)
-                            controlY: hub.cy + link.p.y * 0.5 - 24
-                            x: hub.cx + link.p.x
-                            y: hub.cy + link.p.y
-                        }
-                    }
+            Item {
+                id: keys
+                focus: true
+                Keys.onEscapePressed: root.back()
+                Keys.onLeftPressed: root.hovered = (root.hovered - 1 + root.sections.length) % root.sections.length
+                Keys.onRightPressed: root.hovered = (root.hovered + 1) % root.sections.length
+                Keys.onReturnPressed: {
+                    if (root.hovered >= 0)
+                        root.go(root.sections[root.hovered].key);
                 }
             }
 
             Item {
-                x: hub.cx - width / 2
-                y: hub.cy - height / 2
-                width: 170
-                height: 170
-                opacity: root.phase(0.05, 0.45)
-                scale: 0.6 + 0.4 * root.phase(0.05, 0.45)
+                id: hub
+                readonly property real cx: win.midX + win.midW / 2
+                readonly property real cy: win.height * 0.5
+                readonly property real rx: Math.min(win.midW * 0.42, 560)
+                readonly property real ry: Math.min(win.height * 0.3, hub.rx * 0.52)
+                readonly property real mini: 0.38
+                readonly property real targetY: win.gutter + 20 + (hub.ry + 70) * hub.mini
+                anchors.fill: parent
+                opacity: root.phase(0.1, 0.5) * (1 - 0.2 * root.dive)
 
-                Rectangle {
-                    anchors.centerIn: parent
-                    width: parent.width + 30 + 8 * Math.sin(root.time * 1.3)
-                    height: width
-                    radius: width / 2
-                    color: "transparent"
-                    border.width: 2
-                    border.color: Qt.alpha(Theme.accent, 0.35)
-                }
+                transform: [
+                    Scale {
+                        origin.x: hub.cx
+                        origin.y: hub.cy
+                        xScale: 1 - (1 - hub.mini) * root.dive
+                        yScale: 1 - (1 - hub.mini) * root.dive
+                    },
+                    Translate {
+                        y: (hub.targetY - hub.cy) * root.dive
+                    }
+                ]
 
-                Glass {
+                Shape {
                     anchors.fill: parent
-                    radius: width / 2
-                    raised: true
-                    lit: root.section !== ""
-                }
+                    visible: root.cons.ring
+                    opacity: root.phase(0.15, 0.55) * 0.8
+                    preferredRendererType: Shape.CurveRenderer
 
-                Glyph {
-                    anchors.centerIn: parent
-                    anchors.verticalCenterOffset: -12
-                    text: root.section === "" ? Icons.GLYPHS.settings : root.sectionInfo(root.section).glyph
-                    size: 54
-                    color: root.section === "" ? Theme.accent : Theme.onAccent
-                }
+                    ShapePath {
+                        strokeColor: Qt.alpha(Theme.text, 0.14)
+                        strokeWidth: 1.5
+                        fillColor: "transparent"
+                        strokeStyle: ShapePath.DashLine
+                        dashPattern: [2, 9]
 
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.bottom: parent.bottom
-                    anchors.bottomMargin: 30
-                    text: root.section === "" ? "Settings" : "Back"
-                    color: root.section === "" ? Theme.textSoft : Theme.onAccent
-                    font.family: Tokens.fontUi
-                    font.pixelSize: 15
-                    font.weight: Font.DemiBold
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.go("")
-                }
-            }
-
-            Repeater {
-                model: root.sections
-
-                delegate: Item {
-                    id: star
-                    required property var modelData
-                    required property int index
-                    readonly property var p: root.node(star.index, root.sections.length, hub.rx, hub.ry)
-                    readonly property bool on: root.section === star.modelData.key
-                    readonly property bool hot: root.hovered === star.index
-                    readonly property real arrive: root.phase(0.25 + 0.4 * star.index / root.sections.length, 0.65 + 0.3 * star.index / root.sections.length)
-                    x: hub.cx + star.p.x * (0.4 + 0.6 * star.arrive) - width / 2
-                    y: hub.cy + star.p.y * (0.4 + 0.6 * star.arrive) - height / 2
-                    width: 104
-                    height: 104
-                    z: star.hot ? 3 : 1 + star.p.depth
-                    opacity: star.arrive
-                    scale: (0.5 + 0.5 * star.arrive) * (0.86 + 0.14 * star.p.depth) * (starArea.pressed ? 0.92 : star.hot || star.on ? 1.14 : 1)
-
-                    Behavior on scale {
-                        enabled: star.arrive >= 1
-                        NumberAnimation {
-                            duration: Tokens.stateDuration + 80
-                            easing.type: Easing.BezierSpline
-                            easing.bezierCurve: Tokens.springCurve
+                        PathAngleArc {
+                            centerX: hub.cx
+                            centerY: hub.cy
+                            radiusX: hub.rx * (0.7 + 0.3 * root.phase(0.15, 0.55))
+                            radiusY: hub.ry * (0.7 + 0.3 * root.phase(0.15, 0.55))
+                            startAngle: 0
+                            sweepAngle: 360
                         }
+                    }
+                }
+
+                Repeater {
+                    model: root.cons.links ? root.sections : []
+
+                    delegate: Shape {
+                        id: link
+                        required property var modelData
+                        required property int index
+                        readonly property var p: root.node(link.index, root.sections.length, hub.rx, hub.ry)
+                        readonly property bool on: root.hovered === link.index || root.section === link.modelData.key
+                        anchors.fill: parent
+                        opacity: root.phase(0.35, 0.8) * (link.on ? 0.85 : 0.14)
+                        preferredRendererType: Shape.CurveRenderer
+
+                        ShapePath {
+                            strokeWidth: link.on ? 2.5 : 1.5
+                            strokeColor: link.on ? Theme.accentHi : Theme.text
+                            fillColor: "transparent"
+                            startX: hub.cx
+                            startY: hub.cy
+                            PathQuad {
+                                controlX: hub.cx + link.p.x * 0.5 + 30 * Math.sin(root.time * 0.7 + link.index)
+                                controlY: hub.cy + link.p.y * 0.5 - 24
+                                x: hub.cx + link.p.x
+                                y: hub.cy + link.p.y
+                            }
+                        }
+                    }
+                }
+
+                Item {
+                    x: hub.cx - width / 2
+                    y: hub.cy - height / 2
+                    width: 170
+                    height: 170
+                    opacity: root.phase(0.05, 0.45)
+                    scale: 0.6 + 0.4 * root.phase(0.05, 0.45)
+
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: parent.width + 30 + 8 * Math.sin(root.time * 1.3)
+                        height: width
+                        radius: width / 2
+                        color: "transparent"
+                        border.width: 2
+                        border.color: Qt.alpha(Theme.accent, 0.35)
                     }
 
                     Glass {
                         anchors.fill: parent
                         radius: width / 2
-                        raised: star.hot || star.on
-                        lit: star.on
-                        hot: star.hot
+                        raised: true
+                        lit: root.section !== ""
                     }
 
                     Glyph {
                         anchors.centerIn: parent
-                        text: star.modelData.glyph
-                        size: 36
-                        color: star.on ? Theme.onAccent : star.hot ? Theme.accentHi : Theme.text
+                        anchors.verticalCenterOffset: -12
+                        text: root.section === "" ? Icons.GLYPHS.settings : root.sectionInfo(root.section).glyph
+                        size: 54
+                        color: root.section === "" ? Theme.accent : Theme.onAccent
                     }
 
                     Text {
-                        visible: root.cons.labels || star.hot
                         anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.top: parent.bottom
-                        anchors.topMargin: 10
-                        text: star.modelData.label
-                        color: star.hot || star.on ? Theme.text : Theme.textSoft
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: 30
+                        text: root.section === "" ? "Settings" : "Back"
+                        color: root.section === "" ? Theme.textSoft : Theme.onAccent
                         font.family: Tokens.fontUi
-                        font.pixelSize: 16
-                        font.weight: star.hot || star.on ? Font.DemiBold : Font.Medium
-                        style: Text.Raised
-                        styleColor: Qt.alpha("#000000", 0.3)
+                        font.pixelSize: 15
+                        font.weight: Font.DemiBold
                     }
 
                     MouseArea {
-                        id: starArea
                         anchors.fill: parent
-                        anchors.margins: -8
-                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onEntered: root.hovered = star.index
-                        onExited: {
-                            if (root.hovered === star.index)
-                                root.hovered = -1;
+                        onClicked: root.go("")
+                    }
+                }
+
+                Repeater {
+                    model: root.sections
+
+                    delegate: Item {
+                        id: star
+                        required property var modelData
+                        required property int index
+                        readonly property var p: root.node(star.index, root.sections.length, hub.rx, hub.ry)
+                        readonly property bool on: root.section === star.modelData.key
+                        readonly property bool hot: root.hovered === star.index
+                        readonly property real arrive: root.phase(0.25 + 0.4 * star.index / root.sections.length, 0.65 + 0.3 * star.index / root.sections.length)
+                        x: hub.cx + star.p.x * (0.4 + 0.6 * star.arrive) - width / 2
+                        y: hub.cy + star.p.y * (0.4 + 0.6 * star.arrive) - height / 2
+                        width: 104
+                        height: 104
+                        z: star.hot ? 3 : 1 + star.p.depth
+                        opacity: star.arrive
+                        scale: (0.5 + 0.5 * star.arrive) * (0.86 + 0.14 * star.p.depth) * (starArea.pressed ? 0.92 : star.hot || star.on ? 1.14 : 1)
+
+                        Behavior on scale {
+                            enabled: star.arrive >= 1
+                            NumberAnimation {
+                                duration: Tokens.stateDuration + 80
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Tokens.springCurve
+                            }
                         }
-                        onClicked: root.go(star.modelData.key)
+
+                        Glass {
+                            anchors.fill: parent
+                            radius: width / 2
+                            raised: star.hot || star.on
+                            lit: star.on
+                            hot: star.hot
+                        }
+
+                        Glyph {
+                            anchors.centerIn: parent
+                            text: star.modelData.glyph
+                            size: 36
+                            color: star.on ? Theme.onAccent : star.hot ? Theme.accentHi : Theme.text
+                        }
+
+                        Text {
+                            visible: root.cons.labels || star.hot
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.top: parent.bottom
+                            anchors.topMargin: 10
+                            text: star.modelData.label
+                            color: star.hot || star.on ? Theme.text : Theme.textSoft
+                            font.family: Tokens.fontUi
+                            font.pixelSize: 16
+                            font.weight: star.hot || star.on ? Font.DemiBold : Font.Medium
+                            style: Text.Raised
+                            styleColor: Qt.alpha("#000000", 0.3)
+                        }
+
+                        MouseArea {
+                            id: starArea
+                            anchors.fill: parent
+                            anchors.margins: -8
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onEntered: root.hovered = star.index
+                            onExited: {
+                                if (root.hovered === star.index)
+                                    root.hovered = -1;
+                            }
+                            onClicked: root.go(star.modelData.key)
+                        }
                     }
                 }
             }
-        }
 
-        Text {
-            x: hub.cx - width / 2
-            y: win.height - 120
-            visible: root.dive < 0.99
-            opacity: root.phase(0.6, 1) * (1 - root.dive)
-            text: root.hovered >= 0 ? "Open " + root.sections[root.hovered].label.toLowerCase() : "Pick a star to change that part of Sylvaris"
-            color: Theme.textSoft
-            font.family: Tokens.fontUi
-            font.pixelSize: 20
-        }
-
-        SidePanel {
-            id: leftPanel
-            x: win.gutter - (1 - root.phase(0.3, 0.8)) * 60
-            y: win.gutter
-            width: win.side
-            height: win.height - win.gutter * 2
-            opacity: root.phase(0.3, 0.8)
-            title: "Constellation"
-            glyph: Icons.GLYPHS.stars
-
-            ConstellationControls {
-                width: parent.width
-            }
-        }
-
-        SidePanel {
-            id: rightPanel
-            x: win.width - win.gutter - win.side + (1 - root.phase(0.35, 0.85)) * 60
-            y: win.gutter
-            width: win.side
-            height: win.height - win.gutter * 2
-            opacity: root.phase(0.35, 0.85)
-            title: "Statistics"
-            glyph: Icons.GLYPHS.chart
-
-            StatsAbout {
-                width: parent.width
-                version: root.version
-                memory: root.memory
-                uptime: root.uptimeText
-                onReload: Quickshell.reload(false)
-            }
-        }
-
-        Item {
-            id: sheet
-            readonly property real startY: win.gutter + 30 + (hub.ry + 70) * 2 * hub.mini
-            x: win.midX + (win.midW - width) / 2
-            y: sheet.startY + (1 - root.dive) * 80
-            width: Math.min(win.midW - win.gutter, 860)
-            height: win.height - sheet.startY - win.gutter
-            visible: root.dive > 0.01
-            opacity: root.dive
-
-            MouseArea {
-                anchors.fill: parent
+            Text {
+                x: hub.cx - width / 2
+                y: win.height - 120
+                visible: root.dive < 0.99
+                opacity: root.phase(0.6, 1) * (1 - root.dive)
+                text: root.hovered >= 0 ? "Open " + root.sections[root.hovered].label.toLowerCase() : "Pick a star to change that part of Sylvaris"
+                color: Theme.textSoft
+                font.family: Tokens.fontUi
+                font.pixelSize: 20
             }
 
-            Glass {
-                anchors.fill: parent
-                radius: Tokens.radiusPanel
-                raised: true
-                offColor: Theme.surface
-                offBorder: Theme.line
-            }
+            SidePanel {
+                id: leftPanel
+                x: win.gutter - (1 - root.phase(0.3, 0.8)) * 60
+                y: win.gutter
+                width: win.side
+                height: win.height - win.gutter * 2
+                opacity: root.phase(0.3, 0.8)
+                title: "Constellation"
+                glyph: Icons.GLYPHS.stars
 
-            Row {
-                id: sheetHead
-                x: 30
-                y: 24
-                spacing: 14
-                opacity: root.swap
-
-                Glyph {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.shownSection === "" ? "" : root.sectionInfo(root.shownSection).glyph
-                    size: 24
-                    color: Theme.accent
-                }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.shownSection === "" ? "" : root.sectionInfo(root.shownSection).label
-                    color: Theme.text
-                    font.family: Tokens.fontUi
-                    font.pixelSize: 26
-                    font.weight: Font.DemiBold
+                ConstellationControls {
+                    width: parent.width
                 }
             }
 
-            Glyph {
-                anchors.right: parent.right
-                anchors.rightMargin: 28
-                anchors.verticalCenter: sheetHead.verticalCenter
-                text: Icons.GLYPHS.close
-                size: 20
-                color: sheetClose.containsMouse ? Theme.text : Theme.textDim
+            SidePanel {
+                id: rightPanel
+                x: win.width - win.gutter - win.side + (1 - root.phase(0.35, 0.85)) * 60
+                y: win.gutter
+                width: win.side
+                height: win.height - win.gutter * 2
+                opacity: root.phase(0.35, 0.85)
+                title: "Statistics"
+                glyph: Icons.GLYPHS.chart
+
+                StatsAbout {
+                    width: parent.width
+                    version: root.version
+                    memory: root.memory
+                    uptime: root.uptimeText
+                    onReload: Quickshell.reload(false)
+                }
+            }
+
+            Item {
+                id: sheet
+                readonly property real startY: win.gutter + 30 + (hub.ry + 70) * 2 * hub.mini
+                x: win.midX + (win.midW - width) / 2
+                y: sheet.startY + (1 - root.dive) * 80
+                width: Math.min(win.midW - win.gutter, 860)
+                height: win.height - sheet.startY - win.gutter
+                visible: root.dive > 0.01
+                opacity: root.dive
 
                 MouseArea {
-                    id: sheetClose
                     anchors.fill: parent
-                    anchors.margins: -10
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.go("")
                 }
-            }
 
-            Flickable {
-                id: content
-                x: 30
-                y: sheetHead.y + sheetHead.height + 22
-                width: parent.width - 60
-                height: parent.height - y - 20
-                clip: true
-                contentHeight: page.item ? page.item.implicitHeight + 20 : 0
-                boundsBehavior: Flickable.StopAtBounds
-                opacity: root.swap
+                Glass {
+                    anchors.fill: parent
+                    radius: Tokens.radiusPanel
+                    raised: true
+                    offColor: Theme.surface
+                    offBorder: Theme.line
+                }
 
-                Loader {
-                    id: page
-                    width: content.width
-                    y: (1 - root.swap) * 18
-                    sourceComponent: ({
-                            general: generalPage,
-                            appearance: appearancePage,
-                            motion: motionPage,
-                            wallpaper: wallpaperPage,
-                            bar: barPage,
-                            deck: deckPage,
-                            launcher: launcherPage,
-                            notifications: notificationsPage,
-                            sound: soundPage,
-                            displays: displaysPage,
-                            clock: clockPage,
-                            weather: weatherPage,
-                            power: powerPage,
-                            diver: diverPage,
-                            commands: commandsPage
-                        })[root.shownSection] || null
+                Row {
+                    id: sheetHead
+                    x: 30
+                    y: 24
+                    spacing: 14
+                    opacity: root.swap
+
+                    Glyph {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: root.shownSection === "" ? "" : root.sectionInfo(root.shownSection).glyph
+                        size: 24
+                        color: Theme.accent
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: root.shownSection === "" ? "" : root.sectionInfo(root.shownSection).label
+                        color: Theme.text
+                        font.family: Tokens.fontUi
+                        font.pixelSize: 26
+                        font.weight: Font.DemiBold
+                    }
+                }
+
+                Glyph {
+                    anchors.right: parent.right
+                    anchors.rightMargin: 28
+                    anchors.verticalCenter: sheetHead.verticalCenter
+                    text: Icons.GLYPHS.close
+                    size: 20
+                    color: sheetClose.containsMouse ? Theme.text : Theme.textDim
+
+                    MouseArea {
+                        id: sheetClose
+                        anchors.fill: parent
+                        anchors.margins: -10
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.go("")
+                    }
+                }
+
+                Flickable {
+                    id: content
+                    x: 30
+                    y: sheetHead.y + sheetHead.height + 22
+                    width: parent.width - 60
+                    height: parent.height - y - 20
+                    clip: true
+                    contentHeight: page.item ? page.item.implicitHeight + 20 : 0
+                    boundsBehavior: Flickable.StopAtBounds
+                    opacity: root.swap
+
+                    Loader {
+                        id: page
+                        width: content.width
+                        y: (1 - root.swap) * 18
+                        sourceComponent: ({
+                                general: generalPage,
+                                appearance: appearancePage,
+                                motion: motionPage,
+                                wallpaper: wallpaperPage,
+                                bar: barPage,
+                                deck: deckPage,
+                                launcher: launcherPage,
+                                notifications: notificationsPage,
+                                sound: soundPage,
+                                displays: displaysPage,
+                                clock: clockPage,
+                                weather: weatherPage,
+                                power: powerPage,
+                                diver: diverPage,
+                                commands: commandsPage
+                            })[root.shownSection] || null
+                    }
                 }
             }
         }

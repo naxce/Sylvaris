@@ -22,10 +22,8 @@ Scope {
     property var screenInfo: null
     property real phase: 0
     default property alias content: body.data
-    readonly property Item panel: panel
     readonly property bool live: root.shown || root.phase > 0
     readonly property real grow: 0.94 + 0.06 * root.phase
-    readonly property var visual: M.scaledRect(0, 0, win.width, win.height, root.placed, root.grow, (1 - root.phase) * 10 * M.rise(root.placed))
 
     signal opened
     signal closed
@@ -106,93 +104,122 @@ Scope {
         easing.bezierCurve: Tokens.exitCurve
     }
 
-    PanelWindow {
-        visible: root.shown
-        screen: root.screenInfo
-        anchors {
-            top: true
-            bottom: true
-            left: true
-            right: true
-        }
-        color: Qt.alpha("#000000", root.dim * root.phase)
-        exclusionMode: ExclusionMode.Normal
-        WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.namespace: "sylcatcher"
+    Item {
+        id: body
+        anchors.fill: parent
+    }
 
-        MouseArea {
-            anchors.fill: parent
-            onClicked: root.close()
+    onLiveChanged: {
+        if (!root.live)
+            keep.restart();
+    }
+
+    Timer {
+        id: keep
+        interval: 20000
+    }
+
+    LazyLoader {
+        active: root.shown || keep.running
+
+        PanelWindow {
+            visible: root.shown
+            screen: root.screenInfo
+            anchors {
+                top: true
+                bottom: true
+                left: true
+                right: true
+            }
+            color: Qt.alpha("#000000", root.dim * root.phase)
+            exclusionMode: ExclusionMode.Normal
+            WlrLayershell.layer: WlrLayer.Top
+            WlrLayershell.namespace: "sylcatcher"
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: root.close()
+            }
         }
     }
 
-    PanelWindow {
-        id: win
-        visible: root.live
-        screen: root.screenInfo
-        anchors {
-            top: root.placed.indexOf("top") === 0
-            bottom: root.placed.indexOf("bottom") === 0
-            left: root.placed.indexOf("left") > 0
-            right: root.placed.indexOf("right") > 0
-        }
-        margins {
-            top: Tokens.edgeMargin
-            bottom: Tokens.edgeMargin
-            left: Tokens.edgeMargin
-            right: Tokens.edgeMargin
-        }
-        implicitWidth: root.panelWidth
-        implicitHeight: root.panelHeight
-        color: "transparent"
-        exclusionMode: ExclusionMode.Normal
-        exclusiveZone: 0
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.namespace: root.namespace
-        WlrLayershell.keyboardFocus: root.shown && root.keyboard ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-        mask: Region {
-            item: root.shown ? panel : null
-        }
-        BackgroundEffect.blurRegion: Resin.enabled && root.phase > 0.02 ? blur : null
+    LazyLoader {
+        active: root.live || keep.running
 
-        Region {
-            id: blur
-            x: Math.round(root.visual.x) + 1
-            y: Math.round(root.visual.y) + 1
-            width: Math.round(root.visual.w) - 2
-            height: Math.round(root.visual.h) - 2
-            radius: root.radius * root.grow - 1
-        }
+        PanelWindow {
+            id: win
+            visible: root.live
+            screen: root.screenInfo
+            anchors {
+                top: root.placed.indexOf("top") === 0
+                bottom: root.placed.indexOf("bottom") === 0
+                left: root.placed.indexOf("left") > 0
+                right: root.placed.indexOf("right") > 0
+            }
+            margins {
+                top: Tokens.edgeMargin
+                bottom: Tokens.edgeMargin
+                left: Tokens.edgeMargin
+                right: Tokens.edgeMargin
+            }
+            implicitWidth: root.panelWidth
+            implicitHeight: root.panelHeight
+            color: "transparent"
+            exclusionMode: ExclusionMode.Normal
+            exclusiveZone: 0
+            WlrLayershell.layer: WlrLayer.Overlay
+            WlrLayershell.namespace: root.namespace
+            WlrLayershell.keyboardFocus: root.shown && root.keyboard ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+            mask: Region {
+                item: root.shown ? panel : null
+            }
+            BackgroundEffect.blurRegion: Resin.enabled && root.phase > 0.02 ? blur : null
+            readonly property var visual: M.scaledRect(0, 0, win.width, win.height, root.placed, root.grow, (1 - root.phase) * 10 * M.rise(root.placed))
 
-        onVisibleChanged: {
-            if (visible)
-                panel.forceActiveFocus();
-        }
-
-        Item {
-            id: panel
-
-            anchors.fill: parent
-            opacity: Math.min(1, root.phase * 1.6)
-            scale: root.grow
-            transformOrigin: root.originItem()
-            focus: true
-            Keys.onEscapePressed: root.close()
-
-            transform: Translate {
-                y: (1 - root.phase) * 10 * M.rise(root.placed)
+            Region {
+                id: blur
+                x: Math.round(win.visual.x) + 1
+                y: Math.round(win.visual.y) + 1
+                width: Math.round(win.visual.w) - 2
+                height: Math.round(win.visual.h) - 2
+                radius: root.radius * root.grow - 1
             }
 
-            Glass {
-                anchors.fill: parent
-                radius: root.radius
-                offColor: Theme.surface
-                offBorder: Theme.line
+            onVisibleChanged: {
+                if (visible)
+                    panel.forceActiveFocus();
+            }
+            Component.onCompleted: {
+                if (visible)
+                    panel.forceActiveFocus();
             }
 
             Item {
-                id: body
+                id: panel
+
                 anchors.fill: parent
+                opacity: Math.min(1, root.phase * 1.6)
+                scale: root.grow
+                transformOrigin: root.originItem()
+                focus: true
+                Keys.onEscapePressed: root.close()
+
+                transform: Translate {
+                    y: (1 - root.phase) * 10 * M.rise(root.placed)
+                }
+
+                Glass {
+                    anchors.fill: parent
+                    radius: root.radius
+                    offColor: Theme.surface
+                    offBorder: Theme.line
+                }
+
+                Item {
+                    id: slot
+                    anchors.fill: parent
+                    Component.onCompleted: body.parent = slot
+                }
             }
         }
     }
