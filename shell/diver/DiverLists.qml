@@ -320,30 +320,10 @@ Item {
             width: parent.width
             spacing: 8
 
-            TextBox {
-                id: quickAdd
-                width: parent.width - newChip.width - 8
-                placeholder: root.list ? "Add to " + root.list.name + "…" : ""
-                onAccepted: {
-                    if (quickAdd.text.trim() === "")
-                        return;
-                    const q = Diver.add(quickAdd.text, "");
-                    root.run(() => Diver.saveDraft(Object.assign(P.draftOf(q, "inbox"), {
-                        where: root.current
-                    })));
-                    quickAdd.text = "";
-                }
-            }
-
             Chip {
-                id: newChip
-                anchors.verticalCenter: parent.verticalCenter
                 text: "Details"
                 glyph: Icons.GLYPHS.pencil
-                onClicked: {
-                    root.create(quickAdd.text, root.current);
-                    quickAdd.text = "";
-                }
+                onClicked: root.create("", root.current)
             }
         }
 

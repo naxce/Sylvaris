@@ -59,7 +59,7 @@ Popup {
         }
     }
 
-    onOpened: capture.focusInput()
+    onOpened: body.forceActiveFocus()
 
     Timer {
         id: problemTimer
@@ -145,6 +145,13 @@ Popup {
                 current: root.view
                 onPicked: key => root.view = key
             }
+
+            Chip {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "Details"
+                glyph: Icons.GLYPHS.pencil
+                onClicked: root.create("", "", "")
+            }
         }
 
         Text {
@@ -175,45 +182,10 @@ Popup {
             }
         }
 
-        Row {
-            id: captureRow
-            anchors.top: head.bottom
-            anchors.topMargin: 18
-            width: parent.width
-            spacing: 8
-
-            TextBox {
-                id: capture
-                width: parent.width - details.width - 8
-                placeholder: "Capture anything…  “call Ana tomorrow 18:00”, “gym every mon and thu 7:30”"
-                onAccepted: {
-                    if (capture.text.trim() === "")
-                        return;
-                    try {
-                        Diver.add(capture.text, "");
-                        capture.text = "";
-                    } catch (e) {
-                        root.fail(e.message);
-                    }
-                }
-            }
-
-            Chip {
-                id: details
-                anchors.verticalCenter: parent.verticalCenter
-                text: "Details"
-                glyph: Icons.GLYPHS.pencil
-                onClicked: {
-                    root.create(capture.text, "", "");
-                    capture.text = "";
-                }
-            }
-        }
-
         Item {
             id: focusBar
-            anchors.top: captureRow.bottom
-            anchors.topMargin: Diver.focusEnd > 0 ? 12 : 0
+            anchors.top: head.bottom
+            anchors.topMargin: Diver.focusEnd > 0 ? 18 : 0
             width: parent.width
             height: Diver.focusEnd > 0 ? 44 : 0
             visible: Diver.focusEnd > 0
@@ -333,7 +305,7 @@ Popup {
             id: sheet
             anchors.fill: parent
             anchors.margins: -14
-            onClosed: capture.focusInput()
+            onClosed: body.forceActiveFocus()
         }
     }
 }

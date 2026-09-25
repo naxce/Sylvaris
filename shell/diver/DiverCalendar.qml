@@ -185,27 +185,10 @@ Item {
             width: parent.width
             spacing: 8
 
-            TextBox {
-                id: addBox
-                width: parent.width - detailsChip.width - 8
-                placeholder: "Add to " + P.dayLabel(root.day) + "…  “gym 18:00”"
-                onAccepted: {
-                    if (addBox.text.trim() === "")
-                        return;
-                    Diver.add(addBox.text, root.day);
-                    addBox.text = "";
-                }
-            }
-
             Chip {
-                id: detailsChip
-                anchors.verticalCenter: parent.verticalCenter
                 text: "Details"
                 glyph: Icons.GLYPHS.pencil
-                onClicked: {
-                    root.create(addBox.text, root.day);
-                    addBox.text = "";
-                }
+                onClicked: root.create("", root.day)
             }
         }
 
