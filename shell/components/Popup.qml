@@ -21,6 +21,7 @@ Scope {
     property bool wanted: false
     property var screenInfo: null
     property real phase: 0
+    property var focusTarget: null
     default property alias content: body.data
     readonly property bool live: root.shown || root.phase > 0
     readonly property real grow: 0.94 + 0.06 * root.phase
@@ -185,13 +186,19 @@ Scope {
                 radius: root.radius * root.grow - 1
             }
 
+            function focusIn(): void {
+                panel.forceActiveFocus();
+                if (root.focusTarget !== null)
+                    root.focusTarget.focusInput();
+            }
+
             onVisibleChanged: {
                 if (visible)
-                    panel.forceActiveFocus();
+                    win.focusIn();
             }
             Component.onCompleted: {
                 if (visible)
-                    panel.forceActiveFocus();
+                    win.focusIn();
             }
 
             Item {
