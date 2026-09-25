@@ -419,6 +419,9 @@ const api = (function () {
       const n = Number(m[1]);
       exact = base.getTime() + (/^(h|hour|hours|godz|godzin|godziny)$/i.test(m[2]) ? n * 60 : n) * 60000;
     });
+    take(/(?:^|\s)(now|teraz|right\s+now|zaraz)(?=\s|$)/i, () => {
+      exact = base.getTime() + 60000;
+    });
     take(/(?:^|\s)(today|dzis|dziś|tonight|wieczorem)(?=\s|$)/i, (m) => {
       due = dayKey(base);
       if (/tonight|wieczorem/i.test(m[1]) && !time) time = "20:00";
