@@ -219,7 +219,7 @@ Scope {
                 Repeater {
                     model: ws.list.length
 
-                    delegate: Rectangle {
+                    delegate: Item {
                         id: pill
                         required property int index
                         readonly property var modelData: ws.list[pill.index] || ({
@@ -228,19 +228,18 @@ Scope {
                                 focused: false,
                                 active: false,
                                 urgent: false,
-                                windows: 0
+                                windows: 0,
+                                apps: []
                             })
-                        readonly property bool dots: ws.look.mode === "dots"
-                        readonly property bool glyphs: ws.look.mode === "glyph"
-                        readonly property real small: pill.dots ? (modelData.windows !== 0 || modelData.active ? 10 : 8) : 26
-                        readonly property real long: pill.dots ? 26 : pill.glyphs ? 34 : 38
-                        width: root.vertical ? pill.small : modelData.focused ? pill.long : pill.small
-                        height: root.vertical ? (modelData.focused ? pill.long : pill.small) : pill.small
-                        radius: Math.min(width, height) / 2
-                        antialiasing: true
-                        color: pill.glyphs && !modelData.urgent && !modelData.focused ? "transparent" : modelData.urgent ? Theme.danger : modelData.focused ? Theme.accent : modelData.active ? Qt.alpha(Theme.accent, 0.35) : modelData.windows !== 0 ? Qt.alpha(Theme.text, pill.dots ? 0.55 : 0.14) : pill.dots ? Qt.alpha(Theme.text, 0.2) : "transparent"
-                        border.width: pill.dots || pill.glyphs || modelData.focused || modelData.windows !== 0 || modelData.active ? 0 : 1
-                        border.color: Qt.alpha(Theme.text, 0.18)
+                        readonly property bool on: modelData.focused
+                        readonly property var apps: pill.on ? B.workspaceApps(modelData.apps, 3) : ({
+                                shown: [],
+                                more: 0
+                            })
+                        readonly property int ticks: pill.on ? 0 : B.workspaceTicks(modelData.windows)
+                        readonly property bool busy: modelData.windows !== 0 || modelData.active
+                        width: Math.max(26, inner.implicitWidth + (pill.on ? 18 : 10))
+                        height: root.vertical ? Math.max(26, inner.implicitHeight + (pill.on ? 18 : 10)) : 26
 
                         Behavior on width {
                             NumberAnimation {
@@ -258,56 +257,109 @@ Scope {
                             }
                         }
 
-                        Behavior on color {
-                            ColorAnimation {
-                                duration: Tokens.stateDuration
-                            }
-                        }
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: Math.min(width, height) / 2
+                            antialiasing: true
+                            color: pill.on ? Theme.accent : pillArea.containsMouse ? Qt.alpha(Theme.text, 0.12) : "transparent"
+                            border.width: modelData.urgent ? 2 : 0
+                            border.color: Theme.danger
 
-                        Glyph {
-                            anchors.centerIn: parent
-                            visible: pill.glyphs
-                            text: ws.look.glyph
-                            size: modelData.focused ? 17 : 15
-                            color: modelData.focused || modelData.urgent ? Theme.onAccent : modelData.active ? Theme.accentHi : Theme.text
-                            opacity: modelData.focused || modelData.windows !== 0 || modelData.active ? 1 : 0.38
-                            scale: pillArea.containsMouse && !modelData.focused ? 1.15 : 1
-
-                            Behavior on scale {
-                                NumberAnimation {
+                            Behavior on color {
+                                ColorAnimation {
                                     duration: Tokens.stateDuration
-                                    easing.type: Easing.BezierSpline
-                                    easing.bezierCurve: Tokens.springCurve
-                                }
-                            }
-
-                            Behavior on size {
-                                NumberAnimation {
-                                    duration: Tokens.moveDuration
-                                    easing.type: Easing.BezierSpline
-                                    easing.bezierCurve: Tokens.springCurve
                                 }
                             }
                         }
 
-                        Text {
+                        Grid {
+                            id: inner
                             anchors.centerIn: parent
-                            visible: !pill.dots && !pill.glyphs
-                            text: modelData.name.length <= 3 ? modelData.name : modelData.index
-                            color: modelData.focused || modelData.urgent ? Theme.onAccent : Theme.text
-                            opacity: modelData.focused || modelData.windows !== 0 || modelData.active ? 1 : 0.55
-                            font.family: Tokens.fontUi
-                            font.pixelSize: Tokens.tinySize
-                            font.weight: modelData.focused ? Font.Bold : Font.Medium
+                            anchors.verticalCenterOffset: pill.ticks > 0 && !root.vertical ? -2 : 0
+                            columns: root.vertical ? 1 : 8
+                            spacing: 6
+                            horizontalItemAlignment: Grid.AlignHCenter
+                            verticalItemAlignment: Grid.AlignVCenter
+
+                            Glyph {
+                                visible: ws.look.mode === "glyph" && pill.on
+                                text: ws.look.glyph
+                                size: 15
+                                color: Theme.onAccent
+                            }
+
+                            Rectangle {
+                                visible: ws.look.mode === "dots" && !pill.on
+                                width: 8
+                                height: 8
+                                radius: 4
+                                color: modelData.active ? Theme.accentHi : Theme.text
+                                opacity: pill.busy ? 1 : 0.35
+                            }
+
+                            Text {
+                                visible: ws.look.mode !== "dots" || pill.on
+                                text: modelData.name.length <= 3 && modelData.name !== "" ? modelData.name : modelData.index
+                                color: pill.on ? Theme.onAccent : modelData.active ? Theme.accentHi : Theme.text
+                                opacity: pill.on || pill.busy ? 1 : 0.4
+                                font.family: Tokens.fontUi
+                                font.pixelSize: Tokens.smallSize
+                                font.weight: pill.on ? Font.Bold : Font.DemiBold
+                                font.features: {
+                                    "tnum": 1
+                                }
+                            }
+
+                            Repeater {
+                                model: pill.apps.shown
+
+                                delegate: IconImage {
+                                    required property string modelData
+                                    readonly property var entry: DesktopEntries.heuristicLookup(modelData)
+                                    implicitSize: 16
+                                    source: entry !== null && entry.icon ? Quickshell.iconPath(entry.icon, true) : ""
+                                    visible: source !== ""
+                                }
+                            }
+
+                            Text {
+                                visible: pill.apps.more > 0
+                                text: "+" + pill.apps.more
+                                color: Theme.onAccent
+                                font.family: Tokens.fontUi
+                                font.pixelSize: Tokens.tinySize
+                                font.weight: Font.Bold
+                            }
+                        }
+
+                        Row {
+                            anchors.horizontalCenter: root.vertical ? undefined : parent.horizontalCenter
+                            anchors.bottom: root.vertical ? undefined : parent.bottom
+                            anchors.bottomMargin: 3
+                            anchors.verticalCenter: root.vertical ? parent.verticalCenter : undefined
+                            anchors.right: root.vertical ? parent.right : undefined
+                            anchors.rightMargin: 2
+                            spacing: 2
+                            visible: pill.ticks > 0
+
+                            Repeater {
+                                model: pill.ticks
+
+                                delegate: Rectangle {
+                                    width: 3
+                                    height: 3
+                                    radius: 1.5
+                                    color: pill.modelData.active ? Theme.accentHi : Theme.accent
+                                }
+                            }
                         }
 
                         MouseArea {
                             id: pillArea
                             anchors.fill: parent
-                            anchors.margins: pill.dots ? -6 : 0
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: Compositor.focusWorkspace(modelData)
+                            onClicked: Compositor.focusWorkspace(pill.modelData)
                         }
                     }
                 }

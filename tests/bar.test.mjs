@@ -1,6 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { unused, shift, validateBar, validateDeck, deckItems, nextWindow, togglePin, magnify, DEFAULT_BAR, vertical, drawerArrow, placeCorner, deckHidden, screenBusy, workspaceLook, WORKSPACE_ICONS } from "../shell/lib/bar.mjs"
+import { unused, shift, validateBar, validateDeck, deckItems, nextWindow, togglePin, magnify, DEFAULT_BAR, vertical, drawerArrow, placeCorner, deckHidden, screenBusy, workspaceLook, WORKSPACE_ICONS, workspaceApps, workspaceTicks } from "../shell/lib/bar.mjs"
 
 test("validateBar keeps known modules once and falls back per side", () => {
     const b = validateBar({ left: ["clock", "nope", "clock", "pad"], floating: false })
@@ -132,4 +132,11 @@ test("workspaceLook picks numbers, dots or a glyph set, and auto follows the the
     assert.deepEqual(workspaceLook("auto", "unknown"), { mode: "numbers", glyph: "" })
     assert.equal(validateBar({ workspaceIcons: "paw" }).workspaceIcons, "paw")
     assert.equal(validateBar({ workspaceIcons: "rocket" }).workspaceIcons, "auto")
+})
+
+test("workspace pills show each app once and at most three ticks", () => {
+    assert.deepEqual(workspaceApps(["kitty", "firefox", "kitty", "", "nemo", "steam"], 3), { shown: ["kitty", "firefox", "nemo"], more: 1 })
+    assert.deepEqual(workspaceApps(undefined, 3), { shown: [], more: 0 })
+    assert.equal(workspaceTicks(-1), 0)
+    assert.equal(workspaceTicks(7), 3)
 })

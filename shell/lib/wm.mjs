@@ -190,8 +190,11 @@ export function niriReduce(state, event) {
 
 export function niriWorkspaces(state) {
     const counts = {}
-    for (const w of state.windows)
+    const apps = {}
+    for (const w of state.windows) {
         counts[w.workspace_id] = (counts[w.workspace_id] || 0) + 1
+        apps[w.workspace_id] = (apps[w.workspace_id] || []).concat([w.app_id || ""])
+    }
     return state.workspaces.map(w => ({
         id: String(w.id),
         index: w.idx,
@@ -200,7 +203,8 @@ export function niriWorkspaces(state) {
         active: w.is_active,
         focused: w.is_focused,
         urgent: w.is_urgent,
-        windows: counts[w.id] || 0
+        windows: counts[w.id] || 0,
+        apps: apps[w.id] || []
     })).sort(order)
 }
 

@@ -21,6 +21,19 @@ export function workspaceLook(setting, themeIcon) {
     return { mode: "numbers", glyph: "" }
 }
 
+export function workspaceApps(apps, limit) {
+    const out = []
+    for (const a of apps || []) {
+        if (a !== "" && out.indexOf(a) < 0)
+            out.push(a)
+    }
+    return { shown: out.slice(0, limit), more: Math.max(0, out.length - limit) }
+}
+
+export function workspaceTicks(windows) {
+    return windows > 0 ? Math.min(3, windows) : 0
+}
+
 export const DEFAULT_BAR = {
     workspaceIcons: "auto",
     enabled: true,

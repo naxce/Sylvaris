@@ -46,7 +46,8 @@ Singleton {
                     active: w.active,
                     focused: w.focused,
                     urgent: w.urgent,
-                    windows: w.toplevels.values.length
+                    windows: w.toplevels.values.length,
+                    apps: w.toplevels.values.map(t => t.wayland ? t.wayland.appId : t.lastIpcObject && t.lastIpcObject.class ? t.lastIpcObject.class : "")
                 })).sort(W.order);
     }
 
@@ -59,7 +60,8 @@ Singleton {
                     active: w.active,
                     focused: w.focused,
                     urgent: w.urgent,
-                    windows: -1
+                    windows: -1,
+                    apps: []
                 })).sort(W.order);
     }
 
