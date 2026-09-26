@@ -77,6 +77,51 @@
             touch $out
           '';
 
+        hm =
+          let
+            lib = nixpkgs.lib;
+            eval = lib.evalModules {
+              modules = [
+                self.homeManagerModules.sylvaris
+                {
+                  options = {
+                    home.packages = lib.mkOption {
+                      type = lib.types.listOf lib.types.package;
+                      default = [ ];
+                    };
+                    xdg.configFile = lib.mkOption {
+                      type = lib.types.attrsOf lib.types.anything;
+                      default = { };
+                    };
+                    assertions = lib.mkOption {
+                      type = lib.types.listOf lib.types.anything;
+                      default = [ ];
+                    };
+                  };
+                  config = {
+                    _module.args.pkgs = pkgs;
+                    programs.sylvaris = {
+                      enable = true;
+                      bar.position = "left";
+                      motion.scale = 1.5;
+                      deck.hide = "windows";
+                      settings.clock.corner = "top-left";
+                    };
+                  };
+                }
+              ];
+            };
+          in
+          pkgs.runCommand "sylvaris-hm" { nativeBuildInputs = [ pkgs.jq ]; } ''
+            f=${eval.config.xdg.configFile."sylvaris/config.json".source}
+            test "$(jq -r .bar.position $f)" = left
+            test "$(jq -r .motion.scale $f)" = 1.5
+            test "$(jq -r .deck.hide $f)" = windows
+            test "$(jq -r .clock.corner $f)" = top-left
+            test "$(jq -r '.pad // "unset"' $f)" = unset
+            touch $out
+          '';
+
         parts =
           let
             full = pkgs.callPackage ./nix/package.nix { };

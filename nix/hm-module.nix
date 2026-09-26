@@ -9,9 +9,39 @@ let
   cfg = config.programs.sylvaris;
   json = pkgs.formats.json { };
   parts = (cfg.settings.parts or { }) // cfg.parts;
+  schema = lib.importJSON ./schema.json;
+  typeOf =
+    v:
+    if builtins.isBool v then
+      lib.types.bool
+    else if builtins.isInt v || builtins.isFloat v then
+      lib.types.number
+    else if builtins.isString v then
+      lib.types.str
+    else if builtins.isList v then
+      lib.types.listOf lib.types.anything
+    else
+      lib.types.attrsOf lib.types.anything;
+  optionsFor =
+    path: v:
+    if builtins.isAttrs v && v != { } then
+      lib.mapAttrs (k: optionsFor (path ++ [ k ])) v
+    else
+      lib.mkOption {
+        type = lib.types.nullOr (typeOf v);
+        default = null;
+        description = "Sets ${lib.concatStringsSep "." path} in config.json. Sylvaris uses ${builtins.toJSON v} when this is left unset.";
+      };
+  prune =
+    v:
+    if builtins.isAttrs v then
+      lib.filterAttrs (_: x: x != null && x != { }) (lib.mapAttrs (_: prune) v)
+    else
+      v;
+  typed = prune (lib.getAttrs (builtins.attrNames schema) cfg);
 in
 {
-  options.programs.sylvaris = {
+  options.programs.sylvaris = lib.mapAttrs (k: optionsFor [ k ]) schema // {
     enable = lib.mkEnableOption "Sylvaris, a modular Quickshell desktop shell";
 
     package = lib.mkOption {
@@ -57,7 +87,7 @@ in
     xdg.configFile = lib.mkMerge [
       {
         "sylvaris/config.json".source = json.generate "sylvaris-config.json" (
-          { version = 1; } // cfg.settings // lib.optionalAttrs (parts != { }) { inherit parts; }
+          { version = 1; } // lib.recursiveUpdate typed cfg.settings // lib.optionalAttrs (parts != { }) { inherit parts; }
         );
       }
       (lib.mapAttrs' (
