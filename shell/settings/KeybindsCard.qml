@@ -21,7 +21,7 @@ Card {
     }
 
     title: "Key bindings"
-    note: Keybinds.supported ? "Click an action, then press the keys. Sylvaris adds the binding to " + (Compositor.name === "hyprland" ? "Hyprland" : "sway") + " right away. Esc cancels, Backspace removes it. They can also go in config.json or Home Manager as keybinds." : "Your compositor cannot take new bindings at runtime; copy the lines under Keybinds into its config instead."
+    note: Keybinds.supported ? "Click an action, then press the keys. Sylvaris adds the binding to " + (Compositor.name === "hyprland" ? "Hyprland" : "sway") + " right away. Esc cancels, Backspace removes it. They can also go in config.json or Home Manager as keybinds." : "Your compositor cannot take new bindings at runtime; copy the lines from Features › Commands into its config instead."
 
     Repeater {
         model: K.ACTIONS

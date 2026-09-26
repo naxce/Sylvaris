@@ -37,119 +37,165 @@ Scope {
         {
             key: "general",
             label: "General",
-            glyph: Icons.GLYPHS.tune
+            glyph: Icons.GLYPHS.tune,
+            group: "settings"
         },
         {
             key: "appearance",
             label: "Appearance",
-            glyph: Icons.GLYPHS.theme
+            glyph: Icons.GLYPHS.theme,
+            group: "settings"
         },
         {
             key: "motion",
             label: "Motion",
-            glyph: Icons.GLYPHS.bolt
+            glyph: Icons.GLYPHS.bolt,
+            group: "settings"
         },
         {
             key: "wallpaper",
             label: "Wallpaper",
-            glyph: Icons.GLYPHS.image
+            glyph: Icons.GLYPHS.image,
+            group: "settings"
         },
         {
             key: "bar",
             label: "Bar",
-            glyph: Icons.GLYPHS.grid
+            glyph: Icons.GLYPHS.grid,
+            group: "apps"
         },
         {
             key: "deck",
             label: "Deck",
-            glyph: Icons.GLYPHS.pin
+            glyph: Icons.GLYPHS.pin,
+            group: "apps"
         },
         {
             key: "launcher",
             label: "Launcher",
-            glyph: Icons.GLYPHS.apps
+            glyph: Icons.GLYPHS.apps,
+            group: "apps"
         },
         {
             key: "notifications",
             label: "Notifications",
-            glyph: Icons.GLYPHS.bell
+            glyph: Icons.GLYPHS.bell,
+            group: "apps"
         },
         {
             key: "sound",
             label: "Sound",
-            glyph: Icons.GLYPHS.volume
+            glyph: Icons.GLYPHS.volume,
+            group: "settings"
         },
         {
             key: "displays",
             label: "Displays",
-            glyph: Icons.GLYPHS.displays
+            glyph: Icons.GLYPHS.displays,
+            group: "settings"
         },
         {
             key: "clock",
             label: "Sky",
-            glyph: Icons.GLYPHS.night
+            glyph: Icons.GLYPHS.night,
+            group: "apps"
         },
         {
             key: "weather",
             label: "Weather",
-            glyph: Icons.GLYPHS.partlyCloudy
+            glyph: Icons.GLYPHS.partlyCloudy,
+            group: "apps"
         },
         {
             key: "power",
             label: "Power",
-            glyph: Icons.GLYPHS.power
+            glyph: Icons.GLYPHS.power,
+            group: "apps"
         },
         {
             key: "diver",
             label: "Diver",
-            glyph: Icons.GLYPHS.planner
+            glyph: Icons.GLYPHS.planner,
+            group: "apps"
         },
         {
             key: "switcher",
             label: "Switcher",
-            glyph: Icons.GLYPHS.switcher
+            glyph: Icons.GLYPHS.switcher,
+            group: "apps"
         },
         {
             key: "lock",
             label: "Lock",
-            glyph: Icons.GLYPHS.lock
+            glyph: Icons.GLYPHS.lock,
+            group: "features"
         },
         {
             key: "polkit",
             label: "Authentication",
-            glyph: Icons.GLYPHS.shield
+            glyph: Icons.GLYPHS.shield,
+            group: "features"
         },
         {
             key: "clip",
             label: "Clipboard",
-            glyph: Icons.GLYPHS.clipboard
+            glyph: Icons.GLYPHS.clipboard,
+            group: "apps"
         },
         {
             key: "capture",
             label: "Capture",
-            glyph: Icons.GLYPHS.camera
+            glyph: Icons.GLYPHS.camera,
+            group: "apps"
         },
         {
             key: "access",
             label: "Accessibility",
-            glyph: Icons.GLYPHS.accessibility
+            glyph: Icons.GLYPHS.accessibility,
+            group: "features"
         },
         {
             key: "plugins",
             label: "Plugins",
-            glyph: Icons.GLYPHS.puzzle
+            glyph: Icons.GLYPHS.puzzle,
+            group: "features"
         },
         {
             key: "sync",
             label: "App colours",
-            glyph: Icons.GLYPHS.sync
+            glyph: Icons.GLYPHS.sync,
+            group: "features"
+        },
+        {
+            key: "keybinds",
+            label: "Key bindings",
+            glyph: Icons.GLYPHS.keyboard,
+            group: "features"
         },
         {
             key: "commands",
             label: "Commands",
-            glyph: Icons.GLYPHS.keyboard
+            glyph: Icons.GLYPHS.code,
+            group: "features"
         }
     ]
+    readonly property var groups: [
+        {
+            key: "settings",
+            label: "Settings"
+        },
+        {
+            key: "apps",
+            label: "Apps"
+        },
+        {
+            key: "features",
+            label: "Features"
+        }
+    ]
+    property string group: "settings"
+    property real flip: 1
+    readonly property var shownSections: root.sections.filter(s => s.group === root.group)
     readonly property var corners: [
         {
             key: "top-left",
@@ -320,9 +366,24 @@ Scope {
             root.open();
     }
 
+    function pickGroup(key: string): void {
+        if (key === root.group)
+            return;
+        root.hovered = -1;
+        root.group = key;
+        flipAnim.restart();
+    }
+
+    function stepGroup(d: int): void {
+        const keys = root.groups.map(g => g.key);
+        root.pickGroup(keys[(keys.indexOf(root.group) + d + keys.length) % keys.length]);
+    }
+
     function go(name: string): void {
         if (name === root.section)
             return;
+        if (name !== "")
+            root.pickGroup(root.sectionInfo(name).group);
         root.section = name;
         swapAnim.restart();
     }
@@ -415,6 +476,17 @@ Scope {
         duration: Tokens.moveDuration
         easing.type: Easing.BezierSpline
         easing.bezierCurve: Tokens.moveCurve
+    }
+
+    NumberAnimation {
+        id: flipAnim
+        target: root
+        property: "flip"
+        from: 0
+        to: 1
+        duration: Tokens.enterDuration + 80
+        easing.type: Easing.BezierSpline
+        easing.bezierCurve: Tokens.enterCurve
     }
 
     SequentialAnimation {
@@ -561,11 +633,13 @@ Scope {
                 id: keys
                 focus: true
                 Keys.onEscapePressed: root.back()
-                Keys.onLeftPressed: root.hovered = (root.hovered - 1 + root.sections.length) % root.sections.length
-                Keys.onRightPressed: root.hovered = (root.hovered + 1) % root.sections.length
+                Keys.onLeftPressed: root.hovered = (root.hovered - 1 + root.shownSections.length) % root.shownSections.length
+                Keys.onRightPressed: root.hovered = (root.hovered + 1) % root.shownSections.length
+                Keys.onTabPressed: root.stepGroup(1)
+                Keys.onBacktabPressed: root.stepGroup(-1)
                 Keys.onReturnPressed: {
                     if (root.hovered >= 0)
-                        root.go(root.sections[root.hovered].key);
+                        root.go(root.shownSections[root.hovered].key);
                 }
             }
 
@@ -617,16 +691,16 @@ Scope {
                 }
 
                 Repeater {
-                    model: root.cons.links ? root.sections : []
+                    model: root.cons.links ? root.shownSections : []
 
                     delegate: Shape {
                         id: link
                         required property var modelData
                         required property int index
-                        readonly property var p: root.node(link.index, root.sections.length, hub.rx, hub.ry)
+                        readonly property var p: root.node(link.index, root.shownSections.length, hub.rx, hub.ry)
                         readonly property bool on: root.hovered === link.index || root.section === link.modelData.key
                         anchors.fill: parent
-                        opacity: root.phase(0.35, 0.8) * (link.on ? 0.85 : 0.14)
+                        opacity: root.phase(0.35, 0.8) * root.flip * (link.on ? 0.85 : 0.14)
                         preferredRendererType: Shape.CurveRenderer
 
                         ShapePath {
@@ -697,16 +771,16 @@ Scope {
                 }
 
                 Repeater {
-                    model: root.sections
+                    model: root.shownSections
 
                     delegate: Item {
                         id: star
                         required property var modelData
                         required property int index
-                        readonly property var p: root.node(star.index, root.sections.length, hub.rx, hub.ry)
+                        readonly property var p: root.node(star.index, root.shownSections.length, hub.rx, hub.ry)
                         readonly property bool on: root.section === star.modelData.key
                         readonly property bool hot: root.hovered === star.index
-                        readonly property real arrive: root.phase(0.25 + 0.4 * star.index / root.sections.length, 0.65 + 0.3 * star.index / root.sections.length)
+                        readonly property real arrive: root.phase(0.25 + 0.4 * star.index / root.shownSections.length, 0.65 + 0.3 * star.index / root.shownSections.length) * Math.min(1, Math.max(0, root.flip * 1.6 - 0.6 * star.index / root.shownSections.length))
                         x: hub.cx + star.p.x * (0.4 + 0.6 * star.arrive) - width / 2
                         y: hub.cy + star.p.y * (0.4 + 0.6 * star.arrive) - height / 2
                         width: 104
@@ -775,10 +849,21 @@ Scope {
                 y: win.height - 120
                 visible: root.dive < 0.99
                 opacity: root.phase(0.6, 1) * (1 - root.dive)
-                text: root.hovered >= 0 ? "Open " + root.sections[root.hovered].label.toLowerCase() : "Pick a star to change that part of Sylvaris"
+                text: root.hovered >= 0 && root.hovered < root.shownSections.length ? "Open " + root.shownSections[root.hovered].label.toLowerCase() : "Pick a star · Tab switches between settings, apps and features"
                 color: Theme.textSoft
                 font.family: Tokens.fontUi
                 font.pixelSize: 20
+            }
+
+            Segmented {
+                x: hub.cx - width / 2
+                y: win.height * 0.5 - hub.ry - 150
+                width: 420
+                visible: root.dive < 0.99
+                opacity: root.phase(0.4, 0.9) * (1 - root.dive)
+                options: root.groups
+                current: root.group
+                onPicked: key => root.pickGroup(key)
             }
 
             SidePanel {
@@ -917,6 +1002,7 @@ Scope {
                                 access: accessPage,
                                 plugins: pluginsPage,
                                 sync: syncPage,
+                                keybinds: keybindsPage,
                                 commands: commandsPage
                             })[root.shownSection] || null
                     }
@@ -2259,12 +2345,20 @@ Scope {
     }
 
     Component {
-        id: commandsPage
+        id: keybindsPage
 
         Column {
             spacing: 24
 
             KeybindsCard {}
+        }
+    }
+
+    Component {
+        id: commandsPage
+
+        Column {
+            spacing: 24
 
             Card {
                 title: "Keybinds for " + (Compositor.name === "hyprland" ? (Compositor.usingLua ? "Hyprland (Lua)" : "Hyprland") : Compositor.name)

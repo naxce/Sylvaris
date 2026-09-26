@@ -261,7 +261,7 @@ A clipboard history: `sylvaris clip toggle` opens it with a search field. Arrows
 
 ## Key bindings
 
-SylSettings › Commands lists every action worth a key. Click one and press the keys: Sylvaris adds the binding to Hyprland or sway right away and again after the compositor reloads its config. The same map lives in `keybinds`:
+SylSettings › Features › Key bindings lists every action worth a key. Click one and press the keys: Sylvaris adds the binding to Hyprland or sway right away and again after the compositor reloads its config. The same map lives in `keybinds`:
 
 ```nix
 programs.sylvaris.keybinds = {
@@ -286,7 +286,7 @@ Plugins live in `~/.config/sylvaris/plugins/<id>/`: a `plugin.json` and a QML fi
 
 ## SylSync
 
-Turn on SylSettings › App colours and your theme's colours flow into other apps every time you switch themes: GTK 3 and 4 (and Chromium, Brave or Vivaldi set to use the GTK theme), Qt through qt5ct and qt6ct, kitty (open terminals update at once), foot, VS Code, VSCodium and Cursor, Zed, Neovim and Vim, and optionally Firefox, LibreWolf, Zen and Mullvad Browser through `userChrome.css`. Sylvaris writes its own theme files and at most one include line; VS Code and its forks get `workbench.colorCustomizations` in their `settings.json` instead, which they apply at once, and Firefox picks up the new colours on its next start. Each app is a switch, and apps that are not installed are skipped.
+Turn on SylSettings › Features › App colours and your theme's colours flow into other apps every time you switch themes: GTK 3 and 4 (and Chromium, Brave or Vivaldi set to use the GTK theme), Qt through qt5ct and qt6ct, kitty (open terminals update at once), foot, VS Code, VSCodium and Cursor, Zed, Neovim and Vim, and optionally Firefox, LibreWolf, Zen and Mullvad Browser through `userChrome.css`. Sylvaris writes its own theme files and at most one include line; VS Code and its forks get `workbench.colorCustomizations` in their `settings.json` instead, which they apply at once, and Firefox picks up the new colours on its next start. Each app is a switch, and apps that are not installed are skipped.
 
 ## Home Manager
 
@@ -298,7 +298,7 @@ Every panel opens, moves and closes with one set of curves. Full-screen backgrou
 
 ## SylSettings
 
-The gear in SylCenter, `sylvaris settings` or `sylvaris settings open <section>` opens SylSettings over a starfield: every section is a star around the core, and picking one shrinks the constellation to the top and opens the section below it. On the left you tune the constellation itself (drift speed, ring, silk links, labels, starfield), which also changes SylCenter's orbits; on the right are statistics (uptime, the shell's memory, apps, themes, windows, workspaces, screens, notifications) and About. Every switch is also a `sylvaris set` away, and values that come from `config.json` are shown with where to change them.
+The gear in SylCenter, `sylvaris settings` or `sylvaris settings open <section>` opens SylSettings over a starfield. Tabs above it split the sections into Settings (general, appearance, motion, wallpaper, sound, displays), Apps (every Sylvaris panel) and Features (lock, authentication, accessibility, key bindings, app colours, plugins, commands); Tab and Shift+Tab switch between them. Every section is a star around the core, and picking one shrinks the constellation to the top and opens the section below it. On the left you tune the constellation itself (drift speed, ring, silk links, labels, starfield), which also changes SylCenter's orbits; on the right are statistics (uptime, the shell's memory, apps, themes, windows, workspaces, screens, notifications) and About. Every switch is also a `sylvaris set` away, and values that come from `config.json` are shown with where to change them.
 
 ## Resin Glass
 
