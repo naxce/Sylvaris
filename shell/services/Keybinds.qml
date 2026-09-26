@@ -12,7 +12,7 @@ Singleton {
     readonly property var wanted: Settings.values.keybinds
     readonly property bool supported: Compositor.name === "hyprland" || Compositor.name === "sway"
     property var applied: ({})
-    readonly property bool lite: Settings.values.performance || Settings.values.toggleState.performance === true
+    readonly property bool lite: Settings.values.performance || Config.values.toggles.some(t => t.id === "performance") && Settings.values.toggleState.performance === true
 
     function apply(force: bool): void {
         if (Demo.enabled || !root.supported) {

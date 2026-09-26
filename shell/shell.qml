@@ -883,7 +883,7 @@ ShellRoot {
     Binding {
         target: Tokens
         property: "lite"
-        value: Settings.values.performance || Settings.values.toggleState.performance === true
+        value: Settings.values.performance || Config.values.toggles.some(t => t.id === "performance") && Settings.values.toggleState.performance === true
     }
 
     Binding {
