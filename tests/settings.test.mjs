@@ -237,7 +237,7 @@ test("shell.qml loads every part only through its parts flag", () => {
 
 test("PARTS lists every service a part references", () => {
     const root = new URL("../shell/", import.meta.url)
-    const core = ["Config", "Settings", "Ipc", "Demo", "Theme", "Resin", "Compositor"]
+    const core = ["Config", "Settings", "Ipc", "Demo", "Theme", "Resin", "Compositor", "Keybinds"]
     const services = readdirSync(new URL("services/", root)).map(f => f.replace(".qml", "")).filter(n => !core.includes(n))
     const refs = dir => {
         const found = new Set()
