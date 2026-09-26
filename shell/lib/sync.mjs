@@ -3,10 +3,10 @@ export const TARGETS = [
     { id: "qt", label: "Qt apps", about: "Pick “sylvaris” in qt5ct or qt6ct once" },
     { id: "kitty", label: "kitty", about: "Updates open terminals right away" },
     { id: "foot", label: "foot", about: "New foot windows" },
-    { id: "vscode", label: "VS Code, VSCodium and Cursor", about: "Pick the Sylvaris colour theme once" },
+    { id: "vscode", label: "VS Code, VSCodium and Cursor", about: "Recolours the editor live through its settings.json" },
     { id: "zed", label: "Zed", about: "Pick the Sylvaris theme once" },
     { id: "neovim", label: "Neovim and Vim", about: "Use “colorscheme sylvaris”" },
-    { id: "firefox", label: "Firefox, LibreWolf, Zen and Mullvad Browser", about: "Colours the browser frame through userChrome.css" }
+    { id: "firefox", label: "Firefox, LibreWolf, Zen and Mullvad Browser", about: "Colours the browser frame through userChrome.css after a browser restart" }
 ]
 
 function defaults() {
@@ -127,8 +127,7 @@ export function vscodeTheme(p) {
         { scope: ["entity.name.type", "support.type"], settings: { foreground: a[6] } },
         { scope: ["variable"], settings: { foreground: p.fg } }
     ]
-    const manifest = { name: "sylvaris-theme", displayName: "Sylvaris", publisher: "sylvaris", version: "1.0.0", engines: { vscode: "^1.60.0" }, categories: ["Themes"], contributes: { themes: [{ label: "Sylvaris", uiTheme: "vs-dark", path: "./sylvaris-color-theme.json" }] } }
-    return { theme: JSON.stringify({ name: "Sylvaris", type: "dark", colors: colors, tokenColors: tokenColors }, null, 2), manifest: JSON.stringify(manifest, null, 2) }
+    return { colors: colors, tokenColors: tokenColors }
 }
 
 export function zedTheme(p) {
@@ -163,9 +162,9 @@ export function vimColors(p) {
 }
 
 export function firefoxCss(p) {
-    return [":root {", "  --toolbar-bgcolor: " + p.bg2 + " !important;", "  --toolbar-color: " + p.fg + " !important;", "  --lwt-accent-color: " + p.bg + " !important;",
+    return [":root {", "  --toolbox-bgcolor: " + p.bg + " !important;", "  --toolbox-textcolor: " + p.fg + " !important;", "  --toolbar-bgcolor: " + p.bg2 + " !important;", "  --toolbar-color: " + p.fg + " !important;", "  --lwt-accent-color: " + p.bg + " !important;",
         "  --lwt-text-color: " + p.fg + " !important;", "  --tab-selected-bgcolor: " + p.bg + " !important;", "  --toolbar-field-background-color: " + p.bg + " !important;",
-        "  --toolbar-field-color: " + p.fg + " !important;", "  --toolbar-field-focus-border-color: " + p.accent + " !important;", "  --tab-loading-fill: " + p.accent + " !important;", "}", ""].join("\n")
+        "  --toolbar-field-color: " + p.fg + " !important;", "  --toolbar-field-focus-border-color: " + p.accent + " !important;", "  --tab-loading-fill: " + p.accent + " !important;", "}", "#navigator-toolbox, #TabsToolbar, #titlebar {", "  background-color: " + p.bg + " !important;", "  color: " + p.fg + " !important;", "}", ""].join("\n")
 }
 
 export function plan(p, targets, configHome, home) {
@@ -197,10 +196,7 @@ export function plan(p, targets, configHome, home) {
     target = "vscode"
     if (targets.vscode) {
         const code = vscodeTheme(p)
-        for (const d of [home + "/.vscode/extensions", home + "/.vscode-oss/extensions", home + "/.cursor/extensions"]) {
-            write(d + "/sylvaris.sylvaris-theme-1.0.0/package.json", code.manifest, d)
-            write(d + "/sylvaris.sylvaris-theme-1.0.0/sylvaris-color-theme.json", code.theme, d)
-        }
+        ops.push({ op: "vscode", target: target, colors: code.colors, tokenColors: code.tokenColors, dirs: ["Code", "VSCodium", "Cursor", "Code - OSS"].map(n => configHome + "/" + n + "/User") })
     }
     target = "zed"
     if (targets.zed)
@@ -212,7 +208,7 @@ export function plan(p, targets, configHome, home) {
     }
     target = "firefox"
     if (targets.firefox)
-        ops.push({ op: "firefox", target: target, content: firefoxCss(p), roots: [home + "/.mozilla/firefox", home + "/.librewolf", home + "/.zen", home + "/.mullvad-browser/Browser/TorBrowser/Data/Browser"] })
+        ops.push({ op: "firefox", target: target, content: firefoxCss(p), roots: [configHome + "/mozilla/firefox", home + "/.mozilla/firefox", home + "/.librewolf", home + "/.zen", home + "/.mullvad-browser/Browser/TorBrowser/Data/Browser"] })
     return ops
 }
 

@@ -8,6 +8,33 @@ sync = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(sync)
 
 
+class JsoncTest(unittest.TestCase):
+    def test_replaces_and_inserts_keeping_comments(self):
+        text = '{\n  // mine\n  "a": {"x": [1, "}"]},\n  "b": 2,\n}\n'
+        out = sync.set_jsonc_key(text, "a", {"y": 1})
+        self.assertIn("// mine", out)
+        self.assertIn('"b": 2,', out)
+        self.assertIn('"a": {\n    "y": 1\n  },', out)
+        added = sync.set_jsonc_key(out, "c", "z")
+        self.assertTrue(added.startswith('{\n  "c": "z",'))
+        self.assertEqual(sync.set_jsonc_key("{}", "k", 1), '{\n  "k": 1,}')
+        with self.assertRaises(ValueError):
+            sync.set_jsonc_key("[]", "k", 1)
+
+    def test_vscode_writes_live_colours(self):
+        user = os.path.join(tempfile.mkdtemp(), "VSCodium", "User")
+        os.makedirs(user)
+        with open(os.path.join(user, "settings.json"), "w") as f:
+            f.write('{\n  "editor.minimap.enabled": false,\n}\n')
+        res = sync.apply([{"op": "vscode", "target": "vscode", "colors": {"editor.background": "#101010"}, "tokenColors": [], "dirs": [user, user + "x"]}])
+        self.assertEqual([r["status"] for r in res][0], "written")
+        self.assertTrue(res[1]["status"].startswith("skipped"))
+        with open(os.path.join(user, "settings.json")) as f:
+            text = f.read()
+        self.assertIn('"editor.background": "#101010"', text)
+        self.assertIn('"editor.minimap.enabled": false,', text)
+
+
 class SyncTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()

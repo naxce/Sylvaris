@@ -19,9 +19,8 @@ test("generators use the palette", () => {
     assert.ok(kittyConf(p).includes("background #181310"))
     assert.ok(footIni(p).includes("background=181310"))
     assert.ok(qtColors(p).startsWith("[ColorScheme]\nactive_colors=#ffe7dac6"))
-    const code = JSON.parse(vscodeTheme(p).theme)
-    assert.equal(code.colors["editor.background"], "#181310")
-    assert.equal(JSON.parse(vscodeTheme(p).manifest).contributes.themes[0].label, "Sylvaris")
+    assert.equal(vscodeTheme(p).colors["editor.background"], "#181310")
+    assert.equal(vscodeTheme(p).tokenColors[0].scope[0], "comment")
     assert.equal(JSON.parse(zedTheme(p)).themes[0].style.background, "#181310ff")
     assert.ok(nvimLua(p).includes("vim.g.colors_name = \"sylvaris\""))
     assert.ok(vimColors(p).includes("let g:colors_name = \"sylvaris\""))
@@ -38,6 +37,9 @@ test("plan writes only the chosen targets and asks for include lines", () => {
     const include = ops.find(o => o.op === "line" && o.path === "/h/.config/gtk-3.0/gtk.css")
     assert.equal(include.line, "@import 'sylvaris.css';")
     assert.ok(ops.filter(o => o.op === "write").every(o => typeof o.content === "string" && o.needs))
+    const code = plan(palette(colors), { vscode: true, firefox: true }, "/h/.config", "/h")
+    assert.ok(code.find(o => o.op === "vscode").dirs.includes("/h/.config/VSCodium/User"))
+    assert.equal(code.find(o => o.op === "firefox").roots[0], "/h/.config/mozilla/firefox")
 })
 
 test("validateSync is off by default and keeps known targets", () => {

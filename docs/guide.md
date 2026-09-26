@@ -286,7 +286,7 @@ Plugins live in `~/.config/sylvaris/plugins/<id>/`: a `plugin.json` and a QML fi
 
 ## SylSync
 
-Turn on SylSettings › App colours and your theme's colours flow into other apps every time you switch themes: GTK 3 and 4 (and Chromium, Brave or Vivaldi set to use the GTK theme), Qt through qt5ct and qt6ct, kitty (open terminals update at once), foot, VS Code, VSCodium and Cursor, Zed, Neovim and Vim, and optionally Firefox, LibreWolf, Zen and Mullvad Browser through `userChrome.css`. Sylvaris writes its own theme files and at most one include line; each app is a switch, and apps that are not installed are skipped.
+Turn on SylSettings › App colours and your theme's colours flow into other apps every time you switch themes: GTK 3 and 4 (and Chromium, Brave or Vivaldi set to use the GTK theme), Qt through qt5ct and qt6ct, kitty (open terminals update at once), foot, VS Code, VSCodium and Cursor, Zed, Neovim and Vim, and optionally Firefox, LibreWolf, Zen and Mullvad Browser through `userChrome.css`. Sylvaris writes its own theme files and at most one include line; VS Code and its forks get `workbench.colorCustomizations` in their `settings.json` instead, which they apply at once, and Firefox picks up the new colours on its next start. Each app is a switch, and apps that are not installed are skipped.
 
 ## Home Manager
 

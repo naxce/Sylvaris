@@ -75,6 +75,114 @@ def firefox(op):
     return results
 
 
+def _skip(t, i):
+    while i < len(t):
+        if t[i] in " \t\r\n":
+            i += 1
+        elif t.startswith("//", i):
+            j = t.find("\n", i)
+            i = len(t) if j < 0 else j + 1
+        elif t.startswith("/*", i):
+            j = t.find("*/", i + 2)
+            i = len(t) if j < 0 else j + 2
+        else:
+            break
+    return i
+
+
+def _string_end(t, i):
+    i += 1
+    while i < len(t):
+        if t[i] == "\\":
+            i += 2
+        elif t[i] == '"':
+            return i + 1
+        else:
+            i += 1
+    raise ValueError("unterminated string")
+
+
+def _value_end(t, i):
+    if t[i] == '"':
+        return _string_end(t, i)
+    if t[i] in "{[":
+        depth = 0
+        while i < len(t):
+            i = _skip(t, i)
+            c = t[i]
+            if c == '"':
+                i = _string_end(t, i)
+                continue
+            if c in "{[":
+                depth += 1
+            elif c in "}]":
+                depth -= 1
+                if depth == 0:
+                    return i + 1
+            i += 1
+        raise ValueError("unterminated value")
+    while i < len(t) and t[i] not in ",}]\n":
+        i += 1
+    return i
+
+
+def set_jsonc_key(text, key, value):
+    body = json.dumps(value, indent=2).replace("\n", "\n  ")
+    i = _skip(text, 0)
+    if i >= len(text) or text[i] != "{":
+        raise ValueError("not a JSON object")
+    start = i + 1
+    i = start
+    while True:
+        i = _skip(text, i)
+        if i >= len(text):
+            raise ValueError("unterminated object")
+        if text[i] == "}":
+            return text[:start] + "\n  " + json.dumps(key) + ": " + body + "," + text[start:]
+        if text[i] == ",":
+            i += 1
+            continue
+        if text[i] != '"':
+            raise ValueError("unexpected character")
+        j = _string_end(text, i)
+        name = json.loads(text[i:j])
+        i = _skip(text, j)
+        if i >= len(text) or text[i] != ":":
+            raise ValueError("missing colon")
+        vs = _skip(text, i + 1)
+        ve = _value_end(text, vs)
+        if name == key:
+            return text[:vs] + body + text[ve:]
+        i = ve
+
+
+def vscode(op):
+    results = []
+    for d in op["dirs"]:
+        if not os.path.isdir(d):
+            results.append({"path": d, "status": "skipped, " + d + " does not exist"})
+            continue
+        path = os.path.join(d, "settings.json")
+        if os.path.realpath(path).startswith("/nix/store/"):
+            results.append({"path": path, "status": "failed: settings.json is managed by Nix"})
+            continue
+        try:
+            with open(path) as f:
+                text = f.read()
+        except FileNotFoundError:
+            text = "{}"
+        if text.strip() == "":
+            text = "{}"
+        try:
+            new = set_jsonc_key(text, "workbench.colorCustomizations", op["colors"])
+            new = set_jsonc_key(new, "editor.tokenColorCustomizations", {"textMateRules": op["tokenColors"]})
+        except ValueError as e:
+            results.append({"path": path, "status": "failed: settings.json could not be read, " + str(e)})
+            continue
+        results.append({"path": path, "status": write(path, new)})
+    return results
+
+
 def apply(ops):
     results = []
     for op in ops:
@@ -93,6 +201,8 @@ def apply(ops):
                 subprocess.run(op["argv"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
             elif op["op"] == "firefox":
                 results.extend(firefox(op))
+            elif op["op"] == "vscode":
+                results.extend(vscode(op))
         except OSError as e:
             results.append({"path": op.get("path", ""), "status": "failed: " + e.strerror})
         for r in results[start:]:
