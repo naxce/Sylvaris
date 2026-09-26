@@ -1,0 +1,15 @@
+bg mkdir -p $HOME/.config/sylvaris/plugins && cp -r $SYLVARIS_DIR/../examples/plugins/uptime $HOME/.config/sylvaris/plugins/
+sleep 1.5
+syl plugins refresh
+sleep 0.5
+syl plugins enable uptime
+syl set bar.right ["plugin:uptime","audio","power"]
+sleep 1
+shot plugins-bar
+syl plugins new hello-panel panel
+sleep 1
+syl plugins enable hello-panel
+syl plugins open hello-panel
+sleep 1
+shot plugins-panel
+syl plugins list

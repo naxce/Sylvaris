@@ -19,6 +19,7 @@
   grim,
   slurp,
   wf-recorder,
+  git,
   sylvarisParts ? { },
 }:
 
@@ -66,6 +67,7 @@ let
     polkit = [ ];
     clip = [ wl-clipboard ];
     access = [ ];
+    plugins = [ git ];
     capture = [
       grim
       slurp

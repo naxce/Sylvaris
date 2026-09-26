@@ -39,7 +39,7 @@ Scope {
                 center: centerModule,
                 power: powerModule,
                 diver: diverModule
-            })[name] || null;
+            })[name] || (name.indexOf("plugin:") === 0 ? pluginModule : null);
     }
 
     function isOpen(part: string, screen: var): bool {
@@ -157,6 +157,32 @@ Scope {
             glyph: Icons.GLYPHS.apps
             lit: root.isOpen("pad", screenRef)
             onClicked: root.request("pad", "", screenRef)
+        }
+    }
+
+    Component {
+        id: pluginModule
+
+        Item {
+            id: pm
+            property var screenRef: null
+            property var win: null
+            property string moduleName: ""
+            readonly property var plugin: pm.moduleName === "" ? null : Plugins.byId(pm.moduleName.slice(7))
+            property bool wanted: pm.plugin !== null && pm.plugin.manifest.kind === "bar" && Plugins.isEnabled(pm.plugin.id)
+            implicitWidth: slot.item ? slot.item.implicitWidth : 0
+            implicitHeight: Tokens.barItemHeight
+
+            Loader {
+                id: slot
+                anchors.centerIn: parent
+                active: pm.wanted
+                source: pm.wanted ? Plugins.url(pm.plugin) : ""
+                onLoaded: {
+                    if (item.hasOwnProperty("api"))
+                        item.api = Plugins.api(pm.plugin.id);
+                }
+            }
         }
     }
 

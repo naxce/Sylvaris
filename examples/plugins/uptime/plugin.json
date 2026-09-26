@@ -1,0 +1,9 @@
+{
+  "id": "uptime",
+  "name": "Uptime",
+  "version": "1.0.0",
+  "kind": "bar",
+  "entry": "Plugin.qml",
+  "description": "How long this computer has been on, in the bar",
+  "author": "naxce"
+}

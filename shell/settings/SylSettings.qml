@@ -135,6 +135,11 @@ Scope {
             glyph: Icons.GLYPHS.accessibility
         },
         {
+            key: "plugins",
+            label: "Plugins",
+            glyph: Icons.GLYPHS.puzzle
+        },
+        {
             key: "commands",
             label: "Commands",
             glyph: Icons.GLYPHS.keyboard
@@ -905,12 +910,19 @@ Scope {
                                 clip: clipPage,
                                 capture: capturePage,
                                 access: accessPage,
+                                plugins: pluginsPage,
                                 commands: commandsPage
                             })[root.shownSection] || null
                     }
                 }
             }
         }
+    }
+
+    Component {
+        id: pluginsPage
+
+        PluginsPage {}
     }
 
     Component {

@@ -3,6 +3,7 @@ import { DEFAULT_CLIP, validateClip } from "./clip.mjs"
 import { DEFAULT_CAPTURE, validateCapture } from "./capture.mjs"
 import { DEFAULT_ACCESS, validateAccess } from "./access.mjs"
 import { validateKeybinds } from "./keys.mjs"
+import { DEFAULT_PLUGINS, validatePlugins } from "./plugins.mjs"
 import { DEFAULT_BAR, DEFAULT_DECK, validateBar, validateDeck } from "./bar.mjs"
 import { DEFAULT_EQ, validateEq } from "./eq.mjs"
 import { DEFAULT_POWER, validatePower } from "./power.mjs"
@@ -13,7 +14,7 @@ export const CORNERS = ["top-left", "top-center", "top-right"]
 export const REVEALS = ["edges", "center", "fade"]
 
 export const PARTS = {
-    bar: ["Audio", "BluetoothService", "NetworkService", "Diver", "Dnd", "Media", "Notifications"],
+    bar: ["Audio", "BluetoothService", "NetworkService", "Diver", "Dnd", "Media", "Notifications", "Plugins"],
     center: ["Audio", "BluetoothService", "NetworkService", "Hotspot", "Displays", "NightLight", "Diver", "Dnd", "Toggles", "Media"],
     clock: ["Diver", "Weather", "Sky"],
     deck: ["Apps"],
@@ -28,8 +29,9 @@ export const PARTS = {
     clip: [],
     capture: [],
     access: [],
+    plugins: ["Plugins"],
     switcher: ["Apps"],
-    settings: ["Audio", "Equalizer", "NightLight", "Diver", "Weather", "Sky", "Dnd", "Apps", "Notifications"],
+    settings: ["Audio", "Equalizer", "NightLight", "Diver", "Weather", "Sky", "Dnd", "Apps", "Notifications", "Plugins"],
     theme: ["ThemePreview"]
 }
 
@@ -86,6 +88,7 @@ export const DEFAULT_SETTINGS = {
     capture: DEFAULT_CAPTURE,
     access: DEFAULT_ACCESS,
     keybinds: {},
+    plugins: DEFAULT_PLUGINS,
     performance: false,
     parts: partFlags({})
 }
@@ -278,6 +281,7 @@ export function validateSettings(raw) {
     v.capture = validateCapture(v.capture)
     v.access = validateAccess(v.access)
     v.keybinds = validateKeybinds(v.keybinds)
+    v.plugins = validatePlugins(v.plugins)
 
     const sw = isObject(v.switcher) ? v.switcher : {}
     v.switcher = Object.assign({}, sw, {

@@ -128,6 +128,8 @@ Singleton {
     readonly property int captureHeight: 300
     readonly property int accessWidth: 560
     readonly property int accessHeight: 660
+    readonly property int pluginsWidth: 720
+    readonly property int pluginsHeight: 520
     readonly property int diverHeight: 720
     readonly property int settingsHeight: 760
     readonly property int settingsSidebar: 250

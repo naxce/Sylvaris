@@ -21,6 +21,7 @@ import qs.polkit
 import qs.clip
 import qs.capture
 import qs.access
+import qs.plugins
 import "lib/ipc.mjs" as I
 import "lib/eq.mjs" as E
 import "lib/settings.mjs" as S
@@ -47,7 +48,8 @@ ShellRoot {
             polkit: polkitLoader,
             clip: clipLoader,
             capture: captureLoader,
-            access: accessLoader
+            access: accessLoader,
+            plugins: pluginsLoader
         })
     readonly property var parts: {
         const out = {};
@@ -74,7 +76,8 @@ ShellRoot {
             BluetoothService: () => BluetoothService,
             NetworkService: () => NetworkService,
             Hotspot: () => Hotspot,
-            Displays: () => Displays
+            Displays: () => Displays,
+            Plugins: () => Plugins
         })
     readonly property var boot: [Tokens, Ipc, Config, Settings, Theme, Resin, Compositor, Keybinds].concat(root.live.filter(name => root.services[name] !== undefined).map(name => root.services[name]()))
 
@@ -380,6 +383,16 @@ ShellRoot {
     }
 
     LazyLoader {
+        id: pluginsLoader
+        active: root.on("plugins")
+
+        SylPlugins {
+            id: pluginsPart
+            onOpened: root.solo(pluginsPart)
+        }
+    }
+
+    LazyLoader {
         id: accessLoader
         active: root.on("access")
 
@@ -656,6 +669,24 @@ ShellRoot {
                 toggle: () => root.need("pad").toggle(),
                 open: () => root.need("pad").open(),
                 close: () => root.need("pad").close()
+            },
+            plugins: {
+                default: "list",
+                toggle: () => root.need("plugins").toggle(),
+                open: id => id ? root.need("plugins").openPlugin(id) : root.need("plugins").open(),
+                close: () => root.need("plugins").close(),
+                list: () => Plugins.state().plugins,
+                enable: id => {
+                    if (Plugins.byId(id || "") === null)
+                        throw new Error("no working plugin called " + id);
+                    Plugins.setEnabled(id, true);
+                },
+                disable: id => Plugins.setEnabled(id || "", false),
+                new: (id, kind) => Plugins.create(id || "", kind || "bar"),
+                install: url => Plugins.install(url || ""),
+                remove: id => Plugins.remove(id || ""),
+                refresh: () => Plugins.refresh(),
+                state: () => Plugins.state()
             },
             access: {
                 toggle: () => root.need("access").toggle(),

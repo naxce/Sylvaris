@@ -1,3 +1,5 @@
+import { isPluginModule } from "./plugins.mjs"
+
 export const MODULES = ["pad", "workspaces", "window", "clock", "media", "tray", "audio", "network", "bluetooth", "battery", "notifications", "center", "power", "diver"]
 export const POSITIONS = ["top", "bottom", "left", "right"]
 export const STYLES = ["islands", "slab"]
@@ -25,7 +27,7 @@ function modules(v, fallback, taken) {
         return fallback.filter(m => !taken[m] && (taken[m] = true))
     const out = []
     for (const m of v) {
-        if (MODULES.indexOf(m) >= 0 && !taken[m]) {
+        if ((MODULES.indexOf(m) >= 0 || isPluginModule(m)) && !taken[m]) {
             taken[m] = true
             out.push(m)
         }

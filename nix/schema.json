@@ -173,6 +173,10 @@
     "cursor": 0
   },
   "keybinds": {},
+  "plugins": {
+    "enabled": {},
+    "config": {}
+  },
   "performance": false,
   "glass": {
     "enabled": true,

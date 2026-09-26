@@ -92,6 +92,8 @@ Item {
                 onLoaded: {
                     slot.item.screenRef = root.barWindow.modelData;
                     slot.item.win = root.barWindow;
+                    if (slot.item.hasOwnProperty("moduleName"))
+                        slot.item.moduleName = slot.modelData;
                 }
             }
         }
