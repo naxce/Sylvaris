@@ -19,6 +19,12 @@ export const MODULES = {
     access: { label: "Accessibility", section: "access", glyph: "accessibility" }
 }
 
+export const PRODUCT = {
+    bar: "SylBar", deck: "SylDeck", center: "SylCenter", theme: "SylTheme", clock: "SylClock", notify: "SylNotify",
+    pad: "SylPad", media: "SylMedia", settings: "SylSettings", power: "SylPower", paper: "SylPaper", diver: "SylDiver",
+    switcher: "SylSwitch", lock: "SylLock", polkit: "SylPolkit", clip: "SylClip", capture: "SylCapture", access: "SylAccessibility"
+}
+
 export function tiles() {
     return Object.keys(MODULES).map(name => ({
         id: "sylvaris." + name,

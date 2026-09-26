@@ -68,3 +68,10 @@ test("tiles give one searchable pad entry per module", () => {
     assert.deepEqual(search(list, "sound").map(t => t.section), ["sound"])
     assert.equal(search(list, "sylvaris").length, list.length)
 })
+
+test("every part has a product name for the Parts card", async () => {
+    const { PARTS } = await import("../shell/lib/settings.mjs")
+    const { PRODUCT } = await import("../shell/lib/modules.mjs")
+    for (const name of Object.keys(PARTS))
+        assert.ok(PRODUCT[name], name)
+})

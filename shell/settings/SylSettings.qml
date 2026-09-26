@@ -13,6 +13,7 @@ import "../lib/wm.mjs" as W
 import "../lib/power.mjs" as Pw
 import "../lib/icons.mjs" as Icons
 import "../lib/settings.mjs" as S
+import "../lib/modules.mjs" as M
 
 Scope {
     id: root
@@ -1009,8 +1010,8 @@ Scope {
                     delegate: SettingRow {
                         required property string modelData
                         required property int index
-                        title: "Syl" + modelData.charAt(0).toUpperCase() + modelData.slice(1)
-                        subtitle: "parts." + modelData
+                        title: M.PRODUCT[modelData] || modelData
+                        subtitle: (M.MODULES[modelData] ? M.MODULES[modelData].label + " · " : "") + "parts." + modelData
                         last: index === Object.keys(S.PARTS).length - 1
 
                         Toggle {
