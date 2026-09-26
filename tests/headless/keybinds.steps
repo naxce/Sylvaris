@@ -1,0 +1,12 @@
+sleep 1.5
+write sylvaris/settings.json {"version":1,"keybinds":{"clip toggle":"super+v","capture shot area":"SUPER+SHIFT+S"}}
+sleep 1
+syl state keybinds
+syl settings open commands
+sleep 1.2
+shot keybinds
+syl settings close
+sleep 0.5
+bg wtype -k Shift_L -M logo -k v -m logo
+sleep 1
+syl state clip

@@ -2199,6 +2199,8 @@ Scope {
         Column {
             spacing: 24
 
+            KeybindsCard {}
+
             Card {
                 title: "Keybinds for " + (Compositor.name === "hyprland" ? (Compositor.usingLua ? "Hyprland (Lua)" : "Hyprland") : Compositor.name)
                 note: "Every part of Sylvaris is a `sylvaris` command. Copy a line into your compositor config; the keys are only suggestions."

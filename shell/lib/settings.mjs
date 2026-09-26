@@ -2,6 +2,7 @@ import { DEFAULT_LOCK, validateLock } from "./lock.mjs"
 import { DEFAULT_CLIP, validateClip } from "./clip.mjs"
 import { DEFAULT_CAPTURE, validateCapture } from "./capture.mjs"
 import { DEFAULT_ACCESS, validateAccess } from "./access.mjs"
+import { validateKeybinds } from "./keys.mjs"
 import { DEFAULT_BAR, DEFAULT_DECK, validateBar, validateDeck } from "./bar.mjs"
 import { DEFAULT_EQ, validateEq } from "./eq.mjs"
 import { DEFAULT_POWER, validatePower } from "./power.mjs"
@@ -84,6 +85,7 @@ export const DEFAULT_SETTINGS = {
     clip: DEFAULT_CLIP,
     capture: DEFAULT_CAPTURE,
     access: DEFAULT_ACCESS,
+    keybinds: {},
     performance: false,
     parts: partFlags({})
 }
@@ -275,6 +277,7 @@ export function validateSettings(raw) {
     v.clip = validateClip(v.clip)
     v.capture = validateCapture(v.capture)
     v.access = validateAccess(v.access)
+    v.keybinds = validateKeybinds(v.keybinds)
 
     const sw = isObject(v.switcher) ? v.switcher : {}
     v.switcher = Object.assign({}, sw, {

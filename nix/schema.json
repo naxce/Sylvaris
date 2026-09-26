@@ -172,6 +172,7 @@
     "text": 1,
     "cursor": 0
   },
+  "keybinds": {},
   "performance": false,
   "glass": {
     "enabled": true,

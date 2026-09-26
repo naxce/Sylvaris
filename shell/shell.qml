@@ -76,7 +76,7 @@ ShellRoot {
             Hotspot: () => Hotspot,
             Displays: () => Displays
         })
-    readonly property var boot: [Tokens, Ipc, Config, Settings, Theme, Resin, Compositor].concat(root.live.filter(name => root.services[name] !== undefined).map(name => root.services[name]()))
+    readonly property var boot: [Tokens, Ipc, Config, Settings, Theme, Resin, Compositor, Keybinds].concat(root.live.filter(name => root.services[name] !== undefined).map(name => root.services[name]()))
 
     readonly property var openPanel: {
         for (const name of ["center", "clock", "media", "notify", "paper"]) {
@@ -225,6 +225,7 @@ ShellRoot {
             clip: root.part("clip") !== null ? root.part("clip").state() : undefined,
             capture: root.part("capture") !== null ? root.part("capture").state() : undefined,
             access: root.part("access") !== null ? root.part("access").state() : undefined,
+            keybinds: Keybinds.applied,
             config: Config.values,
             configNotice: Config.notice,
             settings: Settings.values,
