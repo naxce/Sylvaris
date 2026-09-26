@@ -68,6 +68,10 @@ let
     clip = [ wl-clipboard ];
     access = [ ];
     plugins = [ git ];
+    sync = [
+      python
+      procps
+    ];
     capture = [
       grim
       slurp

@@ -22,6 +22,7 @@ import qs.clip
 import qs.capture
 import qs.access
 import qs.plugins
+import qs.sync
 import "lib/ipc.mjs" as I
 import "lib/eq.mjs" as E
 import "lib/settings.mjs" as S
@@ -49,7 +50,8 @@ ShellRoot {
             clip: clipLoader,
             capture: captureLoader,
             access: accessLoader,
-            plugins: pluginsLoader
+            plugins: pluginsLoader,
+            sync: syncLoader
         })
     readonly property var parts: {
         const out = {};
@@ -77,7 +79,8 @@ ShellRoot {
             NetworkService: () => NetworkService,
             Hotspot: () => Hotspot,
             Displays: () => Displays,
-            Plugins: () => Plugins
+            Plugins: () => Plugins,
+            Sync: () => Sync
         })
     readonly property var boot: [Tokens, Ipc, Config, Settings, Theme, Resin, Compositor, Keybinds].concat(root.live.filter(name => root.services[name] !== undefined).map(name => root.services[name]()))
 
@@ -229,6 +232,8 @@ ShellRoot {
             capture: root.part("capture") !== null ? root.part("capture").state() : undefined,
             access: root.part("access") !== null ? root.part("access").state() : undefined,
             keybinds: Keybinds.applied,
+            sync: root.on("Sync") ? Sync.state() : undefined,
+            plugins: root.on("Plugins") ? Plugins.state() : undefined,
             config: Config.values,
             configNotice: Config.notice,
             settings: Settings.values,
@@ -380,6 +385,13 @@ ShellRoot {
             id: diverPart
             onOpened: root.solo(diverPart)
         }
+    }
+
+    LazyLoader {
+        id: syncLoader
+        active: root.on("sync")
+
+        SylSync {}
     }
 
     LazyLoader {
@@ -669,6 +681,13 @@ ShellRoot {
                 toggle: () => root.need("pad").toggle(),
                 open: () => root.need("pad").open(),
                 close: () => root.need("pad").close()
+            },
+            sync: {
+                default: "state",
+                now: () => Sync.apply(),
+                on: () => Settings.set("sync.enabled", true),
+                off: () => Settings.set("sync.enabled", false),
+                state: () => Sync.state()
             },
             plugins: {
                 default: "list",

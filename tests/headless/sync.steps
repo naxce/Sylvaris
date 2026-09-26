@@ -1,0 +1,10 @@
+bg mkdir -p $HOME/.config/kitty $HOME/.config/zed $HOME/.config/nvim && printf 'font_size 12\n' > $HOME/.config/kitty/kitty.conf
+sleep 1.5
+syl set sync.enabled true
+sleep 2.5
+syl state sync
+syl settings open sync
+sleep 1.2
+shot sync
+bg find $HOME/.config -name 'sylvaris*' -o -name 'gtk.css' -o -name kitty.conf > $HOME/found.txt
+sleep 0.5

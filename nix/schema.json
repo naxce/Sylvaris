@@ -177,6 +177,19 @@
     "enabled": {},
     "config": {}
   },
+  "sync": {
+    "enabled": false,
+    "targets": {
+      "gtk": true,
+      "qt": true,
+      "kitty": true,
+      "foot": true,
+      "vscode": true,
+      "zed": true,
+      "neovim": true,
+      "firefox": false
+    }
+  },
   "performance": false,
   "glass": {
     "enabled": true,

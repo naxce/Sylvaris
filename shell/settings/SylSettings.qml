@@ -140,6 +140,11 @@ Scope {
             glyph: Icons.GLYPHS.puzzle
         },
         {
+            key: "sync",
+            label: "App colours",
+            glyph: Icons.GLYPHS.sync
+        },
+        {
             key: "commands",
             label: "Commands",
             glyph: Icons.GLYPHS.keyboard
@@ -911,12 +916,19 @@ Scope {
                                 capture: capturePage,
                                 access: accessPage,
                                 plugins: pluginsPage,
+                                sync: syncPage,
                                 commands: commandsPage
                             })[root.shownSection] || null
                     }
                 }
             }
         }
+    }
+
+    Component {
+        id: syncPage
+
+        SyncPage {}
     }
 
     Component {

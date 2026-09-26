@@ -17,13 +17,14 @@ export const MODULES = {
     clip: { label: "Clipboard", section: "clip", glyph: "clipboard" },
     capture: { label: "Screenshots", section: "capture", glyph: "camera" },
     access: { label: "Accessibility", section: "access", glyph: "accessibility" },
-    plugins: { label: "Plugins", section: "plugins", glyph: "puzzle" }
+    plugins: { label: "Plugins", section: "plugins", glyph: "puzzle" },
+    sync: { label: "App colours", section: "sync", glyph: "sync" }
 }
 
 export const PRODUCT = {
     bar: "SylBar", deck: "SylDeck", center: "SylCenter", theme: "SylTheme", clock: "SylClock", notify: "SylNotify",
     pad: "SylPad", media: "SylMedia", settings: "SylSettings", power: "SylPower", paper: "SylPaper", diver: "SylDiver",
-    switcher: "SylSwitch", lock: "SylLock", polkit: "SylPolkit", clip: "SylClip", capture: "SylCapture", access: "SylAccessibility", plugins: "SylPlugins"
+    switcher: "SylSwitch", lock: "SylLock", polkit: "SylPolkit", clip: "SylClip", capture: "SylCapture", access: "SylAccessibility", plugins: "SylPlugins", sync: "SylSync"
 }
 
 export function tiles() {

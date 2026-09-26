@@ -4,6 +4,7 @@ import { DEFAULT_CAPTURE, validateCapture } from "./capture.mjs"
 import { DEFAULT_ACCESS, validateAccess } from "./access.mjs"
 import { validateKeybinds } from "./keys.mjs"
 import { DEFAULT_PLUGINS, validatePlugins } from "./plugins.mjs"
+import { DEFAULT_SYNC, validateSync } from "./sync.mjs"
 import { DEFAULT_BAR, DEFAULT_DECK, validateBar, validateDeck } from "./bar.mjs"
 import { DEFAULT_EQ, validateEq } from "./eq.mjs"
 import { DEFAULT_POWER, validatePower } from "./power.mjs"
@@ -30,8 +31,9 @@ export const PARTS = {
     capture: [],
     access: [],
     plugins: ["Plugins"],
+    sync: ["Sync"],
     switcher: ["Apps"],
-    settings: ["Audio", "Equalizer", "NightLight", "Diver", "Weather", "Sky", "Dnd", "Apps", "Notifications", "Plugins"],
+    settings: ["Audio", "Equalizer", "NightLight", "Diver", "Weather", "Sky", "Dnd", "Apps", "Notifications", "Plugins", "Sync"],
     theme: ["ThemePreview"]
 }
 
@@ -89,6 +91,7 @@ export const DEFAULT_SETTINGS = {
     access: DEFAULT_ACCESS,
     keybinds: {},
     plugins: DEFAULT_PLUGINS,
+    sync: DEFAULT_SYNC,
     performance: false,
     parts: partFlags({})
 }
@@ -282,6 +285,7 @@ export function validateSettings(raw) {
     v.access = validateAccess(v.access)
     v.keybinds = validateKeybinds(v.keybinds)
     v.plugins = validatePlugins(v.plugins)
+    v.sync = validateSync(v.sync)
 
     const sw = isObject(v.switcher) ? v.switcher : {}
     v.switcher = Object.assign({}, sw, {
