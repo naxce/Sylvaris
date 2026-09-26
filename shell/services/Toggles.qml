@@ -3,18 +3,27 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "../lib/icons.mjs" as Icons
 
 Singleton {
     id: root
 
     readonly property var defs: Config.values.toggles
     property var status: ({})
-    readonly property var items: root.defs.map(d => ({
-                id: d.id,
-                label: d.label,
-                icon: d.icon,
-                on: root.stateOf(d)
-            }))
+    readonly property bool ownPerformance: root.defs.some(d => d.id === "performance")
+    readonly property var items: (root.ownPerformance ? [] : [
+            {
+                id: "performance",
+                label: "Performance",
+                icon: Icons.GLYPHS.performance,
+                on: Settings.values.performance
+            }
+        ]).concat(root.defs.map(d => ({
+                    id: d.id,
+                    label: d.label,
+                    icon: d.icon,
+                    on: root.stateOf(d)
+                })))
 
     function stateOf(d: var): bool {
         if (d.status !== "" && root.status[d.id] !== undefined)
@@ -23,6 +32,10 @@ Singleton {
     }
 
     function set(id: string, on: bool): void {
+        if (id === "performance" && !root.ownPerformance) {
+            Settings.set("performance", on);
+            return;
+        }
         let def = null;
         for (const d of root.defs) {
             if (d.id === id)

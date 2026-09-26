@@ -294,7 +294,7 @@ Every setting has its own option, generated from the shell's defaults, so you ca
 
 ## Motion and performance
 
-Every panel opens, moves and closes with one set of curves. Full-screen backgrounds (SylSettings, SylPad, SylPower) spread in from the edges or out from the center, or simply fade (`motion.reveal`: `edges`, `center`, `fade`). `motion.scale` stretches or shortens all of it (1 is the default, 0.5 twice as fast), `motion.reduced = true` makes panels appear without moving. `performance = true`, or the Performance toggle in SylCenter, drops the blurred backdrops, grain, sheen and ambient movement and shortens every animation.
+Every panel opens, moves and closes with one set of curves. Full-screen backgrounds (SylSettings, SylPad, SylPower) spread in from the edges or out from the center, or simply fade (`motion.reveal`: `edges`, `center`, `fade`). `motion.scale` stretches or shortens all of it (1 is the default, 0.5 twice as fast), `motion.reduced = true` makes panels appear without moving. `performance = true`, or the Performance tile in SylCenter, drops the blurred backdrops, grain, sheen and ambient movement and shortens every animation. On Hyprland and sway it also turns off the compositor's animations, blur, shadows and gaps, and turning it off reloads the compositor config to bring them back; nothing else needs to be installed. A custom toggle with the id `performance` replaces the built-in tile.
 
 ## SylSettings
 

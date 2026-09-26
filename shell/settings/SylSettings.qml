@@ -1946,11 +1946,11 @@ Scope {
 
             Card {
                 title: "Performance"
-                note: "Also turns on with the Performance toggle in SylCenter."
+                note: "Also a tile in SylCenter. Nothing to install: Sylvaris trims itself and, on Hyprland and sway, the compositor too."
 
                 SettingRow {
                     title: "Performance mode"
-                    subtitle: "Drops blurred backdrops, grain, sheen and ambient movement, and shortens every animation"
+                    subtitle: "Drops blur, grain, sheen and ambient movement and shortens animations; turns off compositor animations, blur, shadows and gaps until you turn it off"
                     last: true
 
                     Toggle {

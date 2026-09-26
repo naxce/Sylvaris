@@ -1,0 +1,10 @@
+sleep 1.5
+sway gaps inner all set 12
+syl set performance true
+sleep 0.8
+bg swaymsg "gaps inner all set 0, gaps outer all set 0" > "$HOME/accepted.json"
+sleep 0.4
+syl state
+syl set performance false
+sleep 0.8
+syl state
