@@ -962,6 +962,8 @@ Scope {
             Card {
                 title: "Panels"
 
+                PlacementPreview {}
+
                 SettingRow {
                     title: "Control Center"
                     subtitle: "Where SylCenter and SylMedia open"
@@ -1096,6 +1098,8 @@ Scope {
                 title: "Resin Glass"
                 note: "Every panel, tile and card is drawn in translucent glass. Blur comes from your compositor."
 
+                GlassPreview {}
+
                 SettingRow {
                     title: "Glass"
                     subtitle: "Off brings back solid panels"
@@ -1136,6 +1140,8 @@ Scope {
 
             Card {
                 title: "SylBar"
+
+                MiniScreen {}
 
                 SettingRow {
                     title: "Show the bar"
@@ -1310,6 +1316,8 @@ Scope {
 
             Card {
                 title: "SylDeck"
+
+                DeckPreview {}
 
                 SettingRow {
                     title: "Show the deck"
@@ -1525,6 +1533,8 @@ Scope {
                 title: "SylPad"
                 note: "Open it with the apps button on the bar or deck, or bind `sylvaris pad` to a key."
 
+                PadPreview {}
+
                 SettingRow {
                     title: "Layout"
                     subtitle: "A full-screen grid, or a compact list in the middle of the screen"
@@ -1580,6 +1590,8 @@ Scope {
 
             Card {
                 title: "SylNotify"
+
+                NotifyPreview {}
 
                 SettingRow {
                     title: "Do not disturb"
@@ -1834,6 +1846,8 @@ Scope {
                 title: "Motion"
                 note: "Every panel opens, moves and closes with the same motion. Speed stretches or shortens all of it at once."
 
+                MotionPreview {}
+
                 SettingRow {
                     title: "Animation speed"
                     subtitle: Settings.values.motion.scale === 1 ? "Default" : Settings.values.motion.scale < 1 ? "Faster" : "Slower"
@@ -1911,6 +1925,8 @@ Scope {
                 title: "SylPaper"
                 note: "The wallpaper follows the theme. Pick another image for a theme or for one screen in the picker."
 
+                PaperPreview {}
+
                 SettingRow {
                     title: "Draw the wallpaper"
                     subtitle: "Turn off if another program such as hyprpaper draws it"
@@ -1970,6 +1986,8 @@ Scope {
             Card {
                 title: "SylPower"
                 note: "Put the power button on the bar (the power module), on the deck, or both. Commands can be replaced under power.commands in config.json."
+
+                PowerPreview {}
 
                 SettingRow {
                     title: "Actions"
