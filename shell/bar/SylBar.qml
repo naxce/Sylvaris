@@ -194,6 +194,7 @@ Scope {
             property var screenRef: null
             property var win: null
             readonly property var list: Compositor.workspaces.filter(w => ws.screenRef !== null && w.output === ws.screenRef.name)
+            readonly property var look: B.workspaceLook(root.cfg.workspaceIcons, Theme.theme.workspaceIcon || "")
             implicitWidth: root.vertical ? Tokens.barItemHeight : pills.implicitWidth + 12
             implicitHeight: root.vertical ? pills.implicitHeight + 12 : Tokens.barItemHeight
             property bool wanted: ws.list.length > 0
@@ -229,12 +230,16 @@ Scope {
                                 urgent: false,
                                 windows: 0
                             })
-                        width: root.vertical ? 26 : modelData.focused ? 38 : 26
-                        height: root.vertical ? (modelData.focused ? 38 : 26) : 26
-                        radius: 13
+                        readonly property bool dots: ws.look.mode === "dots"
+                        readonly property bool glyphs: ws.look.mode === "glyph"
+                        readonly property real small: pill.dots ? (modelData.windows !== 0 || modelData.active ? 10 : 8) : 26
+                        readonly property real long: pill.dots ? 26 : pill.glyphs ? 34 : 38
+                        width: root.vertical ? pill.small : modelData.focused ? pill.long : pill.small
+                        height: root.vertical ? (modelData.focused ? pill.long : pill.small) : pill.small
+                        radius: Math.min(width, height) / 2
                         antialiasing: true
-                        color: modelData.urgent ? Theme.danger : modelData.focused ? Theme.accent : modelData.active ? Qt.alpha(Theme.accent, 0.35) : modelData.windows !== 0 ? Qt.alpha(Theme.text, 0.14) : "transparent"
-                        border.width: modelData.focused || modelData.windows !== 0 || modelData.active ? 0 : 1
+                        color: pill.glyphs && !modelData.urgent && !modelData.focused ? "transparent" : modelData.urgent ? Theme.danger : modelData.focused ? Theme.accent : modelData.active ? Qt.alpha(Theme.accent, 0.35) : modelData.windows !== 0 ? Qt.alpha(Theme.text, pill.dots ? 0.55 : 0.14) : pill.dots ? Qt.alpha(Theme.text, 0.2) : "transparent"
+                        border.width: pill.dots || pill.glyphs || modelData.focused || modelData.windows !== 0 || modelData.active ? 0 : 1
                         border.color: Qt.alpha(Theme.text, 0.18)
 
                         Behavior on width {
@@ -259,8 +264,35 @@ Scope {
                             }
                         }
 
+                        Glyph {
+                            anchors.centerIn: parent
+                            visible: pill.glyphs
+                            text: ws.look.glyph
+                            size: modelData.focused ? 17 : 15
+                            color: modelData.focused || modelData.urgent ? Theme.onAccent : modelData.active ? Theme.accentHi : Theme.text
+                            opacity: modelData.focused || modelData.windows !== 0 || modelData.active ? 1 : 0.38
+                            scale: pillArea.containsMouse && !modelData.focused ? 1.15 : 1
+
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: Tokens.stateDuration
+                                    easing.type: Easing.BezierSpline
+                                    easing.bezierCurve: Tokens.springCurve
+                                }
+                            }
+
+                            Behavior on size {
+                                NumberAnimation {
+                                    duration: Tokens.moveDuration
+                                    easing.type: Easing.BezierSpline
+                                    easing.bezierCurve: Tokens.springCurve
+                                }
+                            }
+                        }
+
                         Text {
                             anchors.centerIn: parent
+                            visible: !pill.dots && !pill.glyphs
                             text: modelData.name.length <= 3 ? modelData.name : modelData.index
                             color: modelData.focused || modelData.urgent ? Theme.onAccent : Theme.text
                             opacity: modelData.focused || modelData.windows !== 0 || modelData.active ? 1 : 0.55
@@ -270,7 +302,10 @@ Scope {
                         }
 
                         MouseArea {
+                            id: pillArea
                             anchors.fill: parent
+                            anchors.margins: pill.dots ? -6 : 0
+                            hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: Compositor.focusWorkspace(modelData)
                         }

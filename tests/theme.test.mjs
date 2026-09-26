@@ -188,3 +188,10 @@ test("parseLinkOutput tolerates junk", () => {
     assert.deepEqual(parseLinkOutput(""), { changed: 0, missing: [] })
     assert.deepEqual(parseLinkOutput("noise\nchanged 2\nmissing /x y\n"), { changed: 2, missing: ["/x y"] })
 })
+
+test("a theme can name a workspace icon", async () => {
+    const { validateTheme } = await import("../shell/lib/theme.mjs")
+    assert.equal(validateTheme({ id: "dog", name: "Dog", workspaceIcon: "paw" }).theme.workspaceIcon, "paw")
+    assert.equal(validateTheme({ id: "dog", name: "Dog", workspaceIcon: "../x" }).theme.workspaceIcon, "")
+    assert.equal(validateTheme({ id: "dog", name: "Dog" }).theme.workspaceIcon, "")
+})

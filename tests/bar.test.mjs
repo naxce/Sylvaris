@@ -1,6 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { unused, shift, validateBar, validateDeck, deckItems, nextWindow, togglePin, magnify, DEFAULT_BAR, vertical, drawerArrow, placeCorner, deckHidden, screenBusy } from "../shell/lib/bar.mjs"
+import { unused, shift, validateBar, validateDeck, deckItems, nextWindow, togglePin, magnify, DEFAULT_BAR, vertical, drawerArrow, placeCorner, deckHidden, screenBusy, workspaceLook, WORKSPACE_ICONS } from "../shell/lib/bar.mjs"
 
 test("validateBar keeps known modules once and falls back per side", () => {
     const b = validateBar({ left: ["clock", "nope", "clock", "pad"], floating: false })
@@ -122,4 +122,14 @@ test("screenBusy uses the visible workspace's window count and falls back to ope
     assert.equal(screenBusy(sway, [{ minimized: true }], "A"), false)
     assert.equal(screenBusy(sway, [{ minimized: false }], "A"), true)
     assert.equal(screenBusy([], [{ minimized: false }], "A"), false)
+})
+
+test("workspaceLook picks numbers, dots or a glyph set, and auto follows the theme", () => {
+    assert.deepEqual(workspaceLook("numbers", "paw"), { mode: "numbers", glyph: "" })
+    assert.deepEqual(workspaceLook("dots", ""), { mode: "dots", glyph: "" })
+    assert.deepEqual(workspaceLook("heart", ""), { mode: "glyph", glyph: WORKSPACE_ICONS.heart })
+    assert.deepEqual(workspaceLook("auto", "paw"), { mode: "glyph", glyph: WORKSPACE_ICONS.paw })
+    assert.deepEqual(workspaceLook("auto", "unknown"), { mode: "numbers", glyph: "" })
+    assert.equal(validateBar({ workspaceIcons: "paw" }).workspaceIcons, "paw")
+    assert.equal(validateBar({ workspaceIcons: "rocket" }).workspaceIcons, "auto")
 })

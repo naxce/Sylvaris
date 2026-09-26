@@ -111,6 +111,7 @@ export function validateTheme(raw) {
             name: raw.name,
             description: typeof raw.description === "string" ? raw.description : "",
             wallpaper: typeof raw.wallpaper === "string" ? raw.wallpaper : "",
+            workspaceIcon: typeof raw.workspaceIcon === "string" && /^[a-z]{1,20}$/.test(raw.workspaceIcon) ? raw.workspaceIcon : "",
             colors: colors,
             alpha: alpha,
             links: links

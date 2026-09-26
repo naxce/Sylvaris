@@ -1213,6 +1213,29 @@ Scope {
                 }
 
                 SettingRow {
+                    title: "Workspace icons"
+                    subtitle: Settings.values.bar.workspaceIcons === "auto" ? "Follows the theme" + (Theme.theme.workspaceIcon ? " (" + Theme.theme.workspaceIcon + ")" : ", which picks numbers") : "The same everywhere"
+                }
+
+                Flow {
+                    width: parent.width
+                    spacing: 6
+                    bottomPadding: 8
+
+                    Repeater {
+                        model: B.WORKSPACE_LOOKS
+
+                        delegate: Chip {
+                            required property string modelData
+                            text: modelData.charAt(0).toUpperCase() + modelData.slice(1)
+                            glyph: B.WORKSPACE_ICONS[modelData] || ""
+                            lit: Settings.values.bar.workspaceIcons === modelData
+                            onClicked: Settings.set("bar.workspaceIcons", modelData)
+                        }
+                    }
+                }
+
+                SettingRow {
                     title: "Floating"
                     subtitle: "A gap around the bar, or one that touches the edge"
                     last: true

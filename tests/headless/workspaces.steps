@@ -1,0 +1,13 @@
+sleep 1.5
+syl set bar.workspaceIcons paw
+sleep 0.6
+shot ws-paw
+syl set bar.workspaceIcons dots
+sleep 0.6
+shot ws-dots
+syl set bar.workspaceIcons numbers
+sleep 0.6
+shot ws-numbers
+syl settings open bar
+sleep 1.2
+shot ws-settings

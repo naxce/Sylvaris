@@ -37,6 +37,7 @@
     "mode": "launchpad"
   },
   "bar": {
+    "workspaceIcons": "auto",
     "enabled": true,
     "floating": true,
     "position": "top",

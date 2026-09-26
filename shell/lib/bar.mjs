@@ -4,7 +4,25 @@ export const MODULES = ["pad", "workspaces", "window", "clock", "media", "tray",
 export const POSITIONS = ["top", "bottom", "left", "right"]
 export const STYLES = ["islands", "slab"]
 
+const g = cp => String.fromCodePoint(cp)
+
+export const WORKSPACE_ICONS = {
+    paw: g(0xF03E9), bone: g(0xF00B9), heart: g(0xF02D1), star: g(0xF0AE2), leaf: g(0xF032A), flower: g(0xF024A), fire: g(0xF0238),
+    diamond: g(0xF0B8A), tree: g(0xF0405), ghost: g(0xF02A0), moon: g(0xF0F65), cat: g(0xF011B), fish: g(0xF023A), music: g(0xF0387)
+}
+export const WORKSPACE_LOOKS = ["auto", "numbers", "dots"].concat(Object.keys(WORKSPACE_ICONS))
+
+export function workspaceLook(setting, themeIcon) {
+    const pick = setting === "auto" ? themeIcon : setting
+    if (pick === "dots")
+        return { mode: "dots", glyph: "" }
+    if (WORKSPACE_ICONS[pick] !== undefined)
+        return { mode: "glyph", glyph: WORKSPACE_ICONS[pick] }
+    return { mode: "numbers", glyph: "" }
+}
+
 export const DEFAULT_BAR = {
+    workspaceIcons: "auto",
     enabled: true,
     floating: true,
     position: "top",
@@ -43,6 +61,7 @@ export function validateBar(raw) {
         floating: b.floating !== false,
         position: POSITIONS.indexOf(b.position) >= 0 ? b.position : DEFAULT_BAR.position,
         style: STYLES.indexOf(b.style) >= 0 ? b.style : DEFAULT_BAR.style,
+        workspaceIcons: WORKSPACE_LOOKS.indexOf(b.workspaceIcons) >= 0 ? b.workspaceIcons : DEFAULT_BAR.workspaceIcons,
         left: modules(b.left, DEFAULT_BAR.left, taken),
         center: modules(b.center, DEFAULT_BAR.center, taken),
         right: modules(b.right, DEFAULT_BAR.right, taken)
