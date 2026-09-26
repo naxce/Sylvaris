@@ -14,6 +14,7 @@ let
   launch = pkgs.writeShellScript "sylvaris-greet" ''
     export XDG_CONFIG_HOME=${configDir}
     export SYLVARIS_GREET_STATE=/var/lib/sylvaris-greet
+    export SYLVARIS_GREET_SESSIONS=${config.services.displayManager.sessionData.desktops}/share/wayland-sessions
     ${lib.optionalString (greet.user != "") "export SYLVARIS_GREET_USER=${lib.escapeShellArg greet.user}"}
     ${lib.optionalString (greet.session != "") "export SYLVARIS_GREET_SESSION=${lib.escapeShellArg greet.session}"}
     ${lib.optionalString (greet.wallpaper != null) "export SYLVARIS_GREET_WALLPAPER=${greet.wallpaper}"}
@@ -44,6 +45,13 @@ in
         description = "Wayland session file name (without .desktop) picked on the first start.";
       };
 
+      theme = lib.mkOption {
+        type = lib.types.str;
+        default = "";
+        example = "noir";
+        description = "Theme id from greeter.themes the login screen uses; empty keeps the built-in look.";
+      };
+
       wallpaper = lib.mkOption {
         type = lib.types.nullOr lib.types.path;
         default = null;
@@ -69,6 +77,7 @@ in
       security.pam.services.sylvaris = { };
     })
     (lib.mkIf greet.enable {
+      services.displayManager.enable = true;
       services.greetd = {
         enable = true;
         settings.default_session = {
@@ -80,9 +89,14 @@ in
       environment.etc = lib.mkMerge [
         {
           "sylvaris-greet/sylvaris/config.json".source = json.generate "sylvaris-greet-config.json" (
-            { version = 1; } // greet.settings
+            {
+              version = 1;
+            }
+            // lib.optionalAttrs (greet.theme != "") { themeStateFile = "${configDir}/theme"; }
+            // greet.settings
           );
         }
+        (lib.mkIf (greet.theme != "") { "sylvaris-greet/theme".text = greet.theme; })
         (lib.mapAttrs' (
           name: theme:
           lib.nameValuePair "sylvaris-greet/sylvaris/themes/${name}.json" {

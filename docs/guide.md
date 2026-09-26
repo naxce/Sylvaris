@@ -229,7 +229,7 @@ Alt+Tab for every compositor. Bind `sylvaris switcher next` to Alt+Tab and `sylv
 
 ## SylGreet
 
-A login screen for greetd in the same style: pick a user with ↑ ↓ and a session with F2, type the password, and it starts your session and remembers both for next time. Turn it on in NixOS:
+A login screen for greetd in the same style as SylLock. The session button in the bottom left (or F2) lists every installed session, such as Hyprland, niri or sway; ↑ ↓ pick the user. Type the password and it starts that session and remembers both for next time. Turn it on in NixOS:
 
 ```nix
 imports = [ sylvaris.nixosModules.sylvaris ];
@@ -237,11 +237,14 @@ programs.sylvaris.greeter = {
   enable = true;
   user = "you";
   session = "hyprland";
-  settings.glass.opacity = 0.6;
+  theme = "noir";
+  themes = config.home-manager.users.you.programs.sylvaris.themes;
+  wallpaper = ./wallpapers/noir.png;
+  settings.avatar = "${./avatar.png}";
 };
 ```
 
-It runs in cage with its own theme and config under `/etc/sylvaris-greet`, and reboot and shutdown are one click away.
+It runs in cage with its own config under `/etc/sylvaris-greet`, and reboot and shutdown are one click away. The login screen cannot read your home folder, so give it files from your flake: `themes` can reuse your Home Manager themes, `theme` picks one, and `wallpaper` and `settings.avatar` take paths. Sessions come from the ones NixOS knows about, so enabling Hyprland, niri or sway is enough.
 
 ## SylPolkit
 

@@ -57,6 +57,7 @@
                   programs.sylvaris.greeter = {
                     enable = true;
                     user = "ada";
+                    theme = "noir";
                   };
                   boot.loader.grub.enable = false;
                   fileSystems."/" = {
@@ -73,6 +74,9 @@
             grep -q "sylvaris greet" ${cfg.services.greetd.settings.default_session.command}
             grep -q "SYLVARIS_GREET_USER=ada" ${cfg.services.greetd.settings.default_session.command}
             test "${cfg.services.greetd.settings.default_session.user}" = greeter
+            grep -q "SYLVARIS_GREET_SESSIONS=/nix/store/.*/share/wayland-sessions" ${cfg.services.greetd.settings.default_session.command}
+            test "${cfg.environment.etc."sylvaris-greet/theme".text}" = noir
+            grep -q '"themeStateFile": "/etc/sylvaris-greet/theme"' ${cfg.environment.etc."sylvaris-greet/sylvaris/config.json".source}
             test -n "${builtins.toString cfg.security.pam.services.sylvaris.unixAuth}"
             touch $out
           '';

@@ -48,7 +48,13 @@ Item {
 
     Shortcut {
         sequence: "F2"
-        onActivated: root.greet.stepSession(1)
+        onActivated: root.picking = !root.picking
+    }
+
+    Shortcut {
+        sequence: "Escape"
+        enabled: root.picking
+        onActivated: root.picking = false
     }
 
     Backdrop {
@@ -96,7 +102,7 @@ Item {
             id: card
             anchors.horizontalCenter: parent.horizontalCenter
             width: 360
-            avatar: root.greet.user === null ? "" : root.greet.user.home + "/.face"
+            avatar: Config.values.avatar !== "" ? Config.values.avatar : root.greet.user === null ? "" : root.greet.user.home + "/.face"
             name: root.greet.user === null ? "No users" : root.greet.user.real
             prompt: root.greet.awaiting ? root.greet.message : "Password"
             secret: !(root.greet.awaiting && root.greet.echo)
@@ -138,7 +144,15 @@ Item {
         }
     }
 
-    Row {
+    property bool picking: false
+
+    MouseArea {
+        anchors.fill: parent
+        enabled: root.picking
+        onClicked: root.picking = false
+    }
+
+    Column {
         anchors.left: parent.left
         anchors.bottom: parent.bottom
         anchors.margins: 32
@@ -146,19 +160,96 @@ Item {
         spacing: 10
         visible: root.greet.session !== null
 
-        RowButton {
-            icon: Icons.GLYPHS.apps
-            label: root.greet.session === null ? "" : root.greet.session.name
-            onClicked: root.greet.stepSession(1)
+        Item {
+            width: 300
+            height: sessionList.implicitHeight + 16
+            visible: root.picking
+            opacity: root.picking ? 1 : 0
+
+            Glass {
+                anchors.fill: parent
+                radius: Tokens.radiusCard
+                raised: true
+                offColor: Theme.surface
+                offBorder: Theme.line
+            }
+
+            Column {
+                id: sessionList
+                x: 8
+                y: 8
+                width: parent.width - 16
+                spacing: 2
+
+                Repeater {
+                    model: root.greet.sessions
+
+                    delegate: Rectangle {
+                        required property var modelData
+                        required property int index
+                        readonly property bool chosen: index === root.greet.sessionIndex
+                        width: sessionList.width
+                        height: 40
+                        radius: 12
+                        color: chosen ? Theme.accent : pickArea.containsMouse ? Theme.tintStrong : "transparent"
+
+                        Text {
+                            anchors.left: parent.left
+                            anchors.leftMargin: 14
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: modelData.name
+                            color: parent.chosen ? Theme.onAccent : Theme.text
+                            font.family: Tokens.fontUi
+                            font.pixelSize: Tokens.bodySize
+                            font.weight: parent.chosen ? Font.DemiBold : Font.Normal
+                        }
+
+                        Glyph {
+                            anchors.right: parent.right
+                            anchors.rightMargin: 14
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: parent.chosen
+                            text: Icons.GLYPHS.check
+                            size: 16
+                            color: Theme.onAccent
+                        }
+
+                        MouseArea {
+                            id: pickArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                root.greet.pickSession(index);
+                                root.picking = false;
+                                card.focusInput();
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        Text {
-            anchors.verticalCenter: parent.verticalCenter
-            visible: root.greet.sessions.length > 1
-            text: "F2 changes the session · ↑ ↓ change the user"
-            color: Theme.textDim
-            font.family: Tokens.fontUi
-            font.pixelSize: Tokens.smallSize
+        Row {
+            spacing: 10
+
+            RowButton {
+                icon: Icons.GLYPHS.apps
+                label: (root.greet.session === null ? "" : root.greet.session.name) + (root.greet.sessions.length > 1 ? "  " + (root.picking ? Icons.GLYPHS.chevronDown : Icons.GLYPHS.chevronUp) : "")
+                onClicked: {
+                    if (root.greet.sessions.length > 1)
+                        root.picking = !root.picking;
+                }
+            }
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: root.greet.sessions.length > 1
+                text: "Session · F2 opens the list · ↑ ↓ change the user"
+                color: Theme.textDim
+                font.family: Tokens.fontUi
+                font.pixelSize: Tokens.smallSize
+            }
         }
     }
 

@@ -55,6 +55,11 @@ Scope {
         root.sessionIndex = (root.sessionIndex + d + root.sessions.length) % root.sessions.length;
     }
 
+    function pickSession(i: int): void {
+        if (i >= 0 && i < root.sessions.length)
+            root.sessionIndex = i;
+    }
+
     function cancel(): void {
         if (Greetd.state !== GreetdState.Inactive)
             Greetd.cancelSession();

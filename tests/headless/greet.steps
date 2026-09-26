@@ -8,6 +8,9 @@ shot greet-wrong
 bg wtype -k Shift_L -k Down
 sleep 0.4
 bg wtype -k Shift_L -k F2
+sleep 0.6
+shot greet-sessions
+bg wtype -k Shift_L -k Escape
 sleep 0.4
 ipc state
 bg wtype -k Shift_L right -k Return
