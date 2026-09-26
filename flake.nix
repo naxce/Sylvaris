@@ -129,6 +129,8 @@
               sylvarisParts = {
                 center = false;
                 media = false;
+                clip = false;
+                capture = false;
               };
             };
           in
@@ -139,7 +141,7 @@
             grep -q wlsunset ${lean}/bin/sylvaris
             for tool in wlr-randr networkmanager wl-clipboard; do
               if grep -q "$tool" ${lean}/bin/sylvaris; then
-                echo "$tool is still wrapped with center and media excluded"
+                echo "$tool is still wrapped with center, media, clip and capture excluded"
                 exit 1
               fi
             done
